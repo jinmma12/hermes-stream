@@ -150,10 +150,10 @@ open http://localhost:8000/docs
 
 ```
 Job          "What to collect" — a tracking unit with its own Recipe
-               e.g., Temperature Collection, Pressure Monitoring
+               e.g., Order Sync, Log Aggregation, Report Generation
 
 Target       "Where to collect from" — sources within a Job
-               e.g., Equipment A, Equipment B, Server 3
+               e.g., Server A, Region US-East, Source DB-2
 
 Recipe       Processing configuration — versioned, diffable
                e.g., { threshold: 3.5, method: "z-score" }
