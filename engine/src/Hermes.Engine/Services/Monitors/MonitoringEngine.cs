@@ -176,6 +176,10 @@ public class MonitoringEngine : IMonitoringEngine
                 bootstrapServers: config.TryGetProperty("bootstrap_servers", out var bs) ? bs.GetString()! : "localhost:9092",
                 topic: config.TryGetProperty("topic", out var t) ? t.GetString()! : "hermes-events",
                 groupId: config.TryGetProperty("group_id", out var g) ? g.GetString()! : "hermes-engine"),
+            MonitoringType.DbPoll => new CdcMonitor(
+                connectionString: config.TryGetProperty("connection_string", out var cs) ? cs.GetString()! : "",
+                tableName: config.TryGetProperty("table", out var tbl) ? tbl.GetString()! : "",
+                cursorColumn: config.TryGetProperty("cursor_column", out var cc) ? cc.GetString()! : "updated_at"),
             _ => throw new NotSupportedException($"Monitoring type not supported: {pipeline.MonitoringType}")
         };
     }

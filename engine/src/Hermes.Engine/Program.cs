@@ -100,6 +100,12 @@ try
         Log.Information("NiFi integration enabled: {Url}", nifiConfig.BaseUrl);
     }
 
+    // Incremental sync state management
+    builder.Services.AddSingleton<IIncrementalSyncManager, IncrementalSyncManager>();
+
+    // Data preview (sample rows, schema inference)
+    builder.Services.AddScoped<IDataPreviewService, DataPreviewService>();
+
     // Monitoring engine (singleton - manages all monitoring tasks)
     builder.Services.AddSingleton<IMonitoringEngine, MonitoringEngine>();
 
