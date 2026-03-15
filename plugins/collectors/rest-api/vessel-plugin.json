@@ -1,0 +1,122 @@
+{
+  "name": "rest-api-collector",
+  "version": "1.0.0",
+  "type": "COLLECTOR",
+  "description": "Collects data from REST APIs with configurable authentication, headers, and polling interval.",
+  "author": "vessel-core",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "title": "API URL",
+        "description": "The full URL of the REST API endpoint to collect data from.",
+        "format": "uri"
+      },
+      "method": {
+        "type": "string",
+        "title": "HTTP Method",
+        "description": "HTTP method to use for the request.",
+        "enum": ["GET", "POST", "PUT", "PATCH"],
+        "default": "GET"
+      },
+      "headers": {
+        "type": "object",
+        "title": "HTTP Headers",
+        "description": "Additional HTTP headers to include in the request.",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "auth_type": {
+        "type": "string",
+        "title": "Authentication Type",
+        "description": "Type of authentication to use.",
+        "enum": ["none", "bearer", "basic", "api_key"],
+        "default": "none"
+      },
+      "auth_token": {
+        "type": "string",
+        "title": "Auth Token / API Key",
+        "description": "Bearer token, Base64-encoded basic credentials, or API key value."
+      },
+      "api_key_header": {
+        "type": "string",
+        "title": "API Key Header Name",
+        "description": "Header name for API key authentication (e.g., X-API-Key).",
+        "default": "X-API-Key"
+      },
+      "body": {
+        "type": "object",
+        "title": "Request Body",
+        "description": "JSON body for POST/PUT/PATCH requests."
+      },
+      "interval": {
+        "type": "string",
+        "title": "Poll Interval",
+        "description": "How often to poll the API (e.g., '5m', '1h', '30s'). Leave empty for one-shot.",
+        "default": ""
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "title": "Request Timeout",
+        "description": "HTTP request timeout in seconds.",
+        "default": 30,
+        "minimum": 1,
+        "maximum": 300
+      },
+      "records_path": {
+        "type": "string",
+        "title": "Records JSON Path",
+        "description": "Dot-notation path to extract records array from response (e.g., 'data.items'). Leave empty if response is the records array."
+      }
+    },
+    "required": ["url"]
+  },
+  "uiSchema": {
+    "url": {
+      "ui:placeholder": "https://api.example.com/data",
+      "ui:autofocus": true
+    },
+    "method": {
+      "ui:widget": "radio"
+    },
+    "auth_type": {
+      "ui:widget": "radio"
+    },
+    "auth_token": {
+      "ui:widget": "password"
+    },
+    "headers": {
+      "ui:widget": "key-value-editor"
+    },
+    "body": {
+      "ui:widget": "json-editor"
+    },
+    "interval": {
+      "ui:widget": "duration-picker",
+      "ui:help": "Leave empty for one-shot execution. Examples: 30s, 5m, 1h"
+    },
+    "records_path": {
+      "ui:placeholder": "data.items",
+      "ui:help": "Dot-notation path to extract records from the JSON response"
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "records": {
+        "type": "array",
+        "description": "Collected records from the API response."
+      },
+      "record_count": {
+        "type": "integer",
+        "description": "Number of records collected."
+      }
+    }
+  }
+}

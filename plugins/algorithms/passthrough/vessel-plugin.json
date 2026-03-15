@@ -1,0 +1,31 @@
+{
+  "name": "passthrough",
+  "version": "1.0.0",
+  "type": "ALGORITHM",
+  "description": "Default algorithm that passes data through unchanged. Use this when no transformation is needed between collection and transfer.",
+  "author": "vessel-core",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "log_passthrough": {
+        "type": "boolean",
+        "title": "Log Data Passthrough",
+        "description": "If true, logs a summary of data passing through (useful for debugging).",
+        "default": false
+      }
+    }
+  },
+  "uiSchema": {
+    "log_passthrough": {
+      "ui:widget": "checkbox",
+      "ui:help": "Enable for debugging to see what data passes through"
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "description": "Same structure as input — data is passed through unchanged."
+  }
+}

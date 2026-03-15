@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: vessel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vessel
+      POSTGRES_PASSWORD: vessel
+      POSTGRES_DB: vessel_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - vessel_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vessel -d vessel_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vessel-net
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vessel-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://vessel:vessel@postgres:5432/vessel_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - vessel-net
+
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    container_name: vessel-webapp
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./webapp:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      - api
+    networks:
+      - vessel-net
+
+volumes:
+  vessel_pgdata:
+
+networks:
+  vessel-net:
+    driver: bridge

@@ -1,0 +1,105 @@
+{
+  "name": "rest-api-transfer",
+  "version": "1.0.0",
+  "type": "TRANSFER",
+  "description": "Sends processed data to a REST API endpoint via HTTP POST/PUT/PATCH.",
+  "author": "vessel-core",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "title": "API URL",
+        "description": "The full URL of the REST API endpoint to send data to.",
+        "format": "uri"
+      },
+      "method": {
+        "type": "string",
+        "title": "HTTP Method",
+        "description": "HTTP method to use for sending data.",
+        "enum": ["POST", "PUT", "PATCH"],
+        "default": "POST"
+      },
+      "headers": {
+        "type": "object",
+        "title": "HTTP Headers",
+        "description": "Additional HTTP headers to include in the request.",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "auth_type": {
+        "type": "string",
+        "title": "Authentication Type",
+        "description": "Type of authentication to use.",
+        "enum": ["none", "bearer", "basic", "api_key"],
+        "default": "none"
+      },
+      "auth_token": {
+        "type": "string",
+        "title": "Auth Token / API Key",
+        "description": "Bearer token, Base64-encoded basic credentials, or API key value."
+      },
+      "api_key_header": {
+        "type": "string",
+        "title": "API Key Header Name",
+        "description": "Header name for API key authentication.",
+        "default": "X-API-Key"
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "title": "Request Timeout",
+        "description": "HTTP request timeout in seconds.",
+        "default": 30,
+        "minimum": 1,
+        "maximum": 300
+      },
+      "batch_size": {
+        "type": "integer",
+        "title": "Batch Size",
+        "description": "If input is an array, send records in batches of this size. 0 means send all at once.",
+        "default": 0,
+        "minimum": 0
+      }
+    },
+    "required": ["url"]
+  },
+  "uiSchema": {
+    "url": {
+      "ui:placeholder": "https://api.example.com/ingest",
+      "ui:autofocus": true
+    },
+    "method": {
+      "ui:widget": "radio"
+    },
+    "auth_type": {
+      "ui:widget": "radio"
+    },
+    "auth_token": {
+      "ui:widget": "password"
+    },
+    "headers": {
+      "ui:widget": "key-value-editor"
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "status_code": {
+        "type": "integer",
+        "description": "HTTP status code from the target API."
+      },
+      "response": {
+        "description": "Response body from the target API."
+      },
+      "records_sent": {
+        "type": "integer",
+        "description": "Number of records sent."
+      }
+    }
+  }
+}

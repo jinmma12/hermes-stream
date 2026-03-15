@@ -1,0 +1,93 @@
+{
+  "name": "file-output",
+  "version": "1.0.0",
+  "type": "TRANSFER",
+  "description": "Writes processed data to files in various formats (JSON, CSV, or raw text).",
+  "author": "vessel-core",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "output_dir": {
+        "type": "string",
+        "title": "Output Directory",
+        "description": "Directory path where output files will be written."
+      },
+      "filename_template": {
+        "type": "string",
+        "title": "Filename Template",
+        "description": "Template for output filenames. Supports {timestamp}, {date}, {uuid}, {index} placeholders.",
+        "default": "output_{timestamp}.json"
+      },
+      "format": {
+        "type": "string",
+        "title": "Output Format",
+        "description": "File format for the output data.",
+        "enum": ["json", "jsonl", "csv", "text"],
+        "default": "json"
+      },
+      "json_indent": {
+        "type": "integer",
+        "title": "JSON Indent",
+        "description": "Number of spaces for JSON indentation. 0 for compact output.",
+        "default": 2,
+        "minimum": 0,
+        "maximum": 8
+      },
+      "csv_delimiter": {
+        "type": "string",
+        "title": "CSV Delimiter",
+        "description": "Delimiter character for CSV output.",
+        "default": ",",
+        "maxLength": 1
+      },
+      "overwrite": {
+        "type": "boolean",
+        "title": "Overwrite Existing",
+        "description": "If true, overwrite existing files. If false, skip or append based on format.",
+        "default": false
+      },
+      "create_dirs": {
+        "type": "boolean",
+        "title": "Create Directories",
+        "description": "Create the output directory if it does not exist.",
+        "default": true
+      }
+    },
+    "required": ["output_dir"]
+  },
+  "uiSchema": {
+    "output_dir": {
+      "ui:placeholder": "/data/output",
+      "ui:help": "Directory where files will be written"
+    },
+    "filename_template": {
+      "ui:placeholder": "output_{timestamp}.json",
+      "ui:help": "Placeholders: {timestamp}, {date}, {uuid}, {index}"
+    },
+    "format": {
+      "ui:widget": "radio"
+    },
+    "overwrite": {
+      "ui:widget": "checkbox"
+    },
+    "create_dirs": {
+      "ui:widget": "checkbox"
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "file_path": {
+        "type": "string",
+        "description": "Full path of the written file."
+      },
+      "bytes_written": {
+        "type": "integer",
+        "description": "Number of bytes written."
+      }
+    }
+  }
+}

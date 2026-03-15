@@ -1,0 +1,84 @@
+{
+  "name": "file-watcher-collector",
+  "version": "1.0.0",
+  "type": "COLLECTOR",
+  "description": "Monitors a directory for new or modified files matching a pattern and outputs file information.",
+  "author": "vessel-core",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "watch_path": {
+        "type": "string",
+        "title": "Watch Directory",
+        "description": "Absolute path to the directory to monitor for new files."
+      },
+      "pattern": {
+        "type": "string",
+        "title": "File Pattern",
+        "description": "Glob pattern to match files (e.g., '*.csv', '*.json', 'data_*.xml').",
+        "default": "*"
+      },
+      "recursive": {
+        "type": "boolean",
+        "title": "Recursive",
+        "description": "Whether to watch subdirectories recursively.",
+        "default": false
+      },
+      "include_existing": {
+        "type": "boolean",
+        "title": "Include Existing Files",
+        "description": "If true, existing files matching the pattern are included on first run.",
+        "default": true
+      },
+      "min_file_size": {
+        "type": "integer",
+        "title": "Minimum File Size (bytes)",
+        "description": "Ignore files smaller than this size in bytes. 0 means no minimum.",
+        "default": 0,
+        "minimum": 0
+      }
+    },
+    "required": ["watch_path"]
+  },
+  "uiSchema": {
+    "watch_path": {
+      "ui:placeholder": "/data/incoming",
+      "ui:help": "The directory path to monitor for new files"
+    },
+    "pattern": {
+      "ui:placeholder": "*.csv",
+      "ui:help": "Standard glob pattern for file matching"
+    },
+    "recursive": {
+      "ui:widget": "checkbox"
+    },
+    "include_existing": {
+      "ui:widget": "checkbox"
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "path": { "type": "string" },
+            "name": { "type": "string" },
+            "size": { "type": "integer" },
+            "modified": { "type": "string", "format": "date-time" }
+          }
+        },
+        "description": "List of discovered files with metadata."
+      },
+      "file_count": {
+        "type": "integer",
+        "description": "Number of files found."
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "json-transform",
+  "version": "1.0.0",
+  "type": "ALGORITHM",
+  "description": "Transforms JSON data using JMESPath expressions. Supports extracting, filtering, and reshaping JSON structures.",
+  "author": "vessel-core",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "jmespath_expression": {
+        "type": "string",
+        "title": "JMESPath Expression",
+        "description": "JMESPath expression to apply to the input data. See https://jmespath.org for syntax reference."
+      },
+      "output_format": {
+        "type": "string",
+        "title": "Output Format",
+        "description": "How to structure the output data.",
+        "enum": ["raw", "records", "single"],
+        "default": "raw"
+      },
+      "fallback_value": {
+        "title": "Fallback Value",
+        "description": "Value to use if the JMESPath expression returns null. Leave empty to output null.",
+        "default": null
+      }
+    },
+    "required": ["jmespath_expression"]
+  },
+  "uiSchema": {
+    "jmespath_expression": {
+      "ui:widget": "textarea",
+      "ui:placeholder": "data[*].{id: id, name: name}",
+      "ui:help": "JMESPath expression to transform the input JSON. Examples: 'data[0]', 'items[?status==`active`]', '{total: length(items)}'"
+    },
+    "output_format": {
+      "ui:widget": "radio",
+      "ui:help": "'raw' = expression result as-is, 'records' = wrap in {records: [...], record_count: N}, 'single' = wrap in {record: ...}"
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "description": "Transformed data structure, format depends on output_format setting."
+  }
+}
