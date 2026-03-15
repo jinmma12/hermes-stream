@@ -10,7 +10,7 @@ Apache NiFi and Hermes serve complementary roles in a data processing architectu
 
 | Capability | NiFi | Hermes | Together |
 |---|---|---|---|
-| **Data routing & transformation** | 300+ built-in processors, clustering, back-pressure | Lightweight plugin system | NiFi handles heavy data movement |
+| **Data routing & transformation** | 300+ built-in processors, clustering, back-throughput | Lightweight plugin system | NiFi handles heavy data movement |
 | **Per-item tracking** | Provenance events (developer-oriented) | Job Explorer with search, filter, reprocess | Hermes surfaces NiFi provenance in a user-friendly UI |
 | **Configuration management** | XML/JSON config, Parameter Contexts | Recipe UI with versioning, JSON Schema forms | Non-developers manage NiFi through Hermes's Recipe Editor |
 | **Reprocessing** | Manual replay from provenance viewer | First-class reprocessing from any step | One-click reprocess through Hermes UI |

@@ -14,7 +14,7 @@
 Hermes V2 positions itself as **"The .NET NiFi"** — an enterprise-grade, lightweight
 alternative to Apache NiFi, Airbyte, and Airflow for organizations that want:
 
-- **NiFi-grade reliability** (back-pressure, content repository, exactly-once)
+- **NiFi-grade reliability** (back-throughput, content repository, exactly-once)
 - **n8n-grade usability** (visual pipeline designer, form-based config)
 - **Cloud-native deployment** (Kubernetes, Docker, horizontal scaling)
 - **Polyglot plugins** (Python, .NET, Go, any language via gRPC or stdin/stdout)
@@ -53,7 +53,7 @@ Features that make Hermes acquisition-worthy for enterprise buyers:
 | **Deployment** | Single process | Distributed cluster (coordinator + workers) |
 | **Data flow** | In-memory only | Disk-based Content Repository + memory-mapped I/O |
 | **Failure handling** | Basic retry per step | DLQ, circuit breaker, poison pill detection, WAL |
-| **Back-pressure** | None | Queue depth monitoring, soft/hard limits, disk overflow |
+| **Back-throughput** | None | Queue depth monitoring, soft/hard limits, disk overflow |
 | **Schema** | Static JSON Schema in definitions | Dynamic schema registry, drift detection, evolution |
 | **Observability** | WebSocket events + logs | Prometheus, OpenTelemetry, structured logging, alerting |
 | **Security** | None (open access) | JWT/OIDC, RBAC, audit log, secrets management, TLS |
@@ -553,7 +553,7 @@ For content < 64MB (configurable):
 
 For content >= 64MB:
   - Streaming read with configurable buffer size (default 4MB)
-  - Backpressure-aware: reader controls pace
+  - Backthroughput-aware: reader controls pace
   - Supports range requests (offset + length)
 
 For content > 1GB:
@@ -715,7 +715,7 @@ Replication:
   - On worker failover: node-scoped state loaded from PostgreSQL backup
 
 Usage Examples:
-  - FileWatcher: { "last_position": "/data/equip_a/2026-03-15/", "last_file": "run_042.csv" }
+  - FileWatcher: { "last_position": "/data/src_a/2026-03-15/", "last_file": "run_042.csv" }
   - APIPoller: { "cursor": "page_token_abc123", "last_poll": "2026-03-15T14:30:00Z" }
   - KafkaConsumer: { "offsets": { "0": 15234, "1": 8921, "2": 12045 } }
   - AggregationPlugin: { "running_sum": 45231.5, "count": 1523 }
@@ -731,7 +731,7 @@ Usage Examples:
 Back-Pressure Architecture
 ──────────────────────────
 
-Back-pressure prevents fast producers from overwhelming slow consumers.
+Back-throughput prevents fast producers from overwhelming slow consumers.
 Applied at every boundary in the system.
 
 Pressure Points:
@@ -761,16 +761,16 @@ Each pipeline step has an input queue with these metrics:
   estimated_drain_time  — queue_depth * avg_processing_time
 
 Derived metrics:
-  pressure_ratio = enqueue_rate / dequeue_rate
+  throughput_ratio = enqueue_rate / dequeue_rate
     < 1.0  →  consumer keeping up
     1.0-1.5 → marginal (queue slowly growing)
-    > 1.5  →  back-pressure needed
+    > 1.5  →  back-throughput needed
 ```
 
 ### 4.3 Threshold Configuration
 
 ```yaml
-# Pipeline-level back-pressure configuration
+# Pipeline-level back-throughput configuration
 backPressure:
   # Per-step queue thresholds
   defaults:
@@ -793,7 +793,7 @@ backPressure:
       softLimit:
         maxItems: 2000          # Algorithm step is CPU-heavy, needs bigger buffer
 
-  # Monitor behavior when back-pressure active
+  # Monitor behavior when back-throughput active
   monitorPolicy:
     onSoftLimit: SLOW_DOWN      # Increase poll interval by 2x
     onHardLimit: PAUSE          # Stop monitoring entirely
@@ -822,7 +822,7 @@ Step 3 (Transfer) slows down
   → Step 2 input queue grows
   → Step 2 queue hits soft limit
   → Step 1 (Collect) output throttled
-  → Monitor detects back-pressure on Step 1
+  → Monitor detects back-throughput on Step 1
   → Monitor increases poll interval (or pauses)
 
 When Step 3 catches up:
@@ -881,9 +881,9 @@ Dead Letter Queue Design
 
 Each pipeline has its own DLQ (configurable destination).
 
-Pipeline "Equipment Monitoring"
+Pipeline "System Monitoring"
 ├── Normal Flow: Monitor → Collect → Algorithm → Transfer
-└── DLQ: hermes_dlq.equipment_monitoring
+└── DLQ: hermes_dlq.system_monitoring
     ├── Storage: PostgreSQL table + Content Repository
     ├── Retention: 30 days (configurable)
     └── Max size: 10,000 items (configurable)
@@ -969,7 +969,7 @@ DLQ Explorer
 ────────────
 
 ┌──────────────────────────────────────────────────────────────────┐
-│  Dead Letter Queue: Equipment Monitoring           23 items      │
+│  Dead Letter Queue: System Monitoring           23 items      │
 │──────────────────────────────────────────────────────────────────│
 │                                                                  │
 │  Filters: [Pipeline ▼] [Error Type ▼] [Step ▼] [Date Range]    │
@@ -978,17 +978,17 @@ DLQ Explorer
 │  ┌─────┬──────────────────┬───────────┬──────────┬────────────┐ │
 │  │  ☐  │ Source Key        │ Error     │ Step     │ Failed At  │ │
 │  ├─────┼──────────────────┼───────────┼──────────┼────────────┤ │
-│  │  ☐  │ equip_a_run_042  │ PERMANENT │ ALGORITH │ 2026-03-15 │ │
+│  │  ☐  │ src_a_run_042  │ PERMANENT │ ALGORITH │ 2026-03-15 │ │
 │  │     │ "Schema mismatch: │           │          │ 14:32:10   │ │
 │  │     │  expected int..."  │           │          │            │ │
 │  ├─────┼──────────────────┼───────────┼──────────┼────────────┤ │
-│  │  ☐  │ equip_b_run_108  │ TRANSIENT │ TRANSFER │ 2026-03-15 │ │
+│  │  ☐  │ src_b_run_108  │ TRANSIENT │ TRANSFER │ 2026-03-15 │ │
 │  │     │ "Connection refu- │           │          │ 14:28:45   │ │
 │  │     │  sed: S3 endpoint" │           │          │            │ │
 │  ├─────┼──────────────────┼───────────┼──────────┼────────────┤ │
-│  │  ☐  │ equip_c_run_015  │ PERMANENT │ COLLECT  │ 2026-03-15 │ │
+│  │  ☐  │ src_c_run_015  │ PERMANENT │ COLLECT  │ 2026-03-15 │ │
 │  │     │ "File not found:  │           │          │ 14:15:22   │ │
-│  │     │  /data/equip_c/..." │          │          │            │ │
+│  │     │  /data/src_c/..." │          │          │            │ │
 │  └─────┴──────────────────┴───────────┴──────────┴────────────┘ │
 │                                                                  │
 │  Selected: 0 items                                               │
@@ -1000,7 +1000,7 @@ DLQ Entry Detail View
 ─────────────────────
 
 ┌──────────────────────────────────────────────────────────────────┐
-│  DLQ Entry: equip_a_run_042                                      │
+│  DLQ Entry: src_a_run_042                                      │
 │──────────────────────────────────────────────────────────────────│
 │                                                                  │
 │  Error: Schema mismatch — expected integer for field "sensor_id" │
@@ -1022,7 +1022,7 @@ DLQ Entry Detail View
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                  │
 │  Recipe at failure:                                              │
-│  { "threshold": 3.5, "targetColumn": "pressure" }              │
+│  { "threshold": 3.5, "targetColumn": "throughput" }              │
 │                                                                  │
 │  Actions:                                                        │
 │  [Replay with Current Recipe]                                    │
@@ -1344,7 +1344,7 @@ Benefits over stdin/stdout:
   - Bidirectional streaming (input and output simultaneously)
   - Binary data without Base64 overhead
   - Multiplexed connections (multiple concurrent executions)
-  - Built-in flow control (gRPC backpressure)
+  - Built-in flow control (gRPC backthroughput)
   - Language-agnostic (gRPC codegen for all major languages)
   - Health checking and graceful shutdown
 
@@ -1366,7 +1366,7 @@ For data > chunk_threshold (default 1MB):
    a. Open content stream
    b. Read chunk_size bytes (default 4MB)
    c. Send DataChunk { data, sequence=0, is_last=false }
-   d. Wait for receiver ACK (backpressure)
+   d. Wait for receiver ACK (backthroughput)
    e. Repeat until EOF
    f. Send DataChunk { data, sequence=N, is_last=true }
 
@@ -1616,7 +1616,7 @@ hermes_api_request_seconds{method, path, status}             — API response ti
 # Gauges
 hermes_pipeline_queue_depth{pipeline, step}                  — current queue depth
 hermes_pipeline_queue_bytes{pipeline, step}                  — current queue memory
-hermes_pipeline_backpressure_active{pipeline, step}          — 1 if backpressure active
+hermes_pipeline_backthroughput_active{pipeline, step}          — 1 if backthroughput active
 hermes_active_pipelines                                      — number of active pipelines
 hermes_active_workers                                        — number of healthy workers
 hermes_content_repository_bytes                              — total content repo size
@@ -1636,9 +1636,9 @@ Distributed Tracing with OpenTelemetry
 
 Trace hierarchy:
   Trace: Job #1002 processing
-  ├── Span: Pipeline "Equipment Monitoring" execution
+  ├── Span: Pipeline "System Monitoring" execution
   │   ├── Span: Step 1 — COLLECT (FileCollector)
-  │   │   ├── Span: File discovery (/data/equip_a/*.csv)
+  │   │   ├── Span: File discovery (/data/src_a/*.csv)
   │   │   ├── Span: File read (run_042.csv, 1.2MB)
   │   │   └── Span: Content Repository write (claim aabb1234)
   │   │
@@ -1655,9 +1655,9 @@ Trace hierarchy:
   │
   └── Span attributes:
       job.id = 1002
-      job.source_key = "equip_a_run_042"
-      pipeline.id = "equipment-monitoring"
-      pipeline.name = "Equipment Monitoring"
+      job.source_key = "src_a_run_042"
+      pipeline.id = "source-monitoring"
+      pipeline.name = "System Monitoring"
       worker.id = "worker-03"
 
 Configuration:
@@ -1685,8 +1685,8 @@ Log Format (JSON):
   "level": "Information",
   "message": "Step completed: ALGORITHM in 2.1s",
   "properties": {
-    "pipeline_id": "equipment-monitoring",
-    "pipeline_name": "Equipment Monitoring",
+    "pipeline_id": "source-monitoring",
+    "pipeline_name": "System Monitoring",
     "job_id": 1002,
     "execution_id": 4521,
     "stage_order": 2,
@@ -1710,7 +1710,7 @@ Log Levels:
   Verbose  — internal framework details
   Debug    — plugin communication, content repo operations
   Information — step start/complete, pipeline lifecycle
-  Warning  — back-pressure active, retry triggered, schema drift
+  Warning  — back-throughput active, retry triggered, schema drift
   Error    — step failure, plugin crash, DLQ routing
   Fatal    — unrecoverable error, process shutdown
 ```
@@ -1764,7 +1764,7 @@ GET /health/detailed
       },
       "queues": {
         "total_depth": 234,
-        "backpressure_active": 1
+        "backthroughput_active": 1
       },
       "content_repository": {
         "claims": 15234,
@@ -1790,7 +1790,7 @@ Central notification hub in the Web UI, inspired by NiFi's bulletin board.
 │  Notifications                                    [Mark All Read]│
 │──────────────────────────────────────────────────────────────────│
 │                                                                  │
-│  🔴 14:32  Pipeline "Equipment Monitoring"                       │
+│  🔴 14:32  Pipeline "System Monitoring"                       │
 │     DLQ: 5 new items in last hour (threshold: 3)                │
 │     [View DLQ] [Acknowledge]                                     │
 │                                                                  │
@@ -1876,7 +1876,7 @@ Dashboard 2: Pipeline Detail
   - Per-step throughput (stacked bar)
   - Per-step latency (heatmap)
   - Queue depth over time (line graph)
-  - Back-pressure events (annotations)
+  - Back-throughput events (annotations)
   - Error rate by step (line graph)
   - Schema drift events (annotations)
 
@@ -1991,7 +1991,7 @@ Implementation:
 
   2. Memory Isolation:
      - Per-pipeline memory budget
-     - Back-pressure triggered independently per pipeline
+     - Back-throughput triggered independently per pipeline
      - OOM in pipeline A doesn't crash the worker process
 
   3. Connection Pool Isolation:
@@ -2470,7 +2470,7 @@ ROUTER:
   Evaluate conditions on work item, route to one branch.
   config:
     routes:
-      - condition: "$.metadata.equipment_type == 'TYPE_A'"
+      - condition: "$.metadata.source_type == 'TYPE_A'"
         targetStep: 3a
       - condition: "$.data.anomalyCount > 10"
         targetStep: 3b
@@ -2656,7 +2656,7 @@ Git-Based Pipeline Versioning
    - Changes tracked via commits
 
    hermes-pipelines/
-   ├── equipment-monitoring/
+   ├── source-monitoring/
    │   ├── pipeline.yaml          # pipeline definition
    │   ├── recipes/
    │   │   ├── collector-v3.yaml  # recipe versions
@@ -2827,8 +2827,8 @@ Analytics & Reporting
 
 3. SLA Monitoring:
    sla:
-     - name: "Equipment data processed within 5 minutes"
-       pipeline: "equipment-monitoring"
+     - name: "Source data processed within 5 minutes"
+       pipeline: "source-monitoring"
        metric: end_to_end_latency
        threshold: 300s
        target: 99.9%             # 99.9% of items within 5 minutes
@@ -2887,7 +2887,7 @@ Target: "I can show this to a potential customer."
 
 ```
 Deliverables:
-  ○ Back-pressure management (Section 4)
+  ○ Back-throughput management (Section 4)
   ○ Dead Letter Queue (Section 5)
   ○ Schema registry + drift detection (Section 6)
   ○ Content Repository — disk-based storage (Section 3.1)
@@ -3165,7 +3165,7 @@ Phase 2: Enable V2 Features
 
   2. Back-Pressure:
      - Enabled by default with conservative thresholds
-     - Existing pipelines get default back-pressure config
+     - Existing pipelines get default back-throughput config
      - Tune per-pipeline as needed
 
   3. DLQ:

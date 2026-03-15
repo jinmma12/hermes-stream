@@ -15,7 +15,7 @@
    → "새 데이터가 생겼다" 신호
 
 2. 그런데 데이터가 어디에, 어떤 형태로 있는지는 케이스마다 다르다
-   → /data/equip_a/2026-03-15/run_001.csv
+   → /data/src_a/2026-03-15/run_001.csv
    → /logs/system_b/*.json (여러 파일)
    → DB 테이블의 특정 row
    → REST API 응답
@@ -49,7 +49,7 @@ dataDescriptor:
 
     # FILE인 경우
     file:
-      basePath: "/data/equip_a/{date}"      # 변수 사용 가능
+      basePath: "/data/src_a/{date}"      # 변수 사용 가능
       pattern: "*.csv"                       # glob 패턴
       encoding: "utf-8"
 
@@ -67,7 +67,7 @@ dataDescriptor:
     # KAFKA인 경우
     kafka:
       brokers: ["kafka:9092"]
-      topic: "equipment.events"
+      topic: "source.events"
       groupId: "hermes-collector"
 
   # 데이터 포맷
@@ -103,7 +103,7 @@ dataDescriptor:
 │                                                               │
 │  ── File Settings ──────────────────────────────────────────  │
 │                                                               │
-│  Base Path:  [ /data/equip_a/{date}          ]               │
+│  Base Path:  [ /data/src_a/{date}          ]               │
 │              ℹ️ {date}, {time} 등 변수 사용 가능              │
 │                                                               │
 │  File Pattern: [ *.csv                       ]               │
@@ -124,7 +124,7 @@ dataDescriptor:
 │  │  timestamp          │ value  │ status │                  │ │
 │  │  2026-03-15 10:00  │  23.5  │ OK     │                  │ │
 │  │  2026-03-15 10:01  │  24.1  │ OK     │                  │ │
-│  │  2026-03-15 10:02  │  99.8  │ ERROR  │  ← 이상치        │ │
+│  │  2026-03-15 10:02  │  99.8  │ ERROR  │  ← anomaly        │ │
 │  └─────────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -147,7 +147,7 @@ collectionStrategy:
     signal:
       source: KAFKA | WEBHOOK | NIFI
       kafka:
-        topic: "equipment.events"
+        topic: "source.events"
         filter: "$.event_type == 'DATA_READY'"
 
     # POLL: 주기적 확인
@@ -247,7 +247,7 @@ collectionStrategy:
 # 알고리즘 정의 (개발자가 등록)
 algorithmDefinition:
   code: "anomaly-detection-zscore"
-  name: "Z-Score 이상치 탐지"
+  name: "Z-Score Anomaly Detection"
   category: "anomaly-detection"
 
   # 이 알고리즘이 받는 파라미터 — JSON Schema
@@ -258,13 +258,13 @@ algorithmDefinition:
       targetColumn:
         type: string
         title: "분석 대상 컬럼"
-        description: "이상치를 탐지할 데이터 컬럼명"
+        description: "anomaly를 탐지할 데이터 컬럼명"
 
       # 알고리즘 파라미터
       threshold:
         type: number
         title: "Z-Score 임계값"
-        description: "이 값을 초과하면 이상치로 판정"
+        description: "이 값을 초과하면 anomaly로 판정"
         minimum: 0.5
         maximum: 10.0
         default: 3.0
@@ -317,7 +317,7 @@ algorithmDefinition:
   uiSchema:
     targetColumn:
       ui:widget: "text"
-      ui:placeholder: "예: temperature, pressure, voltage"
+      ui:placeholder: "예: metric_value, throughput, voltage"
     threshold:
       ui:widget: "range"
       ui:options:
@@ -372,7 +372,7 @@ algorithmRecipe:
   createdBy: "operator:kim"
   changeNote: "초기 설정 — 표준 z-score, 임계값 3.0"
   config:
-    targetColumn: "temperature"
+    targetColumn: "metric_value"
     threshold: 3.0
     windowSize: 100
     method: "standard"
@@ -388,7 +388,7 @@ algorithmRecipe:
   createdBy: "operator:kim"
   changeNote: "오탐 많아서 임계값 상향 3.0 → 4.0, IQR 방식으로 변경"
   config:
-    targetColumn: "temperature"
+    targetColumn: "metric_value"
     threshold: 4.0              # ← 변경됨
     windowSize: 100
     method: "iqr"               # ← 변경됨
@@ -402,9 +402,9 @@ algorithmRecipe:
 algorithmRecipe:
   version: 3
   createdBy: "operator:park"
-  changeNote: "압력 데이터도 분석 추가, modified z-score 적용"
+  changeNote: "log data도 분석 추가, modified z-score 적용"
   config:
-    targetColumn: "pressure"     # ← 분석 대상 변경
+    targetColumn: "throughput"     # ← 분석 대상 변경
     threshold: 3.5
     windowSize: 200             # ← 윈도우 확대
     method: "modified"          # ← modified z-score
@@ -420,12 +420,12 @@ algorithmRecipe:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  Algorithm Recipe: Z-Score 이상치 탐지          v2 → v3 ▼   │
+│  Algorithm Recipe: Z-Score Anomaly Detection          v2 → v3 ▼   │
 │──────────────────────────────────────────────────────────────│
 │                                                               │
 │  분석 대상 컬럼                                               │
-│  [ pressure                          ]                       │
-│  예: temperature, pressure, voltage                          │
+│  [ throughput                          ]                       │
+│  예: metric_value, throughput, voltage                          │
 │                                                               │
 │  Z-Score 임계값                                               │
 │  [==========●══════════════════] 3.5                         │
@@ -449,11 +449,11 @@ algorithmRecipe:
 │  │  정규화:       [Min-Max       ▼]                          │
 │  └──────────────────────────────────────────────────────────  │
 │                                                               │
-│  변경 사유: [ 압력 데이터 분석 추가, modified z-score 적용 ]  │
+│  변경 사유: [ log data 분석 추가, modified z-score 적용 ]  │
 │                                                               │
 │  ┌────────────────────────────────────────────────────────┐  │
 │  │  v2 → v3 변경사항:                                     │  │
-│  │   targetColumn: "temperature" → "pressure"             │  │
+│  │   targetColumn: "metric_value" → "throughput"             │  │
 │  │   threshold: 4.0 → 3.5                                │  │
 │  │   windowSize: 100 → 200                               │  │
 │  │   method: "iqr" → "modified"                          │  │
@@ -475,12 +475,12 @@ algorithmRecipe:
 ┌──────────────────────────────────────────────────────────────────┐
 │  PHASE 1: TRIGGER (신호 수신)                                    │
 │                                                                   │
-│  Kafka Topic: "equipment.events"                                  │
+│  Kafka Topic: "source.events"                                  │
 │    ↓                                                              │
 │  Message: {                                                       │
 │    "event": "DATA_READY",                                        │
-│    "equipment": "EQUIP_A",                                       │
-│    "dataPath": "/data/equip_a/2026-03-15/",                     │
+│    "source": "SRC_A",                                       │
+│    "dataPath": "/data/src_a/2026-03-15/",                     │
 │    "runId": "run_001",                                           │
 │    "timestamp": "2026-03-15T10:15:00Z"                          │
 │  }                                                                │
@@ -489,7 +489,7 @@ algorithmRecipe:
 │    ↓                                                              │
 │  ConditionEvaluator: event.event == "DATA_READY" ✓               │
 │    ↓                                                              │
-│  Job 생성: source_key = "EQUIP_A/run_001"                   │
+│  Job 생성: source_key = "SRC_A/run_001"                   │
 └──────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -498,7 +498,7 @@ algorithmRecipe:
 │                                                                   │
 │  DataDescriptor:                                                  │
 │    source.type: FILE                                              │
-│    source.file.basePath: "/data/equip_a/{date}"                  │
+│    source.file.basePath: "/data/src_a/{date}"                  │
 │    source.file.pattern: "run_{runId}_*.csv"                      │
 │    format.type: CSV (delimiter=",", header=true)                  │
 │                                                                   │
@@ -525,9 +525,9 @@ algorithmRecipe:
 ┌──────────────────────────────────────────────────────────────────┐
 │  PHASE 3: ALGORITHM (분석)                                       │
 │                                                                   │
-│  Algorithm: Z-Score 이상치 탐지                                   │
+│  Algorithm: Z-Score Anomaly Detection                                   │
 │  Recipe v3:                                                       │
-│    targetColumn: "pressure"                                       │
+│    targetColumn: "throughput"                                       │
 │    threshold: 3.5                                                 │
 │    method: "modified"                                             │
 │    windowSize: 200                                                │
@@ -536,7 +536,7 @@ algorithmRecipe:
 │                                                                   │
 │  실행:                                                            │
 │    1. CSV 로드 (pandas/polars)                                    │
-│    2. pressure 컬럼 추출                                          │
+│    2. throughput 컬럼 추출                                          │
 │    3. Modified Z-Score 계산 (MAD 기반)                           │
 │    4. |z-score| > 3.5 인 데이터 포인트 마킹                      │
 │    5. 결과 생성                                                   │
@@ -557,7 +557,7 @@ algorithmRecipe:
 │                                                                   │
 │  Logs (→ ExecutionEventLog):                                     │
 │    10:15:01 ALG_START   "Modified Z-Score, threshold=3.5"        │
-│    10:15:01 ALG_LOAD    "Loaded 15000 pressure readings"         │
+│    10:15:01 ALG_LOAD    "Loaded 15000 throughput readings"         │
 │    10:15:02 ALG_PROCESS "Window size 200, computing..."          │
 │    10:15:03 ALG_RESULT  "7 anomalies detected (0.047%)"         │
 │    10:15:03 ALG_DONE    "Completed in 2.1s"                     │
@@ -610,14 +610,14 @@ algorithmRecipe:
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  Pipeline Designer: 설비A 모니터링                                │
+│  Pipeline Designer: Source A 모니터링                                │
 │──────────────────────────────────────────────────────────────────│
 │                                                                   │
 │  ┌─────────────────┐                                             │
 │  │ 📡 TRIGGER      │                                             │
 │  │                  │                                             │
 │  │ Kafka Consumer   │                                             │
-│  │ topic: equip.*   │                                             │
+│  │ topic: data.*   │                                             │
 │  │ filter: DATA_    │                                             │
 │  │         READY    │                                             │
 │  │ [Edit Trigger]   │                                             │
@@ -638,8 +638,8 @@ algorithmRecipe:
 │  ┌─────────────────┐     ┌─────────────────┐                     │
 │  │ 🔬 ALGORITHM    │     │ ⚙️ Algorithm     │ ← 클릭 시 열림    │
 │  │                  │     │   Recipe v3      │                     │
-│  │ Z-Score 이상치   │────▶│                  │                     │
-│  │                  │     │ target: pressure │                     │
+│  │ Z-Score anomaly   │────▶│                  │                     │
+│  │                  │     │ target: throughput │                     │
 │  │ [Recipe v3]      │     │ threshold: 3.5   │                     │
 │  └────────┬─────────┘     │ method: modified │                     │
 │           │               │ window: 200      │                     │
@@ -671,10 +671,10 @@ algorithmRecipe:
 
 ```
 # 직렬 체인: A → B → C
-COLLECT → ALGORITHM(전처리) → ALGORITHM(이상치탐지) → ALGORITHM(분류) → TRANSFER
+COLLECT → ALGORITHM(전처리) → ALGORITHM(anomaly탐지) → ALGORITHM(분류) → TRANSFER
 
 # 병렬 분기 (Phase 2):
-COLLECT ─┬→ ALGORITHM(이상치) → TRANSFER(DB)
+COLLECT ─┬→ ALGORITHM(anomaly) → TRANSFER(DB)
          └→ ALGORITHM(통계)   → TRANSFER(Report)
 ```
 
@@ -684,7 +684,7 @@ COLLECT ─┬→ ALGORITHM(이상치) → TRANSFER(DB)
 pipelineSteps:
   - stepOrder: 1
     stageType: COLLECT
-    ref: "file-collector-equip-a"
+    ref: "file-collector-src-a"
 
   - stepOrder: 2
     stageType: ALGORITHM
@@ -693,8 +693,8 @@ pipelineSteps:
 
   - stepOrder: 3
     stageType: ALGORITHM
-    ref: "anomaly-zscore"            # 분석: 이상치 탐지
-    recipe: { targetColumn: "pressure", threshold: 3.5 }
+    ref: "anomaly-zscore"            # 분석: Anomaly Detection
+    recipe: { targetColumn: "throughput", threshold: 3.5 }
 
   - stepOrder: 4
     stageType: ALGORITHM

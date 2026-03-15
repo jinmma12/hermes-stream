@@ -1686,18 +1686,18 @@ public interface ISchemaRegistry
 
 ```csharp
 /// <summary>
-/// Manages back-pressure across the processing pipeline.
+/// Manages back-throughput across the processing pipeline.
 /// Prevents overwhelming downstream systems when work items accumulate
 /// faster than they can be processed.
 /// </summary>
 public interface IBackPressureManager
 {
     /// <summary>
-    /// Check whether a pipeline is currently under back-pressure.
+    /// Check whether a pipeline is currently under back-throughput.
     /// </summary>
     /// <param name="pipelineId">The pipeline to check.</param>
     /// <param name="ct">Cancellation token.</param>
-    /// <returns>Current back-pressure status and metrics.</returns>
+    /// <returns>Current back-throughput status and metrics.</returns>
     Task<BackPressureStatus> CheckAsync(Guid pipelineId, CancellationToken ct = default);
 
     /// <summary>
@@ -1715,12 +1715,12 @@ public interface IBackPressureManager
         CancellationToken ct = default);
 
     /// <summary>
-    /// Release back-pressure on a pipeline, restoring normal throughput.
+    /// Release back-throughput on a pipeline, restoring normal throughput.
     /// </summary>
     Task ReleaseAsync(Guid pipelineId, CancellationToken ct = default);
 
     /// <summary>
-    /// Wait until back-pressure is relieved before proceeding.
+    /// Wait until back-throughput is relieved before proceeding.
     /// Used by the processing orchestrator before starting a new work item.
     /// </summary>
     /// <param name="pipelineId">The pipeline to wait for.</param>
@@ -1729,7 +1729,7 @@ public interface IBackPressureManager
 }
 
 /// <summary>
-/// Current back-pressure status for a pipeline.
+/// Current back-throughput status for a pipeline.
 /// </summary>
 public record BackPressureStatus
 {

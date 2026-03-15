@@ -68,13 +68,13 @@
 |                                                                         |
 |  Job 이름 *                                                             |
 |  +-----------------------------------------------------------+         |
-|  | 설비A 온도 데이터 수집                                     |         |
+|  | Source A Order Data Sync                                     |         |
 |  +-----------------------------------------------------------+         |
 |  영문/한글/숫자/하이픈, 3~50자                                          |
 |                                                                         |
 |  설명                                                                   |
 |  +-----------------------------------------------------------+         |
-|  | 설비A에서 생성되는 온도 센서 CSV 파일을 5분마다             |         |
+|  | Source A에서 생성되는 transaction log CSV 파일을 5분마다             |         |
 |  | 수집하여 이상치 탐지 알고리즘에 전달합니다.                 |         |
 |  +-----------------------------------------------------------+         |
 |  선택 사항, 최대 500자                                                  |
@@ -142,7 +142,7 @@ selected in Step 1. Below is the full form design for each source type.
 |                                                                         |
 |  기본 경로 (Base Path) *                                                |
 |  +--------------------------------------------------+  [Browse...]     |
-|  | /data/equip_a                                     |                  |
+|  | /data/src_a                                     |                  |
 |  +--------------------------------------------------+                  |
 |  i 수집 대상 파일이 위치한 최상위 디렉토리                              |
 |                                                                         |
@@ -159,12 +159,12 @@ selected in Step 1. Below is the full form design for each source type.
 |                                                                         |
 |  사용자 정의 패턴  (위에서 "사용자 정의" 선택 시 표시)                   |
 |  +--------------------------------------------------+                  |
-|  | {yyyy}/{equipment_id}                             |                  |
+|  | {yyyy}/{source_id}                             |                  |
 |  +--------------------------------------------------+                  |
-|  i 사용 가능 변수: {yyyy}, {MM}, {dd}, {HH}, {mm}, {equipment_id}      |
+|  i 사용 가능 변수: {yyyy}, {MM}, {dd}, {HH}, {mm}, {source_id}      |
 |                                                                         |
-|  Preview: /data/equip_a/20260315/                                       |
-|           /data/equip_a/20260314/                                       |
+|  Preview: /data/src_a/20260315/                                       |
+|           /data/src_a/20260314/                                       |
 |                                                                         |
 |  == 파일 매칭 ==========================================================|
 |                                                                         |
@@ -185,12 +185,12 @@ selected in Step 1. Below is the full form design for each source type.
 |  +---------------------------------------------------------------+     |
 |  |  Matched 3 files:                                              |     |
 |  |                                                                 |     |
-|  |    /data/equip_a/20260315/sensor_temp_001.csv      1.2 MB      |     |
-|  |    /data/equip_a/20260315/sensor_temp_002.csv      0.8 MB      |     |
-|  |    /data/equip_a/20260315/sensor_press_001.csv     1.5 MB      |     |
+|  |    /data/src_a/20260315/sensor_data_001.csv      1.2 MB      |     |
+|  |    /data/src_a/20260315/sensor_data_002.csv      0.8 MB      |     |
+|  |    /data/src_a/20260315/sensor_press_001.csv     1.5 MB      |     |
 |  |                                                                 |     |
 |  |  Excluded 1 file:                                               |     |
-|  |    /data/equip_a/20260315/sensor_temp.csv.tmp      (excluded)   |     |
+|  |    /data/src_a/20260315/sensor_temp.csv.tmp      (excluded)   |     |
 |  +---------------------------------------------------------------+     |
 |                                                                         |
 |  == 수집 모드 ==========================================================|
@@ -597,8 +597,8 @@ selected in Step 1. Below is the full form design for each source type.
 |  |  | [                                                          | |     |
 |  |  |   {                                                        | |     |
 |  |  |     "timestamp": "2026-03-15T10:00:00Z",                   | |     |
-|  |  |     "temperature": 23.5,                                   | |     |
-|  |  |     "pressure": 101.2,                                     | |     |
+|  |  |     "metric_value": 23.5,                                   | |     |
+|  |  |     "throughput": 101.2,                                     | |     |
 |  |  |     "status": "OK"                                         | |     |
 |  |  |   },                                                       | |     |
 |  |  |   ...                                                      | |     |
@@ -683,7 +683,7 @@ selected in Step 1. Below is the full form design for each source type.
 |                                                                         |
 |  SQL 쿼리 *                                                             |
 |  +-----------------------------------------------------------+         |
-|  | SELECT id, timestamp, temperature, pressure, status       |  [line] |
+|  | SELECT id, timestamp, metric_value, throughput, status       |  [line] |
 |  | FROM sensor_readings                                      |  [nums] |
 |  | WHERE created_at > :last_poll                             |         |
 |  | ORDER BY created_at ASC                                   |         |
@@ -698,8 +698,8 @@ selected in Step 1. Below is the full form design for each source type.
 |  |  +-------------------------+  +------------------------------+ |     |
 |  |  | > public                |  | id          BIGINT    PK     | |     |
 |  |  |   - sensor_readings  <--|  | timestamp   TIMESTAMP        | |     |
-|  |  |   - equipment_master    |  | temperature NUMERIC(10,2)    | |     |
-|  |  |   - alert_history       |  | pressure    NUMERIC(10,2)    | |     |
+|  |  |   - source_master    |  | metric_value NUMERIC(10,2)    | |     |
+|  |  |   - alert_history       |  | throughput    NUMERIC(10,2)    | |     |
 |  |  |   - maintenance_log     |  | status      VARCHAR(10)      | |     |
 |  |  |   - ...                 |  | created_at  TIMESTAMPTZ      | |     |
 |  |  +-------------------------+  +------------------------------+ |     |
@@ -738,7 +738,7 @@ selected in Step 1. Below is the full form design for each source type.
 |  |  Returned: 42 rows                                             |     |
 |  |                                                                 |     |
 |  |  +----+---------------------+-------+----------+--------+     |     |
-|  |  | id | timestamp           | temp  | pressure | status |     |     |
+|  |  | id | timestamp           | temp  | throughput | status |     |     |
 |  |  +----+---------------------+-------+----------+--------+     |     |
 |  |  |  1 | 2026-03-15 09:00:00 | 23.5  | 101.2    | OK     |     |     |
 |  |  |  2 | 2026-03-15 09:01:00 | 23.8  | 101.3    | OK     |     |     |
@@ -750,7 +750,7 @@ selected in Step 1. Below is the full form design for each source type.
 |  |                                                                 |     |
 |  |  Detected Types:                                                |     |
 |  |    id: integer, timestamp: datetime, temp: float,               |     |
-|  |    pressure: float, status: string                              |     |
+|  |    throughput: float, status: string                              |     |
 |  +---------------------------------------------------------------+     |
 |                                                                         |
 |                                       [<- 이전]  [임시저장]  [다음 ->]  |
@@ -782,21 +782,21 @@ selected in Step 1. Below is the full form design for each source type.
 |                                                                         |
 |  토픽 *                                                                 |
 |  +-----------------------------------------------------------+         |
-|  | equipment.sensor.readings                                 |         |
+|  | source.sensor.readings                                 |         |
 |  +-----------------------------------------------------------+         |
 |  i 자동 완성: 연결 성공 시 토픽 목록에서 선택 가능                      |
 |                                                                         |
 |  Topic Autocomplete (연결 성공 후 표시):                                 |
 |  +-----------------------------------------------------------+         |
-|  | equipment.sensor.readings         <- selected              |         |
-|  | equipment.sensor.alerts                                    |         |
-|  | equipment.maintenance.events                               |         |
+|  | source.sensor.readings         <- selected              |         |
+|  | source.sensor.alerts                                    |         |
+|  | source.maintenance.events                               |         |
 |  | system.health.metrics                                      |         |
 |  +-----------------------------------------------------------+         |
 |                                                                         |
 |  Consumer Group *                                                       |
 |  +-----------------------------------------------------------+         |
-|  | hermes-collector-equip-a                                  |         |
+|  | hermes-collector-src-a                                  |         |
 |  +-----------------------------------------------------------+         |
 |  i 고유한 이름 사용 권장. 같은 group은 메시지를 분산 처리합니다.        |
 |                                                                         |
@@ -897,15 +897,15 @@ selected in Step 1. Below is the full form design for each source type.
 |  [ Preview Messages ]                                                   |
 |                                                                         |
 |  +---------------------------------------------------------------+     |
-|  |  Topic: equipment.sensor.readings                              |     |
+|  |  Topic: source.sensor.readings                              |     |
 |  |  Partition: 0  |  Offset: 12345  |  Timestamp: 10:14:59        |     |
 |  |  +-----------------------------------------------------------+ |     |
 |  |  | {                                                          | |     |
-|  |  |   "equipment_id": "EQUIP_A",                               | |     |
+|  |  |   "source_id": "SRC_A",                               | |     |
 |  |  |   "timestamp": "2026-03-15T10:14:59Z",                     | |     |
 |  |  |   "payload": {                                              | |     |
-|  |  |     "temperature": 23.5,                                    | |     |
-|  |  |     "pressure": 101.2                                       | |     |
+|  |  |     "metric_value": 23.5,                                    | |     |
+|  |  |     "throughput": 101.2                                       | |     |
 |  |  |   }                                                         | |     |
 |  |  | }                                                          | |     |
 |  |  +-----------------------------------------------------------+ |     |
@@ -964,7 +964,7 @@ selected in Step 1. Below is the full form design for each source type.
 |  +---------------------------------------------------------------+     |
 |  |  [>] Root                                                      |     |
 |  |      [>] Data Ingestion                                        |     |
-|  |          [>] Equipment Sensors       <- selected               |     |
+|  |          [>] Source Sensors       <- selected               |     |
 |  |              - GetFile                                         |     |
 |  |              - SplitText                                       |     |
 |  |              - RouteOnAttribute                                |     |
@@ -1006,7 +1006,7 @@ selected in Step 1. Below is the full form design for each source type.
 ### Step 3: Target Setup
 
 Targets represent the collection endpoints within a job. A single job can
-have multiple targets (e.g., same equipment but different sensor types,
+have multiple targets (e.g., same source but different sensor types,
 or the same API but different query parameters).
 
 ```
@@ -1027,9 +1027,9 @@ or the same API but different query parameters).
 |  +---------------------------------------------------------------+     |
 |  |  #  | Target ID       | Label          | Path Override | Status|     |
 |  +-----+-----------------+----------------+---------------+-------+     |
-|  |  1  | temp-sensor     | 온도 센서      | /temp/        | [v]   |     |
+|  |  1  | temp-sensor     | transaction log      | /temp/        | [v]   |     |
 |  +-----+-----------------+----------------+---------------+-------+     |
-|  |  2  | press-sensor    | 압력 센서      | /pressure/    | [v]   |     |
+|  |  2  | press-sensor    | throughput 센서      | /throughput/    | [v]   |     |
 |  +-----+-----------------+----------------+---------------+-------+     |
 |  |  3  | vibration       | 진동 센서      | /vibration/   | [!]   |     |
 |  +-----+-----------------+----------------+---------------+-------+     |
@@ -1044,7 +1044,7 @@ or the same API but different query parameters).
 |                                                                         |
 |  Target ID *                           Label *                          |
 |  +-------------------------------+     +-------------------------------+ |
-|  | temp-sensor                   |     | 온도 센서                     | |
+|  | temp-sensor                   |     | transaction log                     | |
 |  +-------------------------------+     +-------------------------------+ |
 |  i 영문/숫자/하이픈, 시스템에서                                         |
 |    이 ID로 대상을 식별합니다       i 사람이 읽기 위한 이름              |
@@ -1054,11 +1054,11 @@ or the same API but different query parameters).
 |  | /temp/                                                    |         |
 |  +-----------------------------------------------------------+         |
 |  i 소스 설정의 기본 경로에 이 값을 추가합니다                           |
-|  i 결과 경로: /data/equip_a/20260315/temp/                              |
+|  i 결과 경로: /data/src_a/20260315/temp/                              |
 |                                                                         |
 |  패턴 오버라이드 (선택)                                                 |
 |  +-----------------------------------------------------------+         |
-|  | sensor_temp_*.csv                                         |         |
+|  | sensor_data_*.csv                                         |         |
 |  +-----------------------------------------------------------+         |
 |  i 비워두면 소스 설정의 기본 패턴(*.csv)을 사용합니다                   |
 |                                                                         |
@@ -1066,12 +1066,12 @@ or the same API but different query parameters).
 |  +-------------------+------------------------------------+--+          |
 |  | Variable Name     | Value                              |  |          |
 |  +-------------------+------------------------------------+--+          |
-|  | equipment_id      | EQUIP_A                            |[x]          |
+|  | source_id      | SRC_A                            |[x]          |
 |  +-------------------+------------------------------------+--+          |
-|  | sensor_type       | temperature                        |[x]          |
+|  | sensor_type       | metric_value                        |[x]          |
 |  +-------------------+------------------------------------+--+          |
 |  [+ 변수 추가]                                                          |
-|  i 파이프라인 내에서 {equipment_id}, {sensor_type} 등으로 참조 가능     |
+|  i 파이프라인 내에서 {source_id}, {sensor_type} 등으로 참조 가능     |
 |                                                                         |
 |  대상 활성화:  [x] 활성 (체크 해제 시 이 대상은 수집에서 제외됩니다)    |
 |                                                                         |
@@ -1080,13 +1080,13 @@ or the same API but different query parameters).
 |  -----------------------------------------------------------------------+
 |                                                                         |
 |  +---------------------------------------------------------------+     |
-|  |  Target: temp-sensor (온도 센서)                               |     |
-|  |  Full Path: /data/equip_a/{yyyyMMdd}/temp/                     |     |
-|  |  Pattern: sensor_temp_*.csv                                    |     |
+|  |  Target: temp-sensor (transaction log)                               |     |
+|  |  Full Path: /data/src_a/{yyyyMMdd}/temp/                     |     |
+|  |  Pattern: sensor_data_*.csv                                    |     |
 |  |                                                                 |     |
 |  |  Resolved (today):                                              |     |
-|  |    /data/equip_a/20260315/temp/sensor_temp_001.csv   1.2 MB    |     |
-|  |    /data/equip_a/20260315/temp/sensor_temp_002.csv   0.8 MB    |     |
+|  |    /data/src_a/20260315/temp/sensor_data_001.csv   1.2 MB    |     |
+|  |    /data/src_a/20260315/temp/sensor_data_002.csv   0.8 MB    |     |
 |  |                                                                 |     |
 |  |  2 files matched                                                |     |
 |  +---------------------------------------------------------------+     |
@@ -1123,7 +1123,7 @@ or the same API but different query parameters).
 |  +---------------------------------------------------------------+     |
 |  |  Connection Test Results                                       |     |
 |  |                                                                 |     |
-|  |  Source: Local File (/data/equip_a)                             |     |
+|  |  Source: Local File (/data/src_a)                             |     |
 |  |                                                                 |     |
 |  |  +---+----------------------------+--------+-----------+       |     |
 |  |  |   | Check                      | Result | Detail    |       |     |
@@ -1142,7 +1142,7 @@ or the same API but different query parameters).
 |                                                                         |
 |  == 매칭 결과 =========================================================|
 |                                                                         |
-|  Target: [temp-sensor (온도 센서) v]   <- dropdown to switch targets    |
+|  Target: [temp-sensor (transaction log) v]   <- dropdown to switch targets    |
 |                                                                         |
 |  +---------------------------------------------------------------+     |
 |  |  Matched Files (Target: temp-sensor)                           |     |
@@ -1150,9 +1150,9 @@ or the same API but different query parameters).
 |  |  +---+------------------------------------------+------+------+|     |
 |  |  |   | File Path                                | Size | Age  ||     |
 |  |  +---+------------------------------------------+------+------+|     |
-|  |  | 1 | .../20260315/temp/sensor_temp_001.csv     | 1.2M | 2h   ||     |
-|  |  | 2 | .../20260315/temp/sensor_temp_002.csv     | 0.8M | 1h   ||     |
-|  |  | 3 | .../20260314/temp/sensor_temp_001.csv     | 1.1M | 26h  ||     |
+|  |  | 1 | .../20260315/temp/sensor_data_001.csv     | 1.2M | 2h   ||     |
+|  |  | 2 | .../20260315/temp/sensor_data_002.csv     | 0.8M | 1h   ||     |
+|  |  | 3 | .../20260314/temp/sensor_data_001.csv     | 1.1M | 26h  ||     |
 |  |  +---+------------------------------------------+------+------+|     |
 |  |                                                                 |     |
 |  |  Filter applied: min 1KB, max 24h                               |     |
@@ -1161,10 +1161,10 @@ or the same API but different query parameters).
 |                                                                         |
 |  == 데이터 미리보기 ===================================================|
 |                                                                         |
-|  File: sensor_temp_001.csv                 Encoding: UTF-8              |
+|  File: sensor_data_001.csv                 Encoding: UTF-8              |
 |                                                                         |
 |  +---------------------------------------------------------------+     |
-|  |  Row | timestamp           | temperature | pressure | status   |     |
+|  |  Row | timestamp           | metric_value | throughput | status   |     |
 |  +------+---------------------+-------------+----------+---------+|     |
 |  |    1 | 2026-03-15 08:00:00 | 23.5        | 101.2    | OK      ||     |
 |  |    2 | 2026-03-15 08:01:00 | 23.8        | 101.3    | OK      ||     |
@@ -1188,8 +1188,8 @@ or the same API but different query parameters).
 |  |  |   | Column Name     | Type     | Nulls  | Sample  |         |     |
 |  |  +---+-----------------+----------+--------+---------+         |     |
 |  |  | 1 | timestamp       | datetime | 0%     | 2026-.. |         |     |
-|  |  | 2 | temperature     | float64  | 0%     | 23.5    |         |     |
-|  |  | 3 | pressure        | float64  | 0.1%   | 101.2   |         |     |
+|  |  | 2 | metric_value     | float64  | 0%     | 23.5    |         |     |
+|  |  | 3 | throughput        | float64  | 0.1%   | 101.2   |         |     |
 |  |  | 4 | status          | string   | 0%     | OK      |         |     |
 |  |  +---+-----------------+----------+--------+---------+         |     |
 |  |                                                                 |     |
@@ -1315,7 +1315,7 @@ or the same API but different query parameters).
 |  --- Signal 선택 시 ---                                                 |
 |  Signal Source:  (*) Kafka Topic   ( ) Webhook URL                      |
 |                                                                         |
-|  Kafka Topic:  [ equipment.events          ]                            |
+|  Kafka Topic:  [ source.events          ]                            |
 |  Filter:       [ $.event_type == "DATA_READY" ]                         |
 |  i JSONPath 조건: 이 조건을 만족하는 메시지만 트리거                    |
 |                                                                         |
@@ -1356,8 +1356,8 @@ or the same API but different query parameters).
 |  +---------------------------------------------------------------+     |
 |  |  Job Summary                                                   |     |
 |  |                                                                 |     |
-|  |  Name:     설비A 온도 데이터 수집                               |     |
-|  |  Source:   Local File (/data/equip_a/{date})                    |     |
+|  |  Name:     Source A Order Data Sync                               |     |
+|  |  Source:   Local File (/data/src_a/{date})                    |     |
 |  |  Targets:  3 (temp-sensor, press-sensor, vibration)             |     |
 |  |  Pipeline: Collect -> Z-Score 이상치 -> DB Insert               |     |
 |  |  Trigger:  Poll every 5 minutes                                 |     |
@@ -1404,7 +1404,7 @@ on the processor's JSON Schema definition (inputSchema).
 |  +------------------------------------------+                          |
 |  | v1 - 초기 설정 (2026-03-01, kim)         |                          |
 |  | v2 - 임계값 상향 (2026-03-08, kim)       |                          |
-|  | v3 - 압력 분석 추가 (2026-03-12, park) <-|  current                 |
+|  | v3 - throughput 분석 추가 (2026-03-12, park) <-|  current                 |
 |  +------------------------------------------+                          |
 |                                                                         |
 |  == 파라미터 설정 =====================================================|
@@ -1413,9 +1413,9 @@ on the processor's JSON Schema definition (inputSchema).
 |                                                                         |
 |  분석 대상 컬럼 *                                                       |
 |  +-----------------------------------------------------------+         |
-|  | pressure                                                  |         |
+|  | throughput                                                  |         |
 |  +-----------------------------------------------------------+         |
-|  예: temperature, pressure, voltage                                     |
+|  예: metric_value, throughput, voltage                                     |
 |                                                                         |
 |  Z-Score 임계값                                                         |
 |  0.5 [===========*======================] 10.0       Value: 3.5         |
@@ -1458,7 +1458,7 @@ on the processor's JSON Schema definition (inputSchema).
 |  |  v3 -> v4 Changes:                                             |     |
 |  |                                                                 |     |
 |  |  targetColumn:                                                  |     |
-|  |  - "pressure"                                                   |     |
+|  |  - "throughput"                                                   |     |
 |  |  + "vibration"                                                  |     |
 |  |                                                                 |     |
 |  |  windowSize:                                                    |     |
@@ -1472,16 +1472,16 @@ on the processor's JSON Schema definition (inputSchema).
 |                                                                         |
 |  +---------------------------------------------------------------+     |
 |  |  v3  2026-03-12  park                                          |     |
-|  |      "압력 데이터 분석 추가, modified z-score 적용"            |     |
-|  |      targetColumn: pressure, threshold: 3.5, method: modified  |     |
+|  |      "log data 분석 추가, modified z-score 적용"            |     |
+|  |      targetColumn: throughput, threshold: 3.5, method: modified  |     |
 |  |  ---------------------------------------------------------------     |
 |  |  v2  2026-03-08  kim                                           |     |
 |  |      "오탐 많아서 임계값 상향 3.0->4.0, IQR 방식으로 변경"    |     |
-|  |      targetColumn: temperature, threshold: 4.0, method: iqr    |     |
+|  |      targetColumn: metric_value, threshold: 4.0, method: iqr    |     |
 |  |  ---------------------------------------------------------------     |
 |  |  v1  2026-03-01  kim                                           |     |
 |  |      "초기 설정 - 표준 z-score, 임계값 3.0"                   |     |
-|  |      targetColumn: temperature, threshold: 3.0, method: std    |     |
+|  |      targetColumn: metric_value, threshold: 3.0, method: std    |     |
 |  +---------------------------------------------------------------+     |
 |                                                                         |
 |  Click any version to load it. Click [Compare] to diff two versions.   |
@@ -1542,7 +1542,7 @@ The Monitor View is the operational dashboard for active jobs.
 |  +------+---------------------+----------+-------+--------+-----------+|
 |  | Stat | Job Name            | Source   | Trig  | Last   | Heartbeat ||
 |  +------+---------------------+----------+-------+--------+-----------+|
-|  | [GO] | 설비A 온도 수집     | File     | Poll  | 2m ago | ** ** **  ||
+|  | [GO] | Source A Order Sync     | File     | Poll  | 2m ago | ** ** **  ||
 |  | [GO] | ERP 주문 동기화     | DB       | 1min  | 45s    | ** ** **  ||
 |  | [!!] | Vendor API 수집     | REST     | 5min  | 12m    | ** __ __  ||
 |  | [--] | 로그 수집 (야간)    | Kafka    | Sig.  | 8h     | __ __ __  ||
@@ -1558,9 +1558,9 @@ The Monitor View is the operational dashboard for active jobs.
 |  Click any row to expand:                                               |
 |                                                                         |
 |  +---------------------------------------------------------------+     |
-|  |  [GO] 설비A 온도 수집                           [Pause] [Stop]|     |
+|  |  [GO] Source A Order Sync                           [Pause] [Stop]|     |
 |  |                                                                 |     |
-|  |  Source:    Local File /data/equip_a/{date}                     |     |
+|  |  Source:    Local File /data/src_a/{date}                     |     |
 |  |  Targets:  3 active (temp-sensor, press-sensor, vibration)      |     |
 |  |  Pipeline: Collect -> Z-Score -> DB Insert                      |     |
 |  |  Trigger:  Poll every 5 minutes                                 |     |
@@ -1583,11 +1583,11 @@ The Monitor View is the operational dashboard for active jobs.
 |  +---------------------------------------------------------------+     |
 |  |  Filters: [All v]  [All Sources v]  [All Levels v]  [Search ] |     |
 |  |                                                                 |     |
-|  |  10:15:03  [OK]  설비A 온도 수집                                |     |
+|  |  10:15:03  [OK]  Source A Order Sync                                |     |
 |  |            Completed: 15,000 rows, 7 anomalies, 3.6s           |     |
 |  |                                                                 |     |
-|  |  10:14:59  [>>]  설비A 온도 수집                                |     |
-|  |            Started: collecting from /data/equip_a/20260315/     |     |
+|  |  10:14:59  [>>]  Source A Order Sync                                |     |
+|  |            Started: collecting from /data/src_a/20260315/     |     |
 |  |                                                                 |     |
 |  |  10:12:15  [!!]  Vendor API 수집                                |     |
 |  |            Warning: HTTP 429 Too Many Requests (retry 2/3)      |     |
@@ -1655,7 +1655,7 @@ Browser (React)                         Server (FastAPI)
      |                                       |
      |  { type: "message",                   |
      |    level: "info",                     |
-     |    jobName: "설비A 온도 수집",        |
+     |    jobName: "Source A Order Sync",        |
      |    text: "Completed: 15k rows" }      |
      |<--------------------------------------|
      |                                       |

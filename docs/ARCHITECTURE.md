@@ -162,7 +162,7 @@
 │         ├── outputSchema: { response format }    │
 │         └── executionType: PLUGIN                │
 │                                                  │
-│  AlgorithmDefinition    "이상치 탐지"             │
+│  AlgorithmDefinition    "Anomaly Detection"             │
 │    └── Version 1.0                               │
 │         ├── inputSchema:  { threshold, method }  │
 │         ├── uiSchema:     { slider, dropdown }   │
@@ -190,7 +190,7 @@
 ┌──────────────────────────────────────────────────────────┐
 │              INSTANCE LAYER                               │
 │                                                           │
-│  CollectorInstance "A사 주문 API 수집"                     │
+│  CollectorInstance "Vendor API Collection"                     │
 │    ├── definition: REST API 수집기                        │
 │    └── config (Recipe):                                   │
 │         url: "https://vendor-a.com/api/orders"            │
@@ -198,17 +198,17 @@
 │         interval: "5m"                                    │
 │         version: 3  ← 설정 변경 이력 추적                 │
 │                                                           │
-│  AlgorithmInstance "주문 데이터 이상치 검출"                │
-│    ├── definition: 이상치 탐지                            │
+│  AlgorithmInstance "Data Anomaly Detection"                │
+│    ├── definition: Anomaly Detection                            │
 │    └── config (Recipe):                                   │
 │         threshold: 2.5                                    │
 │         method: "z-score"                                 │
 │         version: 1                                        │
 │                                                           │
-│  PipelineInstance "A사 주문 모니터링"                      │
+│  PipelineInstance "Order Monitoring"                      │
 │    ├── steps:                                             │
-│    │   1. COLLECT  → CollectorInstance "A사 주문 API"      │
-│    │   2. ALGORITHM → AlgorithmInstance "이상치 검출"      │
+│    │   1. COLLECT  → CollectorInstance "Vendor Order API"      │
+│    │   2. ALGORITHM → AlgorithmInstance "anomaly 검출"      │
 │    │   3. TRANSFER  → TransferInstance "S3 업로드"        │
 │    └── monitoringType: API_POLL                           │
 └──────────────────────────────────────────────────────────┘
@@ -229,7 +229,7 @@
 │              MONITORING LAYER                         │
 │                                                       │
 │  PipelineActivation                                   │
-│    ├── pipeline: "A사 주문 모니터링"                   │
+│    ├── pipeline: "Order Monitoring"                   │
 │    ├── status: RUNNING                                │
 │    ├── startedAt: 2026-03-15 09:00:00                │
 │    ├── lastHeartbeatAt: 2026-03-15 14:32:10          │
@@ -402,7 +402,7 @@ Job 단위 처리 이력. **Hermes의 최대 차별점.**
 │ pipeline_activation_id   FK  │
 │ pipeline_instance_id     FK  │  ◄── denormalized for query
 │ source_type                  │  ◄── FILE | API_RESPONSE | DB_CHANGE | EVENT
-│ source_key                   │  ◄── "equipment_A_20260315.csv"
+│ source_key                   │  ◄── "source_A_20260315.csv"
 │ source_metadata          JSONB  ◄── { size, modified_at, ... }
 │ dedup_key                    │  ◄── 중복 방지 키
 │ detected_at                  │
@@ -589,10 +589,10 @@ inputSchema: {                        Recipe (config_json): {
     "type": "number",                   "method": "z-score",
     "minimum": 0,                       "window_size": 100
     "maximum": 10,                    }
-    "description": "이상치 판별 기준"
+    "description": "Anomaly Threshold"
   },                                  → Web UI renders as:
   "method": {                         ┌─────────────────────────┐
-    "type": "string",                 │ 이상치 판별 기준        │
+    "type": "string",                 │ Anomaly Threshold        │
     "enum": ["z-score", "iqr"]        │ [====●========] 3.0     │
   },                                  │                         │
   "window_size": {                    │ 분석 방법               │
@@ -615,7 +615,7 @@ uiSchema: {
 ### 7.2 Recipe Versioning
 
 ```
-CollectorInstance "A사 주문 API"
+CollectorInstance "Vendor Order API"
   └── Version 1 (2026-03-01) config: { interval: "10m", timeout: 30 }
   └── Version 2 (2026-03-10) config: { interval: "5m",  timeout: 30 }  ← current
   └── Version 3 (2026-03-15) config: { interval: "5m",  timeout: 60 }  ← draft
@@ -646,7 +646,7 @@ Web UI에서:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  Pipeline: A사 주문 모니터링                    [Save] [Run] │
+│  Pipeline: Order Monitoring                    [Save] [Run] │
 │──────────────────────────────────────────────────────────────│
 │                                                              │
 │   ┌───────────┐     ┌───────────┐     ┌───────────┐        │
@@ -663,7 +663,7 @@ Web UI에서:
 │  │ Recipe Editor: Anomaly Detector          v2 (draft) │    │
 │  │─────────────────────────────────────────────────────│    │
 │  │                                                      │    │
-│  │ 이상치 판별 기준                                     │    │
+│  │ Anomaly Threshold                                     │    │
 │  │ [========●════════════] 3.0                          │    │
 │  │ ℹ️ 값이 클수록 느슨한 탐지                           │    │
 │  │                                                      │    │
@@ -686,10 +686,10 @@ Web UI에서:
 │  Active Pipelines                                            │
 │──────────────────────────────────────────────────────────────│
 │                                                              │
-│  ● A사 주문 모니터링      RUNNING   ♥ 2s ago    1,247 items │
-│  ● 설비B 파일 수집        RUNNING   ♥ 5s ago      892 items │
+│  ● Order Monitoring      RUNNING   ♥ 2s ago    1,247 items │
+│  ● Source B 파일 수집        RUNNING   ♥ 5s ago      892 items │
 │  ○ ERP DB 동기화          PAUSED                    0 items │
-│  ◉ 설비C 로그 수집        ERROR     ♥ 30m ago     56 items │
+│  ◉ Source C 로그 수집        ERROR     ♥ 30m ago     56 items │
 │                                                              │
 │──────────────────────────────────────────────────────────────│
 │  Recent Jobs                              [View All →] │
@@ -709,7 +709,7 @@ Web UI에서:
 │  Job #1002                                              │
 │──────────────────────────────────────────────────────────────│
 │  Source: order_batch_20260315_002                            │
-│  Pipeline: A사 주문 모니터링                                 │
+│  Pipeline: Order Monitoring                                 │
 │  Detected: 2026-03-15 14:15:00                              │
 │  Status: FAILED → COMPLETED (after reprocess)               │
 │                                                              │
@@ -773,7 +773,7 @@ Hermes은 NiFi 없이 독립 실행되지만, NiFi가 있으면 활용 가능.
 │  (Separate deployment)   │
 │                          │
 │  - Clustering            │
-│  - Backpressure          │
+│  - Backthroughput          │
 │  - 300+ Processors       │
 │  - Data Provenance       │
 │                          │

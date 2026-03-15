@@ -488,7 +488,7 @@ transient network issues without triggering unnecessary failovers.
 
 Hermes uses a **pull-based** job assignment model. Workers pull jobs
 from the coordinator rather than having jobs pushed to them. This
-naturally provides back-pressure: overloaded workers simply stop pulling.
+naturally provides back-throughput: overloaded workers simply stop pulling.
 
 ```
 Job Assignment Flow
@@ -657,10 +657,10 @@ Affinity Rule Types
 
 Configuration example:
   {
-    "pipeline_id": "temperature-collection",
+    "pipeline_id": "metric_value-collection",
     "affinity": {
       "type": "STICKY_SESSION",
-      "key": "{{target.equipment_id}}",
+      "key": "{{target.source_id}}",
       "fallback": "ANY"        // ANY | QUEUE_UNTIL_AVAILABLE
     }
   }
@@ -929,7 +929,7 @@ Response:
      {
        "event": "POISON_PILL_DETECTED",
        "job_id": "abc-123",
-       "pipeline_id": "temperature-collection",
+       "pipeline_id": "metric_value-collection",
        "failure_count": 3,
        "workers_tried": ["worker-1", "worker-2", "worker-3"],
        "errors": ["timeout", "OOM", "timeout"],
@@ -1077,13 +1077,13 @@ separate Grafana/Kibana deployment.
 │    Keyword:  [                              ] [Search]       │
 │                                                               │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ 10:15:03.421  worker-1   INFO   pipeline/temperature   │  │
+│  │ 10:15:03.421  worker-1   INFO   pipeline/metric_value   │  │
 │  │   Job #3421 started: Target=Equip-A, 3 files matched   │  │
 │  │                                                         │  │
 │  │ 10:15:03.523  worker-1   INFO   stage/COLLECT           │  │
-│  │   Downloading temp_001.csv (1.2MB) from /data/equip_a/  │  │
+│  │   Downloading data_001.csv (1.2MB) from /data/src_a/  │  │
 │  │                                                         │  │
-│  │ 10:15:04.812  worker-2   WARN   pipeline/pressure       │  │
+│  │ 10:15:04.812  worker-2   WARN   pipeline/throughput       │  │
 │  │   FTP connection timeout to 192.168.1.100:21            │  │
 │  │   Retry 1/3 in 2s (exponential backoff)                 │  │
 │  │                                                         │  │
@@ -1091,7 +1091,7 @@ separate Grafana/Kibana deployment.
 │  │   Z-Score analysis: 7 anomalies detected                │  │
 │  │   Recipe: threshold=3.5, method=modified                │  │
 │  │                                                         │  │
-│  │ 10:15:06.812  worker-2   ERROR  pipeline/pressure       │  │
+│  │ 10:15:06.812  worker-2   ERROR  pipeline/throughput       │  │
 │  │   FTP connection failed after 3 retries                 │  │
 │  │   Job #2891 -> FAILED -> routed to DLQ                  │  │
 │  │   [View Job Detail] [View DLQ Entry]                    │  │
@@ -1211,7 +1211,7 @@ CREATE TABLE cluster_logs (
     node_role       VARCHAR(50) NOT NULL,   -- coordinator, worker, edge
     timestamp       TIMESTAMPTZ NOT NULL,
     level           VARCHAR(10) NOT NULL,   -- TRACE, DEBUG, INFO, WARN, ERROR, FATAL
-    category        VARCHAR(200),           -- e.g., "pipeline/temperature", "cluster/health"
+    category        VARCHAR(200),           -- e.g., "pipeline/metric_value", "cluster/health"
     pipeline_id     UUID,
     job_id          UUID,
     target_id       VARCHAR(200),

@@ -120,10 +120,10 @@ test_reprocess_already_completed_item
 
 ### Feature 4: Back-Pressure (P0)
 ```
-test_backpressure_pauses_monitoring_at_threshold
-test_backpressure_resumes_when_queue_drains
-test_backpressure_hard_limit_stops_ingestion
-test_backpressure_metrics_exposed
+test_backthroughput_pauses_monitoring_at_threshold
+test_backthroughput_resumes_when_queue_drains
+test_backthroughput_hard_limit_stops_ingestion
+test_backthroughput_metrics_exposed
 ```
 
 ### Feature 5: Dead Letter Queue (P0)

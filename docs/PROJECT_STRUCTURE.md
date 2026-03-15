@@ -3,7 +3,7 @@
 > Python (Web API) + .NET (Core Engine) + React (Frontend)
 >
 > Each layer owns its strengths: Python for rapid API development and UI serving,
-> .NET for high-throughput engine processing with back-pressure and resilience,
+> .NET for high-throughput engine processing with back-throughput and resilience,
 > React for visual pipeline design.
 
 ---
@@ -38,7 +38,7 @@ long-running, and performance-critical logic:
 - Processing Orchestrator (stage execution, CQRS)
 - Execution Dispatcher (gRPC to algorithm containers)
 - Content Repository (disk-based storage with claim management)
-- Back-pressure and flow control
+- Back-throughput and flow control
 - Dead Letter Queue (DLQ) with retry policies
 - Circuit Breaker for external dependencies
 - Schema Registry (version tracking, compatibility checks)
@@ -228,7 +228,7 @@ service HermesEngineService {
 | Auth / CORS tests | Python | `backend/tests/` | Middleware lives in Python layer |
 | Collection scenarios | C# / xUnit | `engine/tests/` | MonitoringEngine logic lives in .NET |
 | Failure handling | C# / xUnit | `engine/tests/` | Retry, circuit breaker, DLQ in .NET |
-| Back-pressure | C# / xUnit | `engine/tests/` | Flow control is an engine concern |
+| Back-throughput | C# / xUnit | `engine/tests/` | Flow control is an engine concern |
 | Dead Letter Queue | C# / xUnit | `engine/tests/` | DLQ management in .NET |
 | Orchestration | C# / xUnit | `engine/tests/` | Stage execution, state transitions |
 | Plugin protocol | Both | both | gRPC contract tests (proto compatibility) |
