@@ -132,10 +132,10 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 ### P0 Gaps
 - [x] Back-pressure (큐 깊이 제한 + 모니터링 일시정지)
 - [x] Dead Letter Queue (실패 데이터 격리 + DLQ Explorer UI)
-- [ ] Schema Discovery & Evolution (drift 감지 + 알림)
+- [x] Schema Discovery & Evolution (drift 감지 + 알림)
 
 ### P1 Gaps
-- [ ] Content Repository (디스크 기반 대용량 처리)
+- [x] Content Repository (디스크 기반 대용량 처리)
 - [ ] Exactly-Once (Step별 checkpoint + 크래시 복구)
 - [x] Graceful Shutdown (drain mode + orphan 복구)
 - [x] Observability (Prometheus metrics + Grafana 대시보드)
