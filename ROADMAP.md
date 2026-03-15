@@ -75,7 +75,7 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 ### Monitoring Engine
 - [x] File Watcher (FileSystemWatcher + polling fallback)
 - [x] API Poller (HttpClient + Polly)
-- [ ] Kafka Consumer (Confluent.Kafka)
+- [x] Kafka Consumer (Confluent.Kafka)
 - [x] Condition Evaluator + dedup
 
 ### Processing Engine
@@ -89,7 +89,7 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 - [x] gRPC Plugin Protocol v2 (hermes_plugin.proto)
 - [ ] Hermes.Plugins.Sdk NuGet 패키지
 - [x] Plugin 프로세스 관리 (spawn, health, kill)
-- [ ] 빌트인 플러그인: REST API Collector, File Watcher, Passthrough, File Output
+- [x] 빌트인 플러그인: REST API Collector, File Watcher, Passthrough, File Output
 
 ### Web UI
 - [x] React + TypeScript + Vite 셋업
@@ -111,7 +111,7 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 - [ ] Application 서비스 테스트
 - [ ] API 통합 테스트 (WebApplicationFactory)
 - [ ] TestContainers (PostgreSQL)
-- [ ] CI: GitHub Actions (build + test on PR)
+- [x] CI: GitHub Actions (build + test on PR)
 
 ### Milestone Criteria
 ```
