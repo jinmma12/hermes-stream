@@ -1,0 +1,12 @@
+apiVersion: v2
+name: hermes
+description: Hermes Stream — Lightweight data processing platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - data-pipeline
+  - etl
+  - processing
+  - nifi-alternative
+home: https://github.com/jinmma12/hermes-stream

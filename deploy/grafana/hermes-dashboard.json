@@ -1,0 +1,110 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "hermes-overview",
+    "title": "Hermes Stream — Overview",
+    "description": "Real-time monitoring of the Hermes data processing platform",
+    "tags": ["hermes", "data-pipeline"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Pipelines",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+        "targets": [{"expr": "hermes_pipelines_active", "legendFormat": "Active"}],
+        "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green", "value": null}]}}}
+      },
+      {
+        "id": 2,
+        "title": "Work Items Processing",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 4, "y": 0},
+        "targets": [{"expr": "hermes_work_items_processing", "legendFormat": "Processing"}],
+        "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "blue", "value": null}, {"color": "yellow", "value": 50}, {"color": "red", "value": 100}]}}}
+      },
+      {
+        "id": 3,
+        "title": "Queue Depth",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 8, "y": 0},
+        "targets": [{"expr": "hermes_work_items_queued", "legendFormat": "Queued"}],
+        "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green", "value": null}, {"color": "orange", "value": 100}, {"color": "red", "value": 500}]}}}
+      },
+      {
+        "id": 4,
+        "title": "Engine Uptime",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0},
+        "targets": [{"expr": "hermes_engine_uptime_seconds", "legendFormat": "Uptime"}],
+        "fieldConfig": {"defaults": {"unit": "s"}}
+      },
+      {
+        "id": 5,
+        "title": "Completed vs Failed (rate/min)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [
+          {"expr": "rate(hermes_work_items_completed_total[5m]) * 60", "legendFormat": "Completed/min"},
+          {"expr": "rate(hermes_work_items_failed_total[5m]) * 60", "legendFormat": "Failed/min"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Processing Duration (p50/p95/p99)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [
+          {"expr": "histogram_quantile(0.50, rate(hermes_work_item_duration_seconds_bucket[5m]))", "legendFormat": "p50"},
+          {"expr": "histogram_quantile(0.95, rate(hermes_work_item_duration_seconds_bucket[5m]))", "legendFormat": "p95"},
+          {"expr": "histogram_quantile(0.99, rate(hermes_work_item_duration_seconds_bucket[5m]))", "legendFormat": "p99"}
+        ],
+        "fieldConfig": {"defaults": {"unit": "s"}}
+      },
+      {
+        "id": 7,
+        "title": "Step Execution by Type",
+        "type": "timeseries",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {"expr": "rate(hermes_step_executions_total{status=\"Completed\"}[5m]) * 60", "legendFormat": "{{step_type}} completed/min"},
+          {"expr": "rate(hermes_step_executions_total{status=\"Failed\"}[5m]) * 60", "legendFormat": "{{step_type}} failed/min"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Plugin Executions",
+        "type": "timeseries",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {"expr": "rate(hermes_plugin_executions_total[5m]) * 60", "legendFormat": "{{plugin_name}} ({{status}})"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Events Detected vs Deduped",
+        "type": "timeseries",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 18},
+        "targets": [
+          {"expr": "rate(hermes_events_detected_total[5m]) * 60", "legendFormat": "Detected/min"},
+          {"expr": "rate(hermes_events_deduped_total[5m]) * 60", "legendFormat": "Deduped/min"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Back-Pressure & DLQ",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 18},
+        "targets": [
+          {"expr": "hermes_work_items_queued", "legendFormat": "Queue Depth"},
+          {"expr": "hermes_work_items_processing", "legendFormat": "Processing"}
+        ]
+      }
+    ],
+    "templating": {"list": [{"name": "datasource", "type": "datasource", "query": "prometheus"}]},
+    "time": {"from": "now-1h", "to": "now"},
+    "schemaVersion": 39,
+    "version": 1
+  }
+}

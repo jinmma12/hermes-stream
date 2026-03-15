@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-api
+spec:
+  type: {{ .Values.service.api.type }}
+  ports:
+    - port: {{ .Values.service.api.port }}
+      targetPort: {{ .Values.service.api.port }}
+      name: http
+  selector:
+    app.kubernetes.io/name: hermes-api
+    app.kubernetes.io/instance: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-engine
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.service.engine.grpcPort }}
+      targetPort: {{ .Values.service.engine.grpcPort }}
+      name: grpc
+    - port: {{ .Values.service.engine.metricsPort }}
+      targetPort: {{ .Values.service.engine.metricsPort }}
+      name: metrics
+  selector:
+    app.kubernetes.io/name: hermes-engine
+    app.kubernetes.io/instance: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-webapp
+spec:
+  type: {{ .Values.service.webapp.type }}
+  ports:
+    - port: {{ .Values.service.webapp.port }}
+      targetPort: 3000
+      name: http
+  selector:
+    app.kubernetes.io/name: hermes-webapp
+    app.kubernetes.io/instance: {{ .Release.Name }}

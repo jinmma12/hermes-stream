@@ -1,0 +1,101 @@
+# Hermes Stream Helm Chart Values
+
+replicaCount:
+  api: 1
+  engine: 1
+  webapp: 1
+
+image:
+  api:
+    repository: hermes/api
+    tag: latest
+    pullPolicy: IfNotPresent
+  engine:
+    repository: hermes/engine
+    tag: latest
+    pullPolicy: IfNotPresent
+  webapp:
+    repository: hermes/webapp
+    tag: latest
+    pullPolicy: IfNotPresent
+
+service:
+  api:
+    type: ClusterIP
+    port: 8000
+  engine:
+    grpcPort: 50051
+    metricsPort: 9090
+  webapp:
+    type: ClusterIP
+    port: 3000
+
+ingress:
+  enabled: false
+  className: nginx
+  host: hermes.local
+  tls: false
+
+postgresql:
+  enabled: true
+  auth:
+    username: hermes
+    password: hermes
+    database: hermes_db
+  primary:
+    persistence:
+      size: 10Gi
+
+database:
+  provider: PostgreSQL
+  # External DB (when postgresql.enabled=false)
+  external:
+    host: ""
+    port: 5432
+    name: hermes_db
+    username: hermes
+    password: ""
+
+engine:
+  processingConcurrency: 4
+  pluginTimeoutSeconds: 300
+  monitoringIntervalMs: 5000
+  contentRepositorySize: 10Gi
+
+nifi:
+  enabled: false
+  baseUrl: "http://nifi:8080/nifi-api"
+
+jwt:
+  secret: "change-me-in-production-min-32-chars!!"
+  expirationMinutes: 480
+
+resources:
+  api:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  engine:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  webapp:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+monitoring:
+  prometheus:
+    enabled: true
+    serviceMonitor: false
+  grafana:
+    enabled: false
