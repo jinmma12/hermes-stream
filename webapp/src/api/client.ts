@@ -211,6 +211,10 @@ export const monitor = {
     api.get<PipelineActivation[]>('/monitor/activations').then((r) => r.data),
   getRecentJobs: (limit: number = 20) =>
     api.get<Job[]>(`/monitor/recent-jobs?limit=${limit}`).then((r) => r.data),
+  getRecentLogs: async (limit: number = 100): Promise<any[]> => {
+    const { data } = await api.get(`/monitor/logs?limit=${limit}`);
+    return data;
+  },
 };
 
 // ============================================================
