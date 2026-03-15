@@ -5,6 +5,7 @@ import validator from '@rjsf/validator-ajv8';
 
 import { StageType } from '../types';
 import type { Recipe } from '../types';
+import RecipeDiffViewer from '../components/recipe/RecipeDiffViewer';
 
 interface RecipeEditorPanelProps {
   stageId: number;
@@ -111,6 +112,7 @@ export default function RecipeEditorPanel({ stageType, onClose }: RecipeEditorPa
   const [changeNote, setChangeNote] = useState('');
   const [versions, setVersions] = useState<Recipe[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
 
   const demoData = demoSchemas[stageType];
 
@@ -225,8 +227,44 @@ export default function RecipeEditorPanel({ stageType, onClose }: RecipeEditorPa
               </button>
             </div>
           </div>
+        ) : showDiff && versions.length >= 2 ? (
+          <div className="p-4">
+            <button
+              onClick={() => setShowDiff(false)}
+              className="mb-3 flex items-center gap-1 text-xs text-hermes-600 hover:text-hermes-700"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Back to History
+            </button>
+            <RecipeDiffViewer
+              instanceName={stageLabel.name}
+              versions={versions.map(v => ({
+                version: v.version_no,
+                config: v.config_json as Record<string, unknown>,
+                created_by: v.created_by,
+                change_note: v.change_note,
+                created_at: v.created_at,
+              }))}
+            />
+          </div>
         ) : (
           <div className="divide-y divide-slate-100">
+            {/* Compare button */}
+            {versions.length >= 2 && (
+              <div className="px-4 py-2">
+                <button
+                  onClick={() => setShowDiff(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-hermes-200 bg-hermes-50 px-3 py-2 text-xs font-medium text-hermes-700 transition-colors hover:bg-hermes-100"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                  </svg>
+                  Compare Versions (Diff)
+                </button>
+              </div>
+            )}
             {versions.map((version) => (
               <div
                 key={version.version_no}
@@ -256,7 +294,13 @@ export default function RecipeEditorPanel({ stageType, onClose }: RecipeEditorPa
                 </pre>
 
                 {!version.is_current && (
-                  <button className="mt-2 text-[11px] font-medium text-hermes-600 hover:text-hermes-700">
+                  <button
+                    onClick={() => {
+                      setFormData(version.config_json as Record<string, unknown>);
+                      setShowHistory(false);
+                    }}
+                    className="mt-2 text-[11px] font-medium text-hermes-600 hover:text-hermes-700"
+                  >
                     Restore this version
                   </button>
                 )}
