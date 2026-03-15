@@ -171,17 +171,17 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 > 목표: 다중 노드 운영 + 기업 기능. 상용화 기반.
 
 ### Distributed Processing
-- [ ] Worker 노드 수평 확장
-- [ ] Coordinator-Worker 아키텍처
-- [ ] 작업 분배 + 리밸런싱
-- [ ] Worker 장애 → 자동 재할당
-- [ ] Split-brain 방지
+- [x] Worker 노드 수평 확장 (in-process 시뮬레이션)
+- [ ] Coordinator-Worker 아키텍처 (Orleans)
+- [x] 작업 분배 + 리밸런싱 (round-robin)
+- [x] Worker 장애 → 자동 재할당
+- [ ] Split-brain 방지 (PostgreSQL advisory locks)
 
 ### P2 Gaps
 - [x] Authentication (JWT/OIDC)
 - [x] RBAC (Viewer/Operator/Admin)
 - [x] Audit Log (사용자 행동 추적)
-- [ ] Data Preview (파이프라인 실행 전 미리보기)
+- [x] Data Preview (파이프라인 실행 전 미리보기)
 - [x] Content-Based Routing (조건부 분기)
 - [x] Rate Limiting
 - [x] Circuit Breaker
@@ -193,10 +193,10 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 - [ ] 운영 가이드 문서
 
 ### Testing
-- [ ] 분산 환경 테스트 (multi-node)
-- [ ] 장애 주입 테스트 (Chaos Engineering)
+- [x] 분산 환경 테스트 (multi-node 시뮬레이션)
+- [x] 장애 주입 테스트 (worker failure + reassignment)
 - [ ] 성능 벤치마크 (NiFi/Airbyte 대비)
-- [ ] 95%+ 커버리지
+- [x] 95%+ 커버리지
 
 ### Milestone Criteria
 ```
