@@ -13,6 +13,10 @@ node_modules/
 dist/
 .next/
 
+# .NET
+bin/
+obj/
+
 # IDE
 .vscode/
 .idea/

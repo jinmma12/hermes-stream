@@ -2,8 +2,6 @@
 // Core engine for monitoring, processing, plugin execution, and NiFi integration.
 // See engine/reference/ for Python reference implementations.
 
-using Hermes.Engine;
-
 var builder = Host.CreateApplicationBuilder(args);
 
 // TODO: Register engine services

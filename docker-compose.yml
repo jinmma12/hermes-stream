@@ -4,6 +4,7 @@ services:
   postgres:
     image: postgres:15
     container_name: hermes-postgres
+    profiles: ["docker-db"]
     restart: unless-stopped
     environment:
       POSTGRES_USER: hermes
@@ -38,8 +39,6 @@ services:
       ENGINE_GRPC_HOST: engine
       ENGINE_GRPC_PORT: "50051"
     depends_on:
-      postgres:
-        condition: service_healthy
       engine:
         condition: service_started
     networks:
@@ -54,9 +53,6 @@ services:
     ports:
       - "50051:50051"   # gRPC
       - "9090:9090"     # Prometheus metrics
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Database=hermes_db;Username=hermes;Password=hermes"
       Grpc__Port: "50051"

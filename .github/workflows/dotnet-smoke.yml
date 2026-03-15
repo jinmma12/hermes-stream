@@ -1,0 +1,30 @@
+name: Dotnet Smoke
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+
+jobs:
+  dotnet-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore solution
+        run: dotnet restore engine/Hermes.sln
+
+      - name: Build solution
+        run: dotnet build engine/Hermes.sln --no-restore --configuration Release
+
+      - name: Run API contract tests
+        run: dotnet test engine/tests/Hermes.Api.Tests/Hermes.Api.Tests.csproj --no-build --configuration Release
