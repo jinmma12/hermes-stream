@@ -64,6 +64,13 @@ try
     builder.Services.AddSingleton<IBackPressureManager, BackPressureManager>();
     builder.Services.AddSingleton<IDeadLetterQueue, DeadLetterQueue>();
     builder.Services.AddSingleton<ICircuitBreakerManager, CircuitBreakerManager>();
+
+    // Content Repository (disk-based large data storage)
+    var contentRepoPath = builder.Configuration.GetValue<string>("Engine:ContentRepositoryPath")
+        ?? Path.Combine(AppContext.BaseDirectory, "content-repo");
+    builder.Services.AddSingleton<IContentRepository>(sp =>
+        new ContentRepository(contentRepoPath, sp.GetRequiredService<ILogger<ContentRepository>>()));
+
     builder.Services.AddHostedService<GracefulShutdownHandler>();
     builder.Services.AddScoped<ISnapshotResolver, SnapshotResolver>();
     builder.Services.AddScoped<IProcessingOrchestrator, ProcessingOrchestrator>();
@@ -75,6 +82,9 @@ try
             sp.GetRequiredService<ILogger<PluginExecutor>>(),
             builder.Configuration.GetValue<int>("Engine:PluginTimeoutSeconds", 300)));
     builder.Services.AddScoped<IExecutionDispatcher, ExecutionDispatcher>();
+
+    // Schema registry (schema discovery & drift detection)
+    builder.Services.AddSingleton<ISchemaRegistry, SchemaRegistry>();
 
     // Monitoring engine (singleton - manages all monitoring tasks)
     builder.Services.AddSingleton<IMonitoringEngine, MonitoringEngine>();
