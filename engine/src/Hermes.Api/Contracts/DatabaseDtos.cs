@@ -1,6 +1,7 @@
 namespace Hermes.Api.Contracts;
 
 public sealed record DatabaseInfoDto(
+    string Mode,
     string Provider,
     string Schema,
     bool UseDocker,

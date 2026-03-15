@@ -24,6 +24,7 @@ public sealed class DatabaseBootstrapScriptService : IDatabaseBootstrapScriptSer
             .ToArray();
 
         return new DatabaseInfoDto(
+            NormalizeMode(_options.Mode),
             NormalizeProvider(_options.Provider),
             NormalizeSchema(_options.Schema),
             _options.UseDocker,
@@ -111,6 +112,9 @@ SET search_path TO "{schema}", public;
 
     private static string NormalizeProvider(string provider) =>
         string.IsNullOrWhiteSpace(provider) ? "postgres" : provider.Trim().ToLowerInvariant();
+
+    private static string NormalizeMode(string mode) =>
+        string.IsNullOrWhiteSpace(mode) ? "inmemory" : mode.Trim().ToLowerInvariant();
 
     private static string NormalizeSchema(string schema) =>
         string.IsNullOrWhiteSpace(schema) ? "hermes" : schema.Trim();

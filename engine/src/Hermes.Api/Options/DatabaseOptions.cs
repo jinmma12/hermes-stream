@@ -4,6 +4,8 @@ public sealed class DatabaseOptions
 {
     public const string SectionName = "Database";
 
+    public string Mode { get; set; } = "inmemory";
+
     public string Provider { get; set; } = "postgres";
 
     public string Schema { get; set; } = "hermes";

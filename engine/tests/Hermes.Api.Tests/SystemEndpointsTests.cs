@@ -66,6 +66,7 @@ public sealed class SystemEndpointsTests : IClassFixture<ApiApplicationFactory>
         var payload = await _client.GetFromJsonAsync<DatabaseInfoPayload>("/api/v1/system/database");
 
         Assert.NotNull(payload);
+        Assert.Equal("inmemory", payload.Mode);
         Assert.Equal("postgres", payload.Provider);
         Assert.Equal("hermes", payload.Schema);
         Assert.Equal("existing", payload.ConnectionMode);
@@ -81,6 +82,16 @@ public sealed class SystemEndpointsTests : IClassFixture<ApiApplicationFactory>
         Assert.Equal("sqlserver", payload.Provider);
         Assert.Equal("hermes_ops", payload.Schema);
         Assert.Contains("[hermes_ops]", payload.Script);
+    }
+
+    [Fact]
+    public async Task System_Database_Schema_Revisions_Returns_Seeded_Baseline()
+    {
+        var payload = await _client.GetFromJsonAsync<SchemaRevisionPayload[]>("/api/v1/system/database/schema-revisions");
+
+        Assert.NotNull(payload);
+        Assert.NotEmpty(payload);
+        Assert.Contains(payload, x => x.RevisionKey == "2026-03-15-prototype-bootstrap-v1");
     }
 
     [Theory]
@@ -323,6 +334,7 @@ public sealed class SystemEndpointsTests : IClassFixture<ApiApplicationFactory>
     public sealed record SystemInfoPayload(string Api, string Engine, string Migration);
 
     public sealed record DatabaseInfoPayload(
+        string Mode,
         string Provider,
         string Schema,
         [property: JsonPropertyName("use_docker")] bool UseDocker,
@@ -335,6 +347,14 @@ public sealed class SystemEndpointsTests : IClassFixture<ApiApplicationFactory>
         string Schema,
         [property: JsonPropertyName("content_type")] string ContentType,
         string Script);
+
+    public sealed record SchemaRevisionPayload(
+        Guid Id,
+        string Provider,
+        [property: JsonPropertyName("schema_name")] string SchemaName,
+        [property: JsonPropertyName("revision_key")] string RevisionKey,
+        [property: JsonPropertyName("applied_by")] string AppliedBy,
+        string Notes);
 
     public sealed record JobListPayload(
         object[] Items,

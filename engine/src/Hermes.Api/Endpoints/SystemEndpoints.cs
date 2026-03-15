@@ -1,5 +1,7 @@
 using Hermes.Api.Options;
+using Hermes.Api.Persistence;
 using Hermes.Api.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Hermes.Api.Endpoints;
@@ -67,6 +69,23 @@ public static class SystemEndpoints
             {
                 return Results.Problem(ex.Message);
             }
+        });
+
+        api.MapGet("/system/database/schema-revisions", async (HermesApiDbContext dbContext) =>
+        {
+            var revisions = await dbContext.SchemaRevisions
+                .OrderByDescending(x => x.AppliedAt)
+                .Select(x => new Hermes.Api.Contracts.SchemaRevisionDto(
+                    x.Id,
+                    x.Provider,
+                    x.SchemaName,
+                    x.RevisionKey,
+                    x.AppliedBy,
+                    x.Notes,
+                    x.AppliedAt))
+                .ToArrayAsync();
+
+            return Results.Ok(revisions);
         });
 
         return app;
