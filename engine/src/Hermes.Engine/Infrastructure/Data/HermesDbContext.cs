@@ -41,6 +41,8 @@ public class HermesDbContext : DbContext, IUnitOfWork
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var isPostgres = Database.IsNpgsql();
+        var jsonColumnType = isPostgres ? "jsonb" : "nvarchar(max)";
         // ── Definitions ──
         modelBuilder.Entity<CollectorDefinition>(e =>
         {
@@ -55,10 +57,10 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.ToTable("collector_definition_versions");
             e.HasKey(x => x.Id);
             e.Property(x => x.ExecutionType).HasConversion<string>().HasMaxLength(20);
-            e.Property(x => x.InputSchema).HasColumnType("jsonb");
-            e.Property(x => x.UiSchema).HasColumnType("jsonb");
-            e.Property(x => x.OutputSchema).HasColumnType("jsonb");
-            e.Property(x => x.DefaultConfig).HasColumnType("jsonb");
+            e.Property(x => x.InputSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.UiSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.OutputSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.DefaultConfig).HasColumnType(jsonColumnType);
         });
 
         modelBuilder.Entity<AlgorithmDefinition>(e =>
@@ -74,10 +76,10 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.ToTable("algorithm_definition_versions");
             e.HasKey(x => x.Id);
             e.Property(x => x.ExecutionType).HasConversion<string>().HasMaxLength(20);
-            e.Property(x => x.InputSchema).HasColumnType("jsonb");
-            e.Property(x => x.UiSchema).HasColumnType("jsonb");
-            e.Property(x => x.OutputSchema).HasColumnType("jsonb");
-            e.Property(x => x.DefaultConfig).HasColumnType("jsonb");
+            e.Property(x => x.InputSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.UiSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.OutputSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.DefaultConfig).HasColumnType(jsonColumnType);
         });
 
         modelBuilder.Entity<TransferDefinition>(e =>
@@ -93,10 +95,10 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.ToTable("transfer_definition_versions");
             e.HasKey(x => x.Id);
             e.Property(x => x.ExecutionType).HasConversion<string>().HasMaxLength(20);
-            e.Property(x => x.InputSchema).HasColumnType("jsonb");
-            e.Property(x => x.UiSchema).HasColumnType("jsonb");
-            e.Property(x => x.OutputSchema).HasColumnType("jsonb");
-            e.Property(x => x.DefaultConfig).HasColumnType("jsonb");
+            e.Property(x => x.InputSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.UiSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.OutputSchema).HasColumnType(jsonColumnType);
+            e.Property(x => x.DefaultConfig).HasColumnType(jsonColumnType);
         });
 
         // ── Instances ──
@@ -111,8 +113,8 @@ public class HermesDbContext : DbContext, IUnitOfWork
         {
             e.ToTable("collector_instance_versions");
             e.HasKey(x => x.Id);
-            e.Property(x => x.ConfigJson).HasColumnType("jsonb");
-            e.Property(x => x.SecretBindingJson).HasColumnType("jsonb");
+            e.Property(x => x.ConfigJson).HasColumnType(jsonColumnType);
+            e.Property(x => x.SecretBindingJson).HasColumnType(jsonColumnType);
         });
 
         modelBuilder.Entity<AlgorithmInstance>(e =>
@@ -126,8 +128,8 @@ public class HermesDbContext : DbContext, IUnitOfWork
         {
             e.ToTable("algorithm_instance_versions");
             e.HasKey(x => x.Id);
-            e.Property(x => x.ConfigJson).HasColumnType("jsonb");
-            e.Property(x => x.SecretBindingJson).HasColumnType("jsonb");
+            e.Property(x => x.ConfigJson).HasColumnType(jsonColumnType);
+            e.Property(x => x.SecretBindingJson).HasColumnType(jsonColumnType);
         });
 
         modelBuilder.Entity<TransferInstance>(e =>
@@ -141,8 +143,8 @@ public class HermesDbContext : DbContext, IUnitOfWork
         {
             e.ToTable("transfer_instance_versions");
             e.HasKey(x => x.Id);
-            e.Property(x => x.ConfigJson).HasColumnType("jsonb");
-            e.Property(x => x.SecretBindingJson).HasColumnType("jsonb");
+            e.Property(x => x.ConfigJson).HasColumnType(jsonColumnType);
+            e.Property(x => x.SecretBindingJson).HasColumnType(jsonColumnType);
         });
 
         // ── Pipelines ──
@@ -152,7 +154,7 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.HasKey(x => x.Id);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.MonitoringType).HasConversion<string>().HasMaxLength(20);
-            e.Property(x => x.MonitoringConfig).HasColumnType("jsonb");
+            e.Property(x => x.MonitoringConfig).HasColumnType(jsonColumnType);
             e.HasMany(x => x.Steps).WithOne(x => x.PipelineInstance)
                 .HasForeignKey(x => x.PipelineInstanceId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(x => x.Activations).WithOne(x => x.PipelineInstance)
@@ -184,7 +186,7 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.HasKey(x => x.Id);
             e.Property(x => x.SourceType).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
-            e.Property(x => x.SourceMetadata).HasColumnType("jsonb");
+            e.Property(x => x.SourceMetadata).HasColumnType(jsonColumnType);
             e.HasMany(x => x.Executions).WithOne(x => x.WorkItem).HasForeignKey(x => x.WorkItemId);
             e.HasMany(x => x.ReprocessRequests).WithOne(x => x.WorkItem).HasForeignKey(x => x.WorkItemId);
         });
@@ -205,8 +207,8 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.HasKey(x => x.Id);
             e.Property(x => x.StepType).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
-            e.Property(x => x.InputSummary).HasColumnType("jsonb");
-            e.Property(x => x.OutputSummary).HasColumnType("jsonb");
+            e.Property(x => x.InputSummary).HasColumnType(jsonColumnType);
+            e.Property(x => x.OutputSummary).HasColumnType(jsonColumnType);
             e.HasMany(x => x.EventLogs).WithOne(x => x.StepExecution).HasForeignKey(x => x.StepExecutionId);
         });
         modelBuilder.Entity<ExecutionSnapshot>(e =>
@@ -214,17 +216,17 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.ToTable("execution_snapshots");
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.ExecutionId).IsUnique();
-            e.Property(x => x.PipelineConfig).HasColumnType("jsonb");
-            e.Property(x => x.CollectorConfig).HasColumnType("jsonb");
-            e.Property(x => x.AlgorithmConfig).HasColumnType("jsonb");
-            e.Property(x => x.TransferConfig).HasColumnType("jsonb");
+            e.Property(x => x.PipelineConfig).HasColumnType(jsonColumnType);
+            e.Property(x => x.CollectorConfig).HasColumnType(jsonColumnType);
+            e.Property(x => x.AlgorithmConfig).HasColumnType(jsonColumnType);
+            e.Property(x => x.TransferConfig).HasColumnType(jsonColumnType);
         });
         modelBuilder.Entity<ExecutionEventLog>(e =>
         {
             e.ToTable("execution_event_logs");
             e.HasKey(x => x.Id);
             e.Property(x => x.EventType).HasConversion<string>().HasMaxLength(10);
-            e.Property(x => x.DetailJson).HasColumnType("jsonb");
+            e.Property(x => x.DetailJson).HasColumnType(jsonColumnType);
         });
         modelBuilder.Entity<ReprocessRequest>(e =>
         {

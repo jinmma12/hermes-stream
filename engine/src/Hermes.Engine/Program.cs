@@ -40,10 +40,21 @@ try
         options.ListenAnyIP(metricsPort, o => o.Protocols = HttpProtocols.Http1);
     });
 
-    // Database
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    // Database — supports PostgreSQL and SQL Server
+    var dbProvider = builder.Configuration.GetValue<string>("Database:Provider") ?? "PostgreSQL";
+    var connectionString = dbProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase)
+        ? builder.Configuration.GetConnectionString("SqlServer")
+        : builder.Configuration.GetConnectionString("DefaultConnection");
+
     builder.Services.AddDbContext<HermesDbContext>(options =>
-        options.UseNpgsql(connectionString));
+    {
+        if (dbProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+            options.UseSqlServer(connectionString);
+        else
+            options.UseNpgsql(connectionString);
+    });
+
+    Log.Information("Database provider: {Provider}", dbProvider);
 
     // HTTP client
     builder.Services.AddHttpClient();

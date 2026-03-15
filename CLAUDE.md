@@ -101,6 +101,15 @@ See `docs/ARCHITECTURE.md` for full design specification including:
 - Database schema (recipes, stages, runs, items, provenance)
 - NiFi bridge integration (optional)
 
+## Requirements
+
+- **Database**: Must support both PostgreSQL and Microsoft SQL Server simultaneously.
+  - EF Core provider is selected via `Database:Provider` in appsettings.json (`PostgreSQL` or `SqlServer`)
+  - JSONB columns use `jsonb` on PostgreSQL and `nvarchar(max)` on SQL Server
+  - All enums are stored as strings (not integers) for both providers
+  - Schema creation via `EnsureCreated` must produce identical table structures on both providers
+  - Connection strings: `ConnectionStrings:DefaultConnection` (PostgreSQL), `ConnectionStrings:SqlServer` (MSSQL)
+
 ## Engine Reference Files
 
 The `engine/reference/` directory contains the original Python implementations
