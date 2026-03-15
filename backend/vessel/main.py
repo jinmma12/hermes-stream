@@ -1,4 +1,10 @@
-"""FastAPI application entrypoint for Hermes."""
+"""FastAPI application entrypoint for Hermes.
+
+This is the Web API layer (Python/FastAPI). Engine functions (monitoring,
+processing, plugin execution, NiFi integration) are delegated to the
+.NET Engine service via gRPC. See engine/ for the .NET implementation
+and engine/reference/ for the original Python reference implementations.
+"""
 
 from __future__ import annotations
 
@@ -16,9 +22,8 @@ from vessel.api.routes.system import router as system_router
 from vessel.api.routes.work_items import router as work_items_router
 from vessel.api.websocket import router as websocket_router
 from vessel.domain.models.base import Base
+from vessel.engine_client import EngineClient
 from vessel.infrastructure.database.session import async_engine, async_session_factory
-from vessel.workers.monitoring_worker import MonitoringWorker
-from vessel.workers.processing_worker import ProcessingWorker
 
 logger = logging.getLogger(__name__)
 
@@ -28,18 +33,17 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
-# Background workers
-_monitoring_worker: MonitoringWorker | None = None
-_processing_worker: ProcessingWorker | None = None
+# gRPC client for .NET Engine
+_engine_client: EngineClient | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: startup and shutdown."""
-    global _monitoring_worker, _processing_worker
+    global _engine_client
 
     # Startup
-    logger.info("Hermes starting up...")
+    logger.info("Hermes Web API starting up...")
 
     # Initialize database tables
     async with async_engine.begin() as conn:
@@ -49,24 +53,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables initialized")
 
-    # Start background workers
-    _monitoring_worker = MonitoringWorker(async_session_factory)
-    _processing_worker = ProcessingWorker(async_session_factory)
+    # Connect to .NET Engine via gRPC
+    _engine_client = EngineClient()
+    await _engine_client.connect()
+    logger.info("Engine client connected (gRPC)")
 
-    await _monitoring_worker.start()
-    await _processing_worker.start()
-    logger.info("Background workers started")
+    # Store engine client in app state for route handlers
+    app.state.engine_client = _engine_client
 
     yield
 
     # Shutdown
-    logger.info("Hermes shutting down...")
-    if _monitoring_worker:
-        await _monitoring_worker.stop()
-    if _processing_worker:
-        await _processing_worker.stop()
+    logger.info("Hermes Web API shutting down...")
+    if _engine_client:
+        await _engine_client.disconnect()
     await async_engine.dispose()
-    logger.info("Hermes shutdown complete")
+    logger.info("Hermes Web API shutdown complete")
 
 
 def create_app() -> FastAPI:

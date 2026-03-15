@@ -1,0 +1,446 @@
+// Hermes Bridge Protocol — Python Web API <-> .NET Core Engine
+//
+// This protocol defines the gRPC interface between the Python FastAPI Web API
+// and the .NET Core Engine. The Python layer acts as a gRPC client, delegating
+// engine operations (pipeline lifecycle, job management, monitoring) to .NET.
+//
+// Read-heavy UI queries (GET /jobs, GET /pipelines) bypass this bridge and
+// read PostgreSQL directly from Python for lower latency.
+//
+// See docs/PROJECT_STRUCTURE.md for the full polyglot architecture overview.
+
+syntax = "proto3";
+
+package hermes.bridge.v1;
+
+option csharp_namespace = "Hermes.Bridge.V1";
+option go_package = "hermes/bridge/v1;bridgev1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/struct.proto";
+
+// ---------------------------------------------------------------------------
+// Service: HermesEngineService
+// ---------------------------------------------------------------------------
+//
+// The primary bridge between Python Web API and .NET Engine.
+// Python calls these RPCs to delegate engine operations.
+
+service HermesEngineService {
+
+  // --- Pipeline Lifecycle ---
+
+  // Activate a pipeline: start monitoring and processing.
+  // Called when user clicks "Activate" in the UI.
+  rpc ActivatePipeline(ActivateRequest) returns (ActivateResponse);
+
+  // Deactivate a pipeline: stop monitoring, drain in-flight jobs.
+  rpc DeactivatePipeline(DeactivateRequest) returns (DeactivateResponse);
+
+  // Get the current runtime status of a pipeline in the engine.
+  rpc GetPipelineStatus(StatusRequest) returns (PipelineStatusResponse);
+
+  // --- Job Management ---
+
+  // Reprocess a single job with optional recipe override.
+  rpc ReprocessJob(ReprocessRequest) returns (ReprocessResponse);
+
+  // Bulk reprocess multiple jobs (e.g., after recipe update).
+  rpc BulkReprocessJobs(BulkReprocessRequest) returns (BulkReprocessResponse);
+
+  // Cancel a running or queued job.
+  rpc CancelJob(CancelRequest) returns (CancelResponse);
+
+  // --- Real-time Monitoring ---
+
+  // Stream engine events for a pipeline (job created, completed, failed, etc.).
+  // Python forwards these to WebSocket clients.
+  rpc StreamEvents(EventStreamRequest) returns (stream EngineEvent);
+
+  // Get engine health status (memory, threads, active pipelines).
+  rpc GetEngineHealth(HealthRequest) returns (EngineHealthResponse);
+
+  // Get engine-level metrics (Prometheus-compatible).
+  rpc GetMetrics(MetricsRequest) returns (MetricsResponse);
+
+  // --- Testing & Preview ---
+
+  // Test connectivity to a data source (before activating a pipeline).
+  rpc TestConnection(TestConnectionRequest) returns (TestConnectionResponse);
+
+  // Preview data from a source (sample rows for UI display).
+  rpc PreviewData(PreviewRequest) returns (PreviewResponse);
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+// Runtime status of a pipeline in the engine.
+enum PipelineRuntimeStatus {
+  PIPELINE_RUNTIME_STATUS_UNSPECIFIED = 0;
+  PIPELINE_RUNTIME_STATUS_INACTIVE    = 1;
+  PIPELINE_RUNTIME_STATUS_STARTING    = 2;
+  PIPELINE_RUNTIME_STATUS_ACTIVE      = 3;
+  PIPELINE_RUNTIME_STATUS_DRAINING    = 4;
+  PIPELINE_RUNTIME_STATUS_ERROR       = 5;
+}
+
+// Event type for streamed engine events.
+enum EngineEventType {
+  ENGINE_EVENT_TYPE_UNSPECIFIED        = 0;
+  ENGINE_EVENT_TYPE_JOB_DETECTED      = 1;
+  ENGINE_EVENT_TYPE_JOB_STARTED       = 2;
+  ENGINE_EVENT_TYPE_JOB_COMPLETED     = 3;
+  ENGINE_EVENT_TYPE_JOB_FAILED        = 4;
+  ENGINE_EVENT_TYPE_JOB_REPROCESSING  = 5;
+  ENGINE_EVENT_TYPE_STEP_STARTED      = 6;
+  ENGINE_EVENT_TYPE_STEP_COMPLETED    = 7;
+  ENGINE_EVENT_TYPE_STEP_FAILED       = 8;
+  ENGINE_EVENT_TYPE_PIPELINE_ERROR    = 9;
+  ENGINE_EVENT_TYPE_PIPELINE_RECOVERED = 10;
+  ENGINE_EVENT_TYPE_DLQ_ENTRY         = 11;
+  ENGINE_EVENT_TYPE_CIRCUIT_OPEN      = 12;
+  ENGINE_EVENT_TYPE_CIRCUIT_CLOSED    = 13;
+  ENGINE_EVENT_TYPE_BACKPRESSURE_ON   = 14;
+  ENGINE_EVENT_TYPE_BACKPRESSURE_OFF  = 15;
+}
+
+// Health status of the engine.
+enum EngineHealthStatus {
+  ENGINE_HEALTH_STATUS_UNSPECIFIED = 0;
+  ENGINE_HEALTH_STATUS_HEALTHY     = 1;
+  ENGINE_HEALTH_STATUS_DEGRADED    = 2;
+  ENGINE_HEALTH_STATUS_UNHEALTHY   = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Messages: Pipeline Lifecycle
+// ---------------------------------------------------------------------------
+
+message ActivateRequest {
+  // Pipeline instance ID to activate.
+  string pipeline_id = 1;
+
+  // Who triggered activation (user ID or "system").
+  string activated_by = 2;
+
+  // Optional: override monitoring config for this activation.
+  string monitoring_config_json = 3;
+}
+
+message ActivateResponse {
+  // Whether activation was accepted by the engine.
+  bool success = 1;
+
+  // Activation ID assigned by the engine.
+  string activation_id = 2;
+
+  // Error message if activation failed.
+  string error_message = 3;
+
+  // Current pipeline runtime status after this call.
+  PipelineRuntimeStatus status = 4;
+}
+
+message DeactivateRequest {
+  // Pipeline instance ID to deactivate.
+  string pipeline_id = 1;
+
+  // Who triggered deactivation.
+  string deactivated_by = 2;
+
+  // If true, cancel in-flight jobs immediately instead of draining.
+  bool force = 3;
+
+  // Maximum seconds to wait for drain before force-stopping.
+  int32 drain_timeout_seconds = 4;
+}
+
+message DeactivateResponse {
+  bool success = 1;
+  string error_message = 2;
+
+  // Number of in-flight jobs at time of deactivation.
+  int32 in_flight_jobs = 3;
+
+  PipelineRuntimeStatus status = 4;
+}
+
+message StatusRequest {
+  // Pipeline instance ID.
+  string pipeline_id = 1;
+}
+
+message PipelineStatusResponse {
+  // Pipeline instance ID.
+  string pipeline_id = 1;
+
+  // Current runtime status in the engine.
+  PipelineRuntimeStatus status = 2;
+
+  // Current activation ID (empty if inactive).
+  string activation_id = 3;
+
+  // Number of jobs currently being processed.
+  int32 active_jobs = 4;
+
+  // Number of jobs queued for processing.
+  int32 queued_jobs = 5;
+
+  // Total jobs processed in current activation.
+  int64 total_jobs_processed = 6;
+
+  // Total jobs failed in current activation.
+  int64 total_jobs_failed = 7;
+
+  // When the current activation started.
+  google.protobuf.Timestamp activated_at = 8;
+
+  // Last error message (if status is ERROR).
+  string last_error = 9;
+
+  // Whether back-pressure is currently active.
+  bool backpressure_active = 10;
+
+  // Whether circuit breaker is open.
+  bool circuit_breaker_open = 11;
+
+  // Worker node ID (in cluster mode).
+  string worker_id = 12;
+}
+
+// ---------------------------------------------------------------------------
+// Messages: Job Management
+// ---------------------------------------------------------------------------
+
+message ReprocessRequest {
+  // Job ID to reprocess.
+  string job_id = 1;
+
+  // Who requested reprocessing.
+  string requested_by = 2;
+
+  // Reason for reprocessing.
+  string reason = 3;
+
+  // Start from this step (1-based). 0 = start from beginning.
+  int32 start_from_step = 4;
+
+  // If true, use the latest recipe version instead of the original.
+  bool use_latest_recipe = 5;
+}
+
+message ReprocessResponse {
+  bool success = 1;
+
+  // New execution ID created for reprocessing.
+  string execution_id = 2;
+
+  string error_message = 3;
+}
+
+message BulkReprocessRequest {
+  // Job IDs to reprocess.
+  repeated string job_ids = 1;
+
+  string requested_by = 2;
+  string reason = 3;
+  bool use_latest_recipe = 4;
+}
+
+message BulkReprocessResponse {
+  // Number of jobs successfully queued for reprocessing.
+  int32 accepted_count = 1;
+
+  // Number of jobs that could not be reprocessed (already running, not found).
+  int32 rejected_count = 2;
+
+  // Details for rejected jobs.
+  repeated RejectedJob rejected_jobs = 3;
+}
+
+message RejectedJob {
+  string job_id = 1;
+  string reason = 2;
+}
+
+message CancelRequest {
+  // Job ID to cancel.
+  string job_id = 1;
+
+  // Who requested cancellation.
+  string cancelled_by = 2;
+
+  // Reason for cancellation.
+  string reason = 3;
+
+  // If true, cancel immediately without waiting for checkpoint.
+  bool force = 4;
+}
+
+message CancelResponse {
+  bool success = 1;
+  string error_message = 2;
+
+  // Job status at time of cancellation.
+  string status_at_cancel = 3;
+}
+
+// ---------------------------------------------------------------------------
+// Messages: Real-time Monitoring
+// ---------------------------------------------------------------------------
+
+message EventStreamRequest {
+  // Pipeline instance ID to subscribe to.
+  // Empty string = subscribe to all pipelines.
+  string pipeline_id = 1;
+
+  // Filter by event types (empty = all events).
+  repeated EngineEventType event_types = 2;
+
+  // If true, include historical events from the last N minutes.
+  bool include_history = 3;
+  int32 history_minutes = 4;
+}
+
+message EngineEvent {
+  // Unique event ID.
+  string event_id = 1;
+
+  // Event type.
+  EngineEventType event_type = 2;
+
+  // Pipeline instance ID this event relates to.
+  string pipeline_id = 3;
+
+  // Job ID (if applicable).
+  string job_id = 4;
+
+  // Execution ID (if applicable).
+  string execution_id = 5;
+
+  // Event timestamp.
+  google.protobuf.Timestamp timestamp = 6;
+
+  // Human-readable event message.
+  string message = 7;
+
+  // Structured event data as JSON.
+  string detail_json = 8;
+
+  // Severity: INFO, WARN, ERROR.
+  string severity = 9;
+}
+
+message HealthRequest {
+  // If true, include detailed component health.
+  bool include_details = 1;
+}
+
+message EngineHealthResponse {
+  // Overall engine health.
+  EngineHealthStatus status = 1;
+
+  // Engine uptime in seconds.
+  int64 uptime_seconds = 2;
+
+  // Number of active pipelines.
+  int32 active_pipelines = 3;
+
+  // Total jobs in processing.
+  int32 jobs_processing = 4;
+
+  // Total jobs queued.
+  int32 jobs_queued = 5;
+
+  // Memory usage in megabytes.
+  int64 memory_used_mb = 6;
+
+  // Thread count.
+  int32 thread_count = 7;
+
+  // Content repository disk usage in megabytes.
+  int64 content_repo_size_mb = 8;
+
+  // DLQ size (entries waiting).
+  int32 dlq_size = 9;
+
+  // Per-component health details (key = component name).
+  map<string, string> component_health = 10;
+
+  // Engine version.
+  string engine_version = 11;
+
+  // Server timestamp.
+  google.protobuf.Timestamp timestamp = 12;
+}
+
+message MetricsRequest {
+  // If true, return Prometheus text format. Otherwise JSON.
+  bool prometheus_format = 1;
+}
+
+message MetricsResponse {
+  // Metrics payload (Prometheus text or JSON).
+  string metrics_payload = 1;
+
+  // Content type: "text/plain" (Prometheus) or "application/json".
+  string content_type = 2;
+}
+
+// ---------------------------------------------------------------------------
+// Messages: Testing & Preview
+// ---------------------------------------------------------------------------
+
+message TestConnectionRequest {
+  // Collector definition code (e.g., "rest-api-collector").
+  string collector_code = 1;
+
+  // Collector configuration as JSON.
+  string config_json = 2;
+
+  // Timeout for the test in seconds.
+  int32 timeout_seconds = 3;
+}
+
+message TestConnectionResponse {
+  bool success = 1;
+
+  // Human-readable result message.
+  string message = 2;
+
+  // Response time in milliseconds.
+  int64 response_time_ms = 3;
+
+  // Details (e.g., server version, available tables).
+  string details_json = 4;
+}
+
+message PreviewRequest {
+  // Collector definition code.
+  string collector_code = 1;
+
+  // Collector configuration as JSON.
+  string config_json = 2;
+
+  // Maximum number of records to preview.
+  int32 max_records = 3;
+
+  // Timeout in seconds.
+  int32 timeout_seconds = 4;
+}
+
+message PreviewResponse {
+  bool success = 1;
+  string error_message = 2;
+
+  // Preview records as a JSON array.
+  string records_json = 3;
+
+  // Number of records returned.
+  int32 record_count = 4;
+
+  // Inferred schema as JSON Schema.
+  string inferred_schema_json = 5;
+}

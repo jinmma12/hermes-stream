@@ -35,9 +35,32 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://hermes:hermes@postgres:5432/hermes_db
+      ENGINE_GRPC_HOST: engine
+      ENGINE_GRPC_PORT: "50051"
     depends_on:
       postgres:
         condition: service_healthy
+      engine:
+        condition: service_started
+    networks:
+      - hermes-net
+
+  engine:
+    build:
+      context: ./engine
+      dockerfile: Dockerfile
+    container_name: hermes-engine
+    restart: unless-stopped
+    ports:
+      - "50051:50051"   # gRPC
+      - "9090:9090"     # Prometheus metrics
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=hermes_db;Username=hermes;Password=hermes"
+      Grpc__Port: "50051"
+      Metrics__PrometheusPort: "9090"
     networks:
       - hermes-net
 

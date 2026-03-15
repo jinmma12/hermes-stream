@@ -1,4 +1,4 @@
-# Hermes Roadmap
+# Hermes Stream Roadmap
 
 > Last updated: 2026-03-15
 > Status: Phase 0 (Design) → Phase 1 (MVP) 진입 준비

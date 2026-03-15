@@ -1,11 +1,14 @@
 """Vessel NiFi Integration Module.
 
-NOTE: NiFi integration is handled by the .NET Engine service.
-The Python reference implementations are preserved in engine/reference/infrastructure/nifi/.
+Provides a bridge between Apache NiFi (1.9.x+) and the Vessel data processing
+platform, enabling seamless management of legacy NiFi flows through Vessel's
+simplified UI, per-item tracking, and Recipe system.
 
-The client, config, and model modules are kept in this package for
-backward compatibility. They will be removed once .NET Engine NiFi
-integration is complete.
+Key components:
+- NiFiClient: Async REST API client for NiFi
+- NiFiVesselBridge: Maps NiFi concepts to Vessel concepts
+- NiFiFlowExecutor: Executes NiFi flows as Vessel pipeline steps
+- NiFiConfig: Configuration for NiFi connectivity
 """
 
 from vessel.infrastructure.nifi.client import NiFiClient

@@ -2,10 +2,10 @@
   <img src="docs/assets/hermes-logo.png" alt="Hermes" width="200" />
 </p>
 
-<h1 align="center">Hermes</h1>
+<h1 align="center">Hermes Stream</h1>
 
 <p align="center">
-  <strong>The messenger for your data.</strong>
+  <strong>The Messenger of Data.</strong>
 </p>
 
 <p align="center">
@@ -94,8 +94,8 @@ Scale from a single node to a multi-worker cluster. Coordinator election, automa
 
 ```bash
 # Clone
-git clone https://github.com/jinmma12/hermes-data.git
-cd hermes-data
+git clone https://github.com/jinmma12/hermes-stream.git
+cd hermes-stream
 
 # Copy environment config
 cp .env.example .env

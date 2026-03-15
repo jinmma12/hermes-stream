@@ -1,7 +1,11 @@
 """Vessel Plugin System.
 
-Provides plugin discovery, registration, and subprocess-based execution
-using a language-agnostic JSON line protocol over stdin/stdout.
+NOTE: Plugin execution is handled by the .NET Engine service.
+The Python reference implementations are preserved in engine/reference/plugins/.
+
+The protocol, registry, and executor modules are kept in this package for
+backward compatibility with existing tests. They will be removed once
+.NET Engine plugin tests fully replace them.
 """
 
 from vessel.plugins.protocol import MessageType, PluginProtocol, VesselMessage
