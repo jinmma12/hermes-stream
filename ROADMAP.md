@@ -87,7 +87,7 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 
 ### Plugin System
 - [x] gRPC Plugin Protocol v2 (hermes_plugin.proto)
-- [ ] Hermes.Plugins.Sdk NuGet 패키지
+- [x] Hermes.Plugins.Sdk NuGet 패키지
 - [x] Plugin 프로세스 관리 (spawn, health, kill)
 - [x] 빌트인 플러그인: REST API Collector, File Watcher, Passthrough, File Output
 

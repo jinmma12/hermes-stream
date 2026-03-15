@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Hermes.Plugins.Sdk</RootNamespace>
+    <PackageId>Hermes.Plugins.Sdk</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>hermes-core</Authors>
+    <Description>SDK for building Hermes Stream plugins (collectors, algorithms, transfers)</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageTags>hermes;plugin;data-pipeline</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+</Project>
