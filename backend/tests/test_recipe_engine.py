@@ -8,24 +8,17 @@ and execution-time snapshot isolation.
 from __future__ import annotations
 
 import uuid
-from typing import Any
 
 import pytest
-import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vessel.domain.models.instance import (
-    AlgorithmInstance,
-    AlgorithmInstanceVersion,
     CollectorInstance,
-    CollectorInstanceVersion,
 )
 from vessel.domain.services.recipe_engine import (
-    ConfigValidationResult,
     RecipeDiff,
     RecipeEngine,
 )
-
 
 # ---------------------------------------------------------------------------
 # Recipe creation and versioning
@@ -94,7 +87,7 @@ class TestRecipeCreation:
         inst, v1 = sample_collector_instance
         engine = RecipeEngine(async_session)
 
-        v2 = await engine.create_recipe(
+        await engine.create_recipe(
             instance_type="COLLECTOR",
             instance_id=inst.id,
             config_json={"url": "https://new.api.com", "method": "GET", "interval_seconds": 30},

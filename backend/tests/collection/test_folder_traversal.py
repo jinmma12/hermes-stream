@@ -75,11 +75,15 @@ def traverse_folders(
             return
 
         for entry in entries:
-            if not entry.is_dir(follow_symlinks=follow_symlinks):
+            if not follow_symlinks and entry.is_symlink():
+                continue
+            try:
+                is_dir = entry.is_dir() if follow_symlinks else entry.resolve().is_dir()
+            except OSError:
+                continue
+            if not is_dir:
                 continue
             if skip_hidden and entry.name.startswith("."):
-                continue
-            if not follow_symlinks and entry.is_symlink():
                 continue
             if skip_empty and not any(entry.iterdir()):
                 continue

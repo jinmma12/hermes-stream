@@ -9,24 +9,17 @@ from __future__ import annotations
 
 import asyncio
 import io
-import json
-import sys
 import textwrap
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import pytest_asyncio
 
-from vessel.plugins.protocol import MessageType, PluginProtocol, VesselMessage
 from vessel.plugins.executor import (
-    DEFAULT_TIMEOUT,
     PluginExecutor,
     PluginLogEntry,
-    PluginResult,
 )
+from vessel.plugins.protocol import MessageType, PluginProtocol, VesselMessage
 from vessel.plugins.registry import PluginManifest, PluginType
-
 
 # ---------------------------------------------------------------------------
 # Helpers

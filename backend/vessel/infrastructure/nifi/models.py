@@ -12,11 +12,10 @@ fields returned by newer NiFi versions are preserved rather than rejected.
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Shared / utility models
@@ -31,7 +30,7 @@ class NiFiRevision(BaseModel):
     """
 
     version: int = 0
-    client_id: Optional[str] = Field(default=None, alias="clientId")
+    client_id: str | None = Field(default=None, alias="clientId")
 
     model_config = {"extra": "allow", "populate_by_name": True}
 
@@ -88,7 +87,7 @@ class ProcessGroupStatus(BaseModel):
 
     id: str = ""
     name: str = ""
-    aggregate_snapshot: Optional[ProcessGroupStatusSnapshot] = Field(
+    aggregate_snapshot: ProcessGroupStatusSnapshot | None = Field(
         default=None, alias="aggregateSnapshot"
     )
 
@@ -100,7 +99,7 @@ class ProcessGroup(BaseModel):
 
     id: str = ""
     name: str = ""
-    position: Optional[Position] = None
+    position: Position | None = None
     comments: str = ""
     running_count: int = Field(default=0, alias="runningCount")
     stopped_count: int = Field(default=0, alias="stoppedCount")
@@ -108,9 +107,9 @@ class ProcessGroup(BaseModel):
     disabled_count: int = Field(default=0, alias="disabledCount")
     input_port_count: int = Field(default=0, alias="inputPortCount")
     output_port_count: int = Field(default=0, alias="outputPortCount")
-    parent_group_id: Optional[str] = Field(default=None, alias="parentGroupId")
-    revision: Optional[NiFiRevision] = None
-    parameter_context: Optional[dict[str, Any]] = Field(
+    parent_group_id: str | None = Field(default=None, alias="parentGroupId")
+    revision: NiFiRevision | None = None
+    parameter_context: dict[str, Any] | None = Field(
         default=None, alias="parameterContext"
     )
 
@@ -122,7 +121,7 @@ class ProcessGroup(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class ProcessorState(str, Enum):
+class ProcessorState(StrEnum):
     """NiFi processor scheduling states."""
 
     RUNNING = "RUNNING"
@@ -133,13 +132,13 @@ class ProcessorState(str, Enum):
 class ProcessorConfig(BaseModel):
     """Processor configuration (scheduling, properties, relationships)."""
 
-    scheduling_period: Optional[str] = Field(default=None, alias="schedulingPeriod")
-    scheduling_strategy: Optional[str] = Field(default=None, alias="schedulingStrategy")
+    scheduling_period: str | None = Field(default=None, alias="schedulingPeriod")
+    scheduling_strategy: str | None = Field(default=None, alias="schedulingStrategy")
     concurrently_schedulable_task_count: int = Field(
         default=1, alias="concurrentlySchedulableTaskCount"
     )
-    penalty_duration: Optional[str] = Field(default=None, alias="penaltyDuration")
-    yield_duration: Optional[str] = Field(default=None, alias="yieldDuration")
+    penalty_duration: str | None = Field(default=None, alias="penaltyDuration")
+    yield_duration: str | None = Field(default=None, alias="yieldDuration")
     properties: dict[str, Any] = Field(default_factory=dict)
     auto_terminated_relationships: list[str] = Field(
         default_factory=list, alias="autoTerminatedRelationships"
@@ -157,8 +156,8 @@ class PropertyDescriptor(BaseModel):
     description: str = ""
     required: bool = False
     sensitive: bool = False
-    default_value: Optional[str] = Field(default=None, alias="defaultValue")
-    allowable_values: Optional[list[dict[str, Any]]] = Field(
+    default_value: str | None = Field(default=None, alias="defaultValue")
+    allowable_values: list[dict[str, Any]] | None = Field(
         default=None, alias="allowableValues"
     )
 
@@ -188,7 +187,7 @@ class ProcessorStatus(BaseModel):
     name: str = ""
     type: str = ""
     run_status: str = Field(default="", alias="runStatus")
-    aggregate_snapshot: Optional[ProcessorStatusSnapshot] = Field(
+    aggregate_snapshot: ProcessorStatusSnapshot | None = Field(
         default=None, alias="aggregateSnapshot"
     )
 
@@ -202,8 +201,8 @@ class Processor(BaseModel):
     name: str = ""
     type: str = ""
     state: str = ""
-    position: Optional[Position] = None
-    config: Optional[ProcessorConfig] = None
+    position: Position | None = None
+    config: ProcessorConfig | None = None
     relationships: list[dict[str, Any]] = Field(default_factory=list)
     validation_errors: list[str] = Field(
         default_factory=list, alias="validationErrors"
@@ -211,8 +210,8 @@ class Processor(BaseModel):
     property_descriptors: dict[str, PropertyDescriptor] = Field(
         default_factory=dict, alias="propertyDescriptors"
     )
-    parent_group_id: Optional[str] = Field(default=None, alias="parentGroupId")
-    revision: Optional[NiFiRevision] = None
+    parent_group_id: str | None = Field(default=None, alias="parentGroupId")
+    revision: NiFiRevision | None = None
 
     model_config = {"extra": "allow", "populate_by_name": True}
 
@@ -251,8 +250,8 @@ class Connection(BaseModel):
     back_pressure_data_size_threshold: str = Field(
         default="1 GB", alias="backPressureDataSizeThreshold"
     )
-    queue_size: Optional[QueueSize] = Field(default=None, alias="status")
-    revision: Optional[NiFiRevision] = None
+    queue_size: QueueSize | None = Field(default=None, alias="status")
+    revision: NiFiRevision | None = None
 
     model_config = {"extra": "allow", "populate_by_name": True}
 
@@ -282,7 +281,7 @@ class FlowFileSummary(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class ProvenanceEventType(str, Enum):
+class ProvenanceEventType(StrEnum):
     """NiFi provenance event types."""
 
     CREATE = "CREATE"
@@ -310,7 +309,7 @@ class ProvenanceEvent(BaseModel):
     id: str = ""
     event_id: int = Field(default=0, alias="eventId")
     event_type: str = Field(default="", alias="eventType")
-    event_time: Optional[str] = Field(default=None, alias="eventTime")
+    event_time: str | None = Field(default=None, alias="eventTime")
     flowfile_uuid: str = Field(default="", alias="flowFileUuid")
     file_size: int = Field(default=0, alias="fileSize")
     component_id: str = Field(default="", alias="componentId")
@@ -322,25 +321,25 @@ class ProvenanceEvent(BaseModel):
     updated_attributes: list[dict[str, Any]] = Field(
         default_factory=list, alias="updatedAttributes"
     )
-    content_claim_section: Optional[str] = Field(
+    content_claim_section: str | None = Field(
         default=None, alias="contentClaimSection"
     )
-    content_claim_container: Optional[str] = Field(
+    content_claim_container: str | None = Field(
         default=None, alias="contentClaimContainer"
     )
-    content_claim_identifier: Optional[str] = Field(
+    content_claim_identifier: str | None = Field(
         default=None, alias="contentClaimIdentifier"
     )
-    content_claim_offset: Optional[int] = Field(
+    content_claim_offset: int | None = Field(
         default=None, alias="contentClaimOffset"
     )
-    content_claim_file_size: Optional[int] = Field(
+    content_claim_file_size: int | None = Field(
         default=None, alias="contentClaimFileSize"
     )
     parent_uuids: list[str] = Field(default_factory=list, alias="parentUuids")
     child_uuids: list[str] = Field(default_factory=list, alias="childUuids")
-    transit_uri: Optional[str] = Field(default=None, alias="transitUri")
-    source_system_flowfile_identifier: Optional[str] = Field(
+    transit_uri: str | None = Field(default=None, alias="transitUri")
+    source_system_flowfile_identifier: str | None = Field(
         default=None, alias="sourceSystemFlowFileIdentifier"
     )
 
@@ -355,8 +354,8 @@ class ProvenanceResults(BaseModel):
     )
     total: int = 0
     total_count: int = Field(default=0, alias="totalCount")
-    generated: Optional[str] = None
-    oldest_event: Optional[str] = Field(default=None, alias="oldestEvent")
+    generated: str | None = None
+    oldest_event: str | None = Field(default=None, alias="oldestEvent")
     percentage_completed: int = Field(default=0, alias="percentCompleted")
     finished: bool = False
 
@@ -374,9 +373,9 @@ class Template(BaseModel):
     id: str = ""
     name: str = ""
     description: str = ""
-    group_id: Optional[str] = Field(default=None, alias="groupId")
-    timestamp: Optional[str] = None
-    uri: Optional[str] = None
+    group_id: str | None = Field(default=None, alias="groupId")
+    timestamp: str | None = None
+    uri: str | None = None
 
     model_config = {"extra": "allow", "populate_by_name": True}
 
@@ -390,7 +389,7 @@ class Parameter(BaseModel):
     """A single parameter in a NiFi Parameter Context."""
 
     name: str = ""
-    value: Optional[str] = None
+    value: str | None = None
     sensitive: bool = False
     description: str = ""
     provided: bool = False
@@ -408,17 +407,17 @@ class ParameterContext(BaseModel):
     bound_process_groups: list[dict[str, Any]] = Field(
         default_factory=list, alias="boundProcessGroups"
     )
-    revision: Optional[NiFiRevision] = None
+    revision: NiFiRevision | None = None
 
     model_config = {"extra": "allow", "populate_by_name": True}
 
-    def get_parameters_flat(self) -> dict[str, Optional[str]]:
+    def get_parameters_flat(self) -> dict[str, str | None]:
         """Return parameters as a flat ``{name: value}`` dict.
 
         NiFi wraps each parameter in ``{"parameter": {...}}``.  This helper
         unwraps them for easier consumption.
         """
-        result: dict[str, Optional[str]] = {}
+        result: dict[str, str | None] = {}
         for entry in self.parameters:
             param = entry.get("parameter", entry)
             result[param.get("name", "")] = param.get("value")
@@ -486,11 +485,11 @@ class SystemDiagnostics(BaseModel):
     provenance_repository_storage_usage: list[StorageUsage] = Field(
         default_factory=list, alias="provenanceRepositoryStorageUsage"
     )
-    flowfile_repository_storage_usage: Optional[StorageUsage] = Field(
+    flowfile_repository_storage_usage: StorageUsage | None = Field(
         default=None, alias="flowFileRepositoryStorageUsage"
     )
     uptime: str = ""
-    stats_last_refreshed: Optional[str] = Field(
+    stats_last_refreshed: str | None = Field(
         default=None, alias="statsLastRefreshed"
     )
 
@@ -528,7 +527,7 @@ class ControllerStatusSnapshot(BaseModel):
 class ControllerStatus(BaseModel):
     """NiFi controller status response."""
 
-    controller_status: Optional[ControllerStatusSnapshot] = Field(
+    controller_status: ControllerStatusSnapshot | None = Field(
         default=None, alias="controllerStatus"
     )
 
@@ -559,7 +558,7 @@ class NiFiHealthStatus(BaseModel):
     stopped_processors: int = 0
     invalid_processors: int = 0
     back_pressure_connections: list[str] = Field(default_factory=list)
-    error: Optional[str] = None
-    checked_at: Optional[datetime] = None
+    error: str | None = None
+    checked_at: datetime | None = None
 
     model_config = {"extra": "allow"}

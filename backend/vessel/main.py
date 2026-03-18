@@ -9,8 +9,8 @@ and engine/reference/ for the original Python reference implementations.
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +23,7 @@ from vessel.api.routes.work_items import router as work_items_router
 from vessel.api.websocket import router as websocket_router
 from vessel.domain.models.base import Base
 from vessel.engine_client import EngineClient
-from vessel.infrastructure.database.session import async_engine, async_session_factory
+from vessel.infrastructure.database.session import async_engine
 
 logger = logging.getLogger(__name__)
 

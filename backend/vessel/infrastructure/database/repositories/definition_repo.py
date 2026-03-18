@@ -1,7 +1,7 @@
 """Generic repository for definition layer CRUD and version management."""
 
 import uuid
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ DefinitionT = TypeVar("DefinitionT", bound=Base)
 VersionT = TypeVar("VersionT", bound=Base)
 
 
-class DefinitionRepository(Generic[DefinitionT, VersionT]):
+class DefinitionRepository[DefinitionT: Base, VersionT: Base]:
     """Generic CRUD repository for all three definition types.
 
     Usage:

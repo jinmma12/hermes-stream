@@ -6,13 +6,9 @@ bulk reprocessing, audit trails, and reprocessing already-completed items.
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
-from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,16 +18,13 @@ from vessel.domain.models.execution import (
     ReprocessRequest,
     WorkItem,
     WorkItemExecution,
-    WorkItemStepExecution,
 )
-from vessel.domain.models.instance import CollectorInstanceVersion
 from vessel.domain.models.monitoring import PipelineActivation
 from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
 from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
 from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
 from vessel.domain.services.recipe_engine import RecipeEngine
 from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
-
 
 # ---------------------------------------------------------------------------
 # Helpers

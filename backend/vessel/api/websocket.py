@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from vessel.domain.models.execution import ExecutionEventLog, WorkItem
 from vessel.domain.models.monitoring import PipelineActivation
@@ -88,7 +86,7 @@ async def pipeline_events(
 
     try:
         # Poll for new events and send to clients
-        last_check = datetime.now(timezone.utc)
+        last_check = datetime.now(UTC)
 
         while True:
             try:
@@ -99,7 +97,7 @@ async def pipeline_events(
                     )
                     # Client can send commands (future use)
                     logger.debug("Received from client: %s", data)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass
 
                 # Poll for new work items and activations
@@ -154,7 +152,7 @@ async def pipeline_events(
                             },
                         })
 
-                last_check = datetime.now(timezone.utc)
+                last_check = datetime.now(UTC)
 
             except WebSocketDisconnect:
                 break
@@ -190,7 +188,7 @@ async def work_item_logs(
                 # Check for close
                 try:
                     await asyncio.wait_for(websocket.receive_text(), timeout=2.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass
 
                 # Poll for new log entries

@@ -12,12 +12,12 @@ Each pipeline stage (Collect → Process → Export) is tested across:
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-from sqlalchemy import select, func as sa_func
+from sqlalchemy import func as sa_func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vessel.domain.models.execution import (
@@ -33,7 +33,6 @@ from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
 from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
 from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
 from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
-
 
 # ===========================================================================
 # Test Helpers
@@ -503,7 +502,7 @@ class TestRetryScenarios:
         dispatcher = _tracking_dispatcher(flaky_collect)
         resolver = _mock_resolver(async_session, steps)
 
-        ex = await _orch(async_session, dispatcher, resolver, steps).process_work_item(wi.id)
+        await _orch(async_session, dispatcher, resolver, steps).process_work_item(wi.id)
         # Collect failed once, retried once, then algorithm + transfer succeed
         assert dispatcher.dispatch.call_count >= 3
 
@@ -546,7 +545,7 @@ class TestBackpressureScenarios:
         # Create work items in different states
         wi1 = await _make_work_item(async_session, pipeline)
         wi2 = await _make_work_item(async_session, pipeline)
-        wi3 = await _make_work_item(async_session, pipeline)
+        await _make_work_item(async_session, pipeline)
 
         # Process wi1 (COMPLETED)
         dispatcher = _mock_dispatcher([_ok(), _ok(), _ok()])

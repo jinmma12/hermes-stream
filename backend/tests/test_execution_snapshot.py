@@ -6,30 +6,21 @@ hash-based change detection, idempotent hashing, and reprocess comparison.
 
 from __future__ import annotations
 
-import hashlib
-import json
 import uuid
-from typing import Any
-from unittest.mock import AsyncMock
 
 import pytest
-import pytest_asyncio
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vessel.domain.models.execution import (
-    ExecutionSnapshot,
     WorkItem,
     WorkItemExecution,
 )
 from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
+from vessel.domain.models.pipeline import PipelineInstance
 from vessel.domain.services.snapshot_resolver import (
     ResolvedConfig,
     SnapshotResolver,
-    StepConfig,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

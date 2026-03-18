@@ -226,14 +226,15 @@ async def simulate_download(
     offset = state.bytes_downloaded  # support resume
 
     while offset < len(data):
+        end = min(offset + chunk_size, len(data))
+
         if fail_at_pct is not None and fail_error is not None:
-            pct = (offset / len(data)) * 100
-            if pct >= fail_at_pct:
-                state.bytes_downloaded = offset
+            fail_offset = min(len(data), int(len(data) * (fail_at_pct / 100)))
+            if end >= fail_offset:
+                state.bytes_downloaded = fail_offset
                 state.error = fail_error
                 raise fail_error
 
-        end = min(offset + chunk_size, len(data))
         result.extend(data[offset:end])
         offset = end
         state.bytes_downloaded = offset

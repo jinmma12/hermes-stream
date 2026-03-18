@@ -16,15 +16,12 @@ Covers scenarios that real-world production pipelines encounter:
 from __future__ import annotations
 
 import hashlib
-import json
 import uuid
-from datetime import datetime, timezone
-from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-from sqlalchemy import select, func as sa_func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func as sa_func
+from sqlalchemy import select
 
 from vessel.domain.models.execution import (
     ExecutionEventLog,
@@ -40,7 +37,6 @@ from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, Exe
 from vessel.domain.services.pipeline_manager import PipelineManager
 from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
 from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
-
 
 # ===========================================================================
 # Helpers (reused from test_pipeline_step_scenarios.py pattern)
@@ -138,8 +134,8 @@ class TestDeduplication:
     async def test_same_dedup_key_creates_two_records(self, async_session, sample_pipeline):
         """DB allows two work items with same dedup_key (application must enforce)."""
         pipeline, steps = sample_pipeline
-        wi1 = await _wi(async_session, pipeline, "a.csv", dedup="FILE:abc123")
-        wi2 = await _wi(async_session, pipeline, "b.csv", dedup="FILE:abc123")
+        await _wi(async_session, pipeline, "a.csv", dedup="FILE:abc123")
+        await _wi(async_session, pipeline, "b.csv", dedup="FILE:abc123")
 
         # Both exist in DB (DB doesn't enforce uniqueness — app layer does)
         count = await async_session.execute(
@@ -387,8 +383,8 @@ class TestPipelineIsolation:
         async_session.add(step_b)
         await async_session.flush()
 
-        wi1 = await _wi(async_session, pipeline1, "p1.csv")
-        wi2 = await _wi(async_session, pipeline2, "p2.csv")
+        await _wi(async_session, pipeline1, "p1.csv")
+        await _wi(async_session, pipeline2, "p2.csv")
 
         p1_count = await async_session.execute(
             select(sa_func.count()).select_from(WorkItem).where(WorkItem.pipeline_instance_id == pipeline1.id)

@@ -1,7 +1,7 @@
 """Repository for instance layer CRUD, recipe versioning."""
 
 import uuid
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ InstanceT = TypeVar("InstanceT", bound=Base)
 VersionT = TypeVar("VersionT", bound=Base)
 
 
-class InstanceRepository(Generic[InstanceT, VersionT]):
+class InstanceRepository[InstanceT: Base, VersionT: Base]:
     """Generic CRUD repository for all three instance types with recipe versioning.
 
     Usage:

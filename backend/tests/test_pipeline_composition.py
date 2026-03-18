@@ -13,14 +13,12 @@ from __future__ import annotations
 import uuid
 
 import pytest
-import pytest_asyncio
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vessel.domain.models.monitoring import PipelineActivation
 from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
 from vessel.domain.services.pipeline_manager import PipelineManager
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -188,7 +186,7 @@ class TestStepReordering:
         pB = await make_pipeline(async_session, "B")
         sA1 = await add_step(async_session, pA.id, 1, "COLLECT")
         sA2 = await add_step(async_session, pA.id, 2, "TRANSFER")
-        sB1 = await add_step(async_session, pB.id, 1, "COLLECT")
+        await add_step(async_session, pB.id, 1, "COLLECT")
 
         mgr = PipelineManager(async_session)
         await mgr.reorder_steps(pA.id, [sA2.id, sA1.id])
@@ -200,7 +198,7 @@ class TestStepReordering:
     @pytest.mark.asyncio
     async def test_reorder_wrong_ids_raises(self, async_session: AsyncSession):
         p = await make_pipeline(async_session)
-        s1 = await add_step(async_session, p.id, 1, "COLLECT")
+        await add_step(async_session, p.id, 1, "COLLECT")
 
         mgr = PipelineManager(async_session)
         with pytest.raises(ValueError, match="step_ids must contain exactly"):
@@ -295,7 +293,7 @@ class TestAddStepViaManager:
     async def test_add_step_after_deletion_continues_sequence(self, async_session: AsyncSession):
         p = await make_pipeline(async_session)
         mgr = PipelineManager(async_session)
-        s1 = await mgr.add_step(p.id, "COLLECT", "COLLECTOR", uuid.uuid4())
+        await mgr.add_step(p.id, "COLLECT", "COLLECTOR", uuid.uuid4())
         s2 = await mgr.add_step(p.id, "ALGORITHM", "ALGORITHM", uuid.uuid4())
 
         await mgr.remove_step(p.id, s2.id)
@@ -378,7 +376,7 @@ class TestFullPipelineLifecycle:
         assert p.status == "PAUSED"
 
         # Reactivate
-        act2 = await mgr.activate_pipeline(pipeline.id)
+        await mgr.activate_pipeline(pipeline.id)
         p = await mgr.get_pipeline(pipeline.id)
         assert p is not None
         assert p.status == "ACTIVE"
@@ -424,7 +422,7 @@ class TestFullPipelineLifecycle:
 
         # Add a processor in the middle while paused
         await mgr.reorder_steps(pipeline.id, [s1.id, s2.id])  # normalize
-        s_new = await mgr.add_step(pipeline.id, "ALGORITHM", "ALGORITHM", algo.id, step_order=2)
+        await mgr.add_step(pipeline.id, "ALGORITHM", "ALGORITHM", algo.id, step_order=2)
         s2.step_order = 3
         await async_session.flush()
 
@@ -531,9 +529,9 @@ class TestStepEnableDisable:
     @pytest.mark.asyncio
     async def test_count_enabled_steps(self, async_session: AsyncSession):
         p = await make_pipeline(async_session)
-        s1 = await add_step(async_session, p.id, 1, "COLLECT")
+        await add_step(async_session, p.id, 1, "COLLECT")
         s2 = await add_step(async_session, p.id, 2, "ALGORITHM")
-        s3 = await add_step(async_session, p.id, 3, "TRANSFER")
+        await add_step(async_session, p.id, 3, "TRANSFER")
 
         s2.is_enabled = False
         await async_session.flush()
@@ -543,7 +541,7 @@ class TestStepEnableDisable:
             .select_from(PipelineStep)
             .where(
                 PipelineStep.pipeline_instance_id == p.id,
-                PipelineStep.is_enabled == True,
+                PipelineStep.is_enabled,
             )
         )
         assert result.scalar() == 2

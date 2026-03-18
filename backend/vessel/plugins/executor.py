@@ -7,14 +7,12 @@ handles timeouts, errors, and progress reporting.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from vessel.plugins.protocol import MessageType, PluginProtocol, VesselMessage
+from vessel.plugins.protocol import MessageType, VesselMessage
 from vessel.plugins.registry import PluginManifest
 
 logger = logging.getLogger(__name__)
@@ -50,7 +48,7 @@ class PluginResult:
     errors: list[dict[str, str]] = field(default_factory=list)
     logs: list[PluginLogEntry] = field(default_factory=list)
     summary: dict[str, Any] = field(default_factory=dict)
-    exit_code: Optional[int] = None
+    exit_code: int | None = None
     duration_seconds: float = 0.0
     last_progress: float = 0.0
 
@@ -71,8 +69,8 @@ class PluginExecutor:
     def __init__(
         self,
         timeout: int = DEFAULT_TIMEOUT,
-        on_progress: Optional[Any] = None,
-        on_log: Optional[Any] = None,
+        on_progress: Any | None = None,
+        on_log: Any | None = None,
     ) -> None:
         """Initialize the executor.
 
@@ -90,7 +88,7 @@ class PluginExecutor:
         plugin: PluginManifest,
         config: dict[str, Any],
         input_data: Any = None,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> PluginResult:
         """Execute a plugin subprocess and return the result.
 
@@ -149,7 +147,7 @@ class PluginExecutor:
                     self._read_output(process, result),
                     timeout=self.timeout,
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.error(
                     "Plugin %s timed out after %d seconds",
                     plugin.name,

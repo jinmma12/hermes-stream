@@ -14,9 +14,6 @@ Engine tests fully replace them.
 """
 
 # Web API services (stay in Python)
-from vessel.domain.services.pipeline_manager import PipelineManager
-from vessel.domain.services.recipe_engine import RecipeEngine
-
 # Engine services (kept for test compatibility; canonical implementation is .NET)
 # See engine/reference/ for the reference Python implementations.
 from vessel.domain.services.condition_evaluator import ConditionEvaluator
@@ -31,7 +28,9 @@ from vessel.domain.services.monitoring_engine import (
     FileMonitor,
     MonitoringEngine,
 )
+from vessel.domain.services.pipeline_manager import PipelineManager
 from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
+from vessel.domain.services.recipe_engine import RecipeEngine
 from vessel.domain.services.snapshot_resolver import SnapshotResolver
 
 __all__ = [

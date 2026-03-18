@@ -21,8 +21,8 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from vessel.infrastructure.nifi.client import (
     NiFiApiError,
@@ -32,11 +32,6 @@ from vessel.infrastructure.nifi.client import (
 from vessel.infrastructure.nifi.config import NiFiConfig
 from vessel.infrastructure.nifi.models import (
     NiFiHealthStatus,
-    ProcessGroup,
-    ProcessGroupStatus,
-    Processor,
-    ProvenanceEvent,
-    ProvenanceResults,
 )
 
 logger = logging.getLogger(__name__)
@@ -78,7 +73,7 @@ class SyncedWorkItem:
     event_type: str
     component_id: str
     component_name: str
-    timestamp: Optional[str] = None
+    timestamp: str | None = None
     details: str = ""
     attributes: dict[str, str] = field(default_factory=dict)
 
@@ -90,9 +85,9 @@ class NiFiFlowResult:
     flowfile_uuid: str
     success: bool
     completed: bool = False
-    output_data: Optional[bytes] = None
+    output_data: bytes | None = None
     events: list[SyncedWorkItem] = field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
     duration_seconds: float = 0.0
 
 
@@ -222,7 +217,7 @@ class NiFiVesselBridge:
     async def sync_nifi_provenance_to_work_items(
         self,
         pipeline_id: str,
-        since: Optional[datetime] = None,
+        since: datetime | None = None,
         max_results: int = 500,
     ) -> list[SyncedWorkItem]:
         """Read NiFi provenance events and map them to Vessel WorkItems.
@@ -309,7 +304,7 @@ class NiFiVesselBridge:
             NiFiApiError: If the update fails.
         """
         # Convert all values to strings (NiFi parameters are string-typed)
-        str_params: dict[str, Optional[str]] = {}
+        str_params: dict[str, str | None] = {}
         for key, value in recipe_config.items():
             if value is None:
                 str_params[key] = None
@@ -336,7 +331,7 @@ class NiFiVesselBridge:
     async def trigger_nifi_flow(
         self,
         process_group_id: str,
-        input_data: Optional[bytes] = None,
+        input_data: bytes | None = None,
     ) -> str:
         """Send data into a NiFi flow via an Input Port.
 
@@ -400,7 +395,7 @@ class NiFiVesselBridge:
             )
 
         # Commit transaction
-        commit_resp = await http.delete(
+        await http.delete(
             transaction_url,
             headers=self._client._auth_headers(),
         )
@@ -423,7 +418,7 @@ class NiFiVesselBridge:
     async def monitor_nifi_flow_completion(
         self,
         flowfile_uuid: str,
-        timeout: Optional[int] = None,
+        timeout: int | None = None,
     ) -> NiFiFlowResult:
         """Poll NiFi provenance to track a FlowFile through completion.
 
@@ -444,7 +439,7 @@ class NiFiVesselBridge:
         events: list[SyncedWorkItem] = []
         completed = False
         success = False
-        error_msg: Optional[str] = None
+        error_msg: str | None = None
 
         terminal_event_types = {"SEND", "DROP", "EXPIRE", "REMOTE_INVOCATION"}
 
@@ -524,7 +519,7 @@ class NiFiVesselBridge:
         Returns:
             NiFiHealthStatus with cluster, JVM, and queue information.
         """
-        health = NiFiHealthStatus(checked_at=datetime.now(timezone.utc))
+        health = NiFiHealthStatus(checked_at=datetime.now(UTC))
 
         try:
             # Cluster summary

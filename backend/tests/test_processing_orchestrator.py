@@ -6,14 +6,10 @@ disabled step skipping, output chaining between steps, and timing recording.
 
 from __future__ import annotations
 
-import asyncio
-import uuid
-from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,15 +17,12 @@ from vessel.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     WorkItem,
-    WorkItemExecution,
-    WorkItemStepExecution,
 )
 from vessel.domain.models.monitoring import PipelineActivation
 from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
 from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
 from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
 from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -271,7 +264,7 @@ class TestErrorHandling:
         orch = ProcessingOrchestrator(
             db=async_session, dispatcher=dispatcher, snapshot_resolver=resolver,
         )
-        execution = await orch.process_work_item(wi.id)
+        await orch.process_work_item(wi.id)
 
         # The initial attempt fails, then retry succeeds on attempt 2
         # So total calls: step1(ok) + step2(fail) + retry1(fail) + retry2(ok) + step3(ok)

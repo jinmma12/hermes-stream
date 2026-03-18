@@ -29,9 +29,9 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
-from vessel.infrastructure.nifi.bridge import NiFiFlowResult, NiFiVesselBridge
+from vessel.infrastructure.nifi.bridge import NiFiVesselBridge
 from vessel.infrastructure.nifi.client import NiFiApiError, NiFiClient
 from vessel.infrastructure.nifi.config import NiFiConfig
 
@@ -69,12 +69,12 @@ class NiFiExecutionResult:
     errors: list[dict[str, str]] = field(default_factory=list)
     logs: list[NiFiExecutionLogEntry] = field(default_factory=list)
     summary: dict[str, Any] = field(default_factory=dict)
-    exit_code: Optional[int] = None
+    exit_code: int | None = None
     duration_seconds: float = 0.0
     last_progress: float = 0.0
 
     # NiFi-specific
-    flowfile_uuid: Optional[str] = None
+    flowfile_uuid: str | None = None
     provenance_event_count: int = 0
 
 
@@ -121,7 +121,7 @@ class NiFiFlowExecutor:
         self,
         config: dict[str, Any],
         input_data: Any = None,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> NiFiExecutionResult:
         """Execute a NiFi flow and return the result.
 
@@ -280,7 +280,7 @@ class NiFiFlowExecutor:
         return result
 
     @staticmethod
-    def _prepare_input(input_data: Any) -> Optional[bytes]:
+    def _prepare_input(input_data: Any) -> bytes | None:
         """Convert input data to bytes for sending to NiFi.
 
         Args:

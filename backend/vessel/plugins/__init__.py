@@ -8,9 +8,9 @@ backward compatibility with existing tests. They will be removed once
 .NET Engine plugin tests fully replace them.
 """
 
+from vessel.plugins.executor import PluginExecutor, PluginResult
 from vessel.plugins.protocol import MessageType, PluginProtocol, VesselMessage
 from vessel.plugins.registry import PluginRegistry
-from vessel.plugins.executor import PluginExecutor, PluginResult
 
 __all__ = [
     "MessageType",

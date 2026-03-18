@@ -7,16 +7,10 @@ and recipe change workflows.
 
 from __future__ import annotations
 
-import json
-import os
-import uuid
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
-import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,16 +20,11 @@ from vessel.domain.models.execution import (
     ReprocessRequest,
     WorkItem,
     WorkItemExecution,
-    WorkItemStepExecution,
-)
-from vessel.domain.models.instance import (
-    AlgorithmInstanceVersion,
-    CollectorInstanceVersion,
 )
 from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
+from vessel.domain.models.pipeline import PipelineStep
 from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
-from vessel.domain.services.monitoring_engine import FileMonitor, MonitorEvent
+from vessel.domain.services.monitoring_engine import FileMonitor
 from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
 from vessel.domain.services.recipe_engine import RecipeEngine
 from vessel.domain.services.snapshot_resolver import (
@@ -43,7 +32,6 @@ from vessel.domain.services.snapshot_resolver import (
     SnapshotResolver,
     StepConfig,
 )
-
 
 # ---------------------------------------------------------------------------
 # Shared helpers

@@ -9,16 +9,16 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 MANIFEST_FILENAME = "vessel-plugin.json"
 
 
-class PluginType(str, Enum):
+class PluginType(StrEnum):
     """Categories of Vessel plugins."""
 
     COLLECTOR = "COLLECTOR"
@@ -166,7 +166,7 @@ class PluginRegistry:
         self,
         plugin_type: PluginType | str,
         name: str,
-    ) -> Optional[PluginManifest]:
+    ) -> PluginManifest | None:
         """Look up a plugin by type and name.
 
         Args:
@@ -183,7 +183,7 @@ class PluginRegistry:
 
     def list_plugins(
         self,
-        type_filter: Optional[PluginType | str] = None,
+        type_filter: PluginType | str | None = None,
     ) -> list[PluginManifest]:
         """List all registered plugins, optionally filtered by type.
 
@@ -229,6 +229,6 @@ class PluginRegistry:
     @staticmethod
     def _load_manifest(manifest_path: Path) -> PluginManifest:
         """Load and parse a single vessel-plugin.json file."""
-        with open(manifest_path, "r", encoding="utf-8") as f:
+        with open(manifest_path, encoding="utf-8") as f:
             data = json.load(f)
         return PluginManifest.from_dict(data, plugin_dir=manifest_path.parent)

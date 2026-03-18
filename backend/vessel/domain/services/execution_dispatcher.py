@@ -5,10 +5,9 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import subprocess
 import time
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -101,8 +100,8 @@ class ExecutionDispatcher:
         context: dict[str, Any] | None,
     ) -> ExecutionResult:
         """Execute a Vessel plugin via subprocess and JSON line protocol."""
-        from vessel.plugins.registry import PluginRegistry
         from vessel.plugins.executor import PluginExecutor
+        from vessel.plugins.registry import PluginRegistry
 
         # execution_ref format: "TYPE:name" e.g. "COLLECTOR:rest-api-collector"
         if not execution_ref:
@@ -200,7 +199,7 @@ class ExecutionDispatcher:
                 logs=logs,
             )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return ExecutionResult(
                 success=False,
                 logs=[{"level": "ERROR", "message": f"Script timed out after {timeout}s"}],

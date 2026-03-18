@@ -8,14 +8,13 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import Any, AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import event as sa_event
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
@@ -32,12 +31,7 @@ from vessel.domain.models.definition import (
     TransferDefinitionVersion,
 )
 from vessel.domain.models.execution import (
-    ExecutionEventLog,
-    ExecutionSnapshot,
-    ReprocessRequest,
     WorkItem,
-    WorkItemExecution,
-    WorkItemStepExecution,
 )
 from vessel.domain.models.instance import (
     AlgorithmInstance,
@@ -51,7 +45,6 @@ from vessel.domain.models.monitoring import PipelineActivation
 from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
 from vessel.plugins.protocol import MessageType, VesselMessage
 from vessel.plugins.registry import PluginManifest, PluginRegistry, PluginType
-
 
 # ---------------------------------------------------------------------------
 # Database fixtures (in-memory SQLite with aiosqlite)

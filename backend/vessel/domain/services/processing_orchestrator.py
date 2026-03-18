@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -14,14 +14,13 @@ from sqlalchemy.orm import selectinload
 
 from vessel.domain.models.execution import (
     ExecutionEventLog,
-    ExecutionSnapshot,
     ReprocessRequest,
     WorkItem,
     WorkItemExecution,
     WorkItemStepExecution,
 )
 from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
+from vessel.domain.services.execution_dispatcher import ExecutionDispatcher
 from vessel.domain.services.snapshot_resolver import SnapshotResolver
 
 logger = logging.getLogger(__name__)
@@ -82,7 +81,7 @@ class ProcessingOrchestrator:
 
         # 1. Create execution record
         execution_no = work_item.execution_count + 1
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         execution = WorkItemExecution(
             work_item_id=work_item.id,
@@ -134,7 +133,7 @@ class ProcessingOrchestrator:
             if not step.is_enabled:
                 continue
 
-            step_start = datetime.now(timezone.utc)
+            step_start = datetime.now(UTC)
 
             step_execution = WorkItemStepExecution(
                 execution_id=execution.id,
@@ -175,7 +174,7 @@ class ProcessingOrchestrator:
                     },
                 )
 
-                step_end = datetime.now(timezone.utc)
+                step_end = datetime.now(UTC)
                 step_execution.ended_at = step_end
                 step_execution.duration_ms = int(
                     (step_end - step_start).total_seconds() * 1000
@@ -202,7 +201,7 @@ class ProcessingOrchestrator:
                     )
 
             except Exception as exc:
-                step_end = datetime.now(timezone.utc)
+                step_end = datetime.now(UTC)
                 step_execution.status = "FAILED"
                 step_execution.error_message = str(exc)
                 step_execution.error_code = type(exc).__name__
@@ -229,7 +228,7 @@ class ProcessingOrchestrator:
                         step_execution.id,
                         "WARN",
                         f"{step.step_type}_SKIPPED",
-                        f"Skipping failed step (on_error=SKIP)",
+                        "Skipping failed step (on_error=SKIP)",
                     )
                     continue
                 elif step.on_error == "RETRY":
@@ -247,7 +246,7 @@ class ProcessingOrchestrator:
                 await self.db.flush()
 
         # 5. Update final status
-        end_time = datetime.now(timezone.utc)
+        end_time = datetime.now(UTC)
         if execution_failed:
             execution.status = "FAILED"
         else:

@@ -20,12 +20,12 @@ from __future__ import annotations
 import json
 import sys
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from io import TextIOBase
-from typing import Any, Optional
+from typing import Any
 
 
-class MessageType(str, Enum):
+class MessageType(StrEnum):
     """Types of messages in the Vessel Plugin Protocol."""
 
     # Vessel Core -> Plugin
@@ -108,7 +108,7 @@ class VesselMessage:
         )
 
     @classmethod
-    def done(cls, summary: Optional[dict[str, Any]] = None) -> VesselMessage:
+    def done(cls, summary: dict[str, Any] | None = None) -> VesselMessage:
         """Create a DONE message."""
         return cls(type=MessageType.DONE, data={"summary": summary or {}})
 
@@ -118,7 +118,7 @@ class VesselMessage:
     def configure(
         cls,
         config: dict[str, Any],
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> VesselMessage:
         """Create a CONFIGURE message."""
         return cls(
@@ -154,7 +154,7 @@ class PluginProtocol:
         output.flush()
 
     @staticmethod
-    def read_message(stream: TextIOBase | Any = None) -> Optional[VesselMessage]:
+    def read_message(stream: TextIOBase | Any = None) -> VesselMessage | None:
         """Read a single message from the given stream.
 
         Blocks until a line is available. Returns None on EOF.

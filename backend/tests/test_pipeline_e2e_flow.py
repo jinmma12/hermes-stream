@@ -15,29 +15,21 @@ Verifies:
 
 from __future__ import annotations
 
-import json
-import uuid
-from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from vessel.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
-    ReprocessRequest,
     WorkItem,
-    WorkItemExecution,
     WorkItemStepExecution,
 )
 from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
 from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
 from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
 from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
-
 
 # ===========================================================================
 # Realistic Dispatchers — simulate actual connector behavior
@@ -217,7 +209,7 @@ class TestFullPipelineFlow:
         mock_d1 = AsyncMock(spec=ExecutionDispatcher)
         mock_d1.dispatch = AsyncMock(side_effect=d1.dispatch)
         r1 = _make_resolver_with_recipes(async_session, steps, {"ALGORITHM": {"threshold": 90.0}})
-        ex1 = await ProcessingOrchestrator(db=async_session, dispatcher=mock_d1, snapshot_resolver=r1).process_work_item(wi1.id)
+        await ProcessingOrchestrator(db=async_session, dispatcher=mock_d1, snapshot_resolver=r1).process_work_item(wi1.id)
 
         # Test 2: threshold=60 → 2 anomalies
         wi2 = await _wi(async_session, pipeline, "run2.csv")
@@ -225,7 +217,7 @@ class TestFullPipelineFlow:
         mock_d2 = AsyncMock(spec=ExecutionDispatcher)
         mock_d2.dispatch = AsyncMock(side_effect=d2.dispatch)
         r2 = _make_resolver_with_recipes(async_session, steps, {"ALGORITHM": {"threshold": 60.0}})
-        ex2 = await ProcessingOrchestrator(db=async_session, dispatcher=mock_d2, snapshot_resolver=r2).process_work_item(wi2.id)
+        await ProcessingOrchestrator(db=async_session, dispatcher=mock_d2, snapshot_resolver=r2).process_work_item(wi2.id)
 
         # Verify: different thresholds → different anomaly counts
         algo1_output = d1.call_log[1]  # ALGORITHM step
@@ -392,7 +384,7 @@ class TestReprocessE2E:
         m1 = AsyncMock(spec=ExecutionDispatcher)
         m1.dispatch = AsyncMock(side_effect=d1.dispatch)
         r1 = _make_resolver_with_recipes(async_session, steps, {"ALGORITHM": {"threshold": 99.0}})
-        ex1 = await ProcessingOrchestrator(db=async_session, dispatcher=m1, snapshot_resolver=r1).process_work_item(wi.id)
+        await ProcessingOrchestrator(db=async_session, dispatcher=m1, snapshot_resolver=r1).process_work_item(wi.id)
 
         wi.status = "DETECTED"
         await async_session.flush()
@@ -402,7 +394,7 @@ class TestReprocessE2E:
         m2 = AsyncMock(spec=ExecutionDispatcher)
         m2.dispatch = AsyncMock(side_effect=d2.dispatch)
         r2 = _make_resolver_with_recipes(async_session, steps, {"ALGORITHM": {"threshold": 50.0}})
-        ex2 = await ProcessingOrchestrator(db=async_session, dispatcher=m2, snapshot_resolver=r2).process_work_item(
+        await ProcessingOrchestrator(db=async_session, dispatcher=m2, snapshot_resolver=r2).process_work_item(
             wi.id, trigger_type="REPROCESS",
         )
 
@@ -511,7 +503,7 @@ class TestEmptyDataFlow:
             if t == "COLLECT":
                 return ExecutionResult(success=True, output={"records": []}, summary={}, duration_ms=5)
             elif t == "ALGORITHM":
-                inp = kw.get("input_data", {})
+                kw.get("input_data", {})
                 return ExecutionResult(success=True, output={"records": [], "count": 0}, summary={}, duration_ms=3)
             return ExecutionResult(success=True, output={"written": 0}, summary={}, duration_ms=2)
 

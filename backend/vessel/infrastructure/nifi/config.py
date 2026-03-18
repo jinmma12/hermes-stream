@@ -14,8 +14,6 @@ Example environment variables::
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -45,15 +43,15 @@ class NiFiConfig(BaseSettings):
         default="http://localhost:8080/nifi-api",
         description="NiFi REST API base URL",
     )
-    username: Optional[str] = Field(
+    username: str | None = Field(
         default=None,
         description="Username for token-based auth",
     )
-    password: Optional[str] = Field(
+    password: str | None = Field(
         default=None,
         description="Password for token-based auth",
     )
-    token: Optional[str] = Field(
+    token: str | None = Field(
         default=None,
         description="Pre-existing bearer token (skips login)",
     )

@@ -8,26 +8,18 @@ and error recovery.
 from __future__ import annotations
 
 import asyncio
-import hashlib
-import os
 import uuid
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import pytest_asyncio
 
 from vessel.domain.services.monitoring_engine import (
     ApiPollMonitor,
-    BaseMonitor,
     FileMonitor,
-    MonitorEvent,
     MonitoringEngine,
     _parse_interval,
 )
-
 
 # ---------------------------------------------------------------------------
 # FileMonitor

@@ -6,10 +6,9 @@ import abc
 import asyncio
 import hashlib
 import logging
-import os
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -31,7 +30,7 @@ class MonitorEvent:
     event_type: str  # FILE | API_RESPONSE | DB_CHANGE
     key: str  # unique identifier for the source item
     metadata: dict[str, Any] = field(default_factory=dict)
-    detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    detected_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 # ---------------------------------------------------------------------------
@@ -85,7 +84,7 @@ class FileMonitor(BaseMonitor):
                             "path": key,
                             "size": stat.st_size,
                             "modified_at": datetime.fromtimestamp(
-                                stat.st_mtime, tz=timezone.utc
+                                stat.st_mtime, tz=UTC
                             ).isoformat(),
                         },
                     )
@@ -347,7 +346,7 @@ class MonitoringEngine:
                         )
 
                     # 6. Update heartbeat
-                    now = datetime.now(timezone.utc)
+                    now = datetime.now(UTC)
                     activation.last_heartbeat_at = now
                     activation.last_polled_at = now
                     await db.commit()

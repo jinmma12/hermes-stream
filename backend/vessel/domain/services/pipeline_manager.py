@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -248,7 +248,7 @@ class PipelineManager:
             msgs = "; ".join(i.message for i in validation.issues)
             raise ValueError(f"Pipeline validation failed: {msgs}")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         activation = PipelineActivation(
             pipeline_instance_id=pipeline_id,
             status="STARTING",
@@ -280,7 +280,7 @@ class PipelineManager:
             raise ValueError(f"No active activation for pipeline {pipeline_id}")
 
         activation.status = "STOPPED"
-        activation.stopped_at = datetime.now(timezone.utc)
+        activation.stopped_at = datetime.now(UTC)
 
         pipeline = await self.db.get(PipelineInstance, pipeline_id)
         if pipeline is not None:

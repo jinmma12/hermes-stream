@@ -26,8 +26,7 @@ import asyncio
 import logging
 import time
 import uuid
-from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Optional
+from typing import Any
 
 import httpx
 
@@ -38,7 +37,6 @@ from vessel.infrastructure.nifi.models import (
     ControllerStatus,
     FlowFileSummary,
     NiFiRevision,
-    Parameter,
     ParameterContext,
     Position,
     ProcessGroup,
@@ -66,8 +64,8 @@ class NiFiApiError(Exception):
     def __init__(
         self,
         message: str,
-        status_code: Optional[int] = None,
-        response_body: Optional[str] = None,
+        status_code: int | None = None,
+        response_body: str | None = None,
     ) -> None:
         self.status_code = status_code
         self.response_body = response_body
@@ -123,10 +121,10 @@ class NiFiClient:
         """
         self._config = config
         self._base_url = config.base_url.rstrip("/")
-        self._token: Optional[str] = config.token
+        self._token: str | None = config.token
         self._token_expiry: float = 0.0
         self._client_id: str = str(uuid.uuid4())
-        self._http: Optional[httpx.AsyncClient] = None
+        self._http: httpx.AsyncClient | None = None
 
     # -- Lifecycle -----------------------------------------------------------
 
@@ -147,7 +145,7 @@ class NiFiClient:
             await self._http.aclose()
             self._http = None
 
-    async def __aenter__(self) -> "NiFiClient":
+    async def __aenter__(self) -> NiFiClient:
         await self.connect()
         return self
 
@@ -227,9 +225,9 @@ class NiFiClient:
         *,
         json: Any = None,
         data: Any = None,
-        params: Optional[dict[str, Any]] = None,
-        headers: Optional[dict[str, str]] = None,
-        expected_status: Optional[set[int]] = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        expected_status: set[int] | None = None,
     ) -> httpx.Response:
         """Execute an HTTP request against the NiFi API with retry logic.
 
@@ -260,7 +258,7 @@ class NiFiClient:
         merged_headers = {**self._auth_headers(), **(headers or {})}
         expected = expected_status or {200, 201}
 
-        last_exc: Optional[Exception] = None
+        last_exc: Exception | None = None
         attempts = 1 + (self._config.max_retries if method.upper() in self._RETRYABLE_METHODS else 0)
 
         for attempt in range(1, attempts + 1):
@@ -443,7 +441,7 @@ class NiFiClient:
         self,
         parent_id: str,
         name: str,
-        position: Optional[Position] = None,
+        position: Position | None = None,
     ) -> ProcessGroup:
         """Create a new process group.
 
@@ -692,7 +690,7 @@ class NiFiClient:
 
     async def submit_provenance_query(
         self,
-        search_terms: Optional[dict[str, str]] = None,
+        search_terms: dict[str, str] | None = None,
         max_results: int = 100,
     ) -> str:
         """Submit a provenance query.
@@ -871,7 +869,7 @@ class NiFiClient:
         self,
         pg_id: str,
         template_id: str,
-        position: Optional[Position] = None,
+        position: Position | None = None,
     ) -> ProcessGroup:
         """Instantiate a template into a process group.
 
@@ -893,7 +891,7 @@ class NiFiClient:
                 "originY": pos.y,
             },
         )
-        data = resp.json()
+        resp.json()
         # The response contains a flow snippet; return the parent PG
         return await self.get_process_group(pg_id)
 
@@ -961,7 +959,7 @@ class NiFiClient:
         return ParameterContext.model_validate(component)
 
     async def update_parameter_context(
-        self, pc_id: str, parameters: dict[str, Optional[str]]
+        self, pc_id: str, parameters: dict[str, str | None]
     ) -> ParameterContext:
         """Update parameters in a parameter context.
 
