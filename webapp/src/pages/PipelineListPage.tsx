@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { PipelineInstance } from '../types';
 import { PipelineStatus } from '../types';
 import { pipelines } from '../api/client';
+import { localPipelines } from '../api/localStore';
 import StatusBadge from '../components/common/StatusBadge';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
@@ -33,72 +34,23 @@ export default function PipelineListPage() {
   async function loadPipelines() {
     try {
       setLoading(true);
-      const data = await pipelines.list();
-      setPipelineList(Array.isArray(data) ? data : []);
+      let data: PipelineInstance[] = [];
+      try {
+        const resp = await pipelines.list();
+        // Verify it's an actual array of pipelines (not HTML)
+        if (Array.isArray(resp) && resp.length > 0 && resp[0].id) {
+          data = resp;
+        } else {
+          throw new Error('Invalid API response');
+        }
+      } catch {
+        // API unavailable — use localStorage
+        data = localPipelines.list();
+      }
+      setPipelineList(data);
     } catch (err) {
       setError('Failed to load pipelines');
-      setPipelineList([
-        {
-          id: 1,
-          name: 'Vendor-A 주문 수집',
-          description: 'REST API → Anomaly Detector → S3 Upload',
-          monitoring_type: 'API_POLL' as PipelineInstance['monitoring_type'],
-          monitoring_config: { interval: '5m' },
-          status: PipelineStatus.ACTIVE,
-          created_at: '2026-03-01T09:00:00Z',
-          updated_at: '2026-03-15T14:30:00Z',
-        },
-        {
-          id: 2,
-          name: '장비 데이터 수집',
-          description: 'FTP/SFTP → Data Transformer → DB Writer',
-          monitoring_type: 'FILE_MONITOR' as PipelineInstance['monitoring_type'],
-          monitoring_config: { path: '/data/equipment', pattern: '*.csv' },
-          status: PipelineStatus.ACTIVE,
-          created_at: '2026-03-05T10:00:00Z',
-          updated_at: '2026-03-15T14:25:00Z',
-        },
-        {
-          id: 3,
-          name: 'ERP DB 동기화',
-          description: 'Database CDC → Transform → DB Writer',
-          monitoring_type: 'DB_POLL' as PipelineInstance['monitoring_type'],
-          monitoring_config: { table: 'orders', poll_interval: '1m' },
-          status: PipelineStatus.PAUSED,
-          created_at: '2026-03-10T08:00:00Z',
-          updated_at: '2026-03-14T16:00:00Z',
-        },
-        {
-          id: 4,
-          name: '센서 데이터 분석',
-          description: 'Kafka Consumer → Anomaly Detector → S3 Upload',
-          monitoring_type: 'EVENT_STREAM' as PipelineInstance['monitoring_type'],
-          monitoring_config: { topics: 'sensor-data' },
-          status: PipelineStatus.ACTIVE,
-          created_at: '2026-03-08T09:00:00Z',
-          updated_at: '2026-03-15T14:00:00Z',
-        },
-        {
-          id: 5,
-          name: '실시간 이상탐지',
-          description: 'Kafka Consumer → Anomaly Detector → Webhook',
-          monitoring_type: 'EVENT_STREAM' as PipelineInstance['monitoring_type'],
-          monitoring_config: { topics: 'equipment-events' },
-          status: PipelineStatus.ACTIVE,
-          created_at: '2026-03-12T10:00:00Z',
-          updated_at: '2026-03-16T09:00:00Z',
-        },
-        {
-          id: 6,
-          name: '로그 수집 파이프라인',
-          description: 'File Watcher → CSV-JSON Converter → Elasticsearch',
-          monitoring_type: 'FILE_MONITOR' as PipelineInstance['monitoring_type'],
-          monitoring_config: {},
-          status: PipelineStatus.DRAFT,
-          created_at: '2026-03-14T11:00:00Z',
-          updated_at: '2026-03-14T11:00:00Z',
-        },
-      ]);
+      setPipelineList(localPipelines.list());
     } finally {
       setLoading(false);
     }

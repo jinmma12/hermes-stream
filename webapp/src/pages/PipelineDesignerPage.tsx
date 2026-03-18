@@ -26,6 +26,7 @@ import '@xyflow/react/dist/style.css';
 import { StageType, PipelineStatus } from '../types';
 import type { PipelineInstance, PipelineStage } from '../types';
 import { pipelines } from '../api/client';
+import { localPipelines } from '../api/localStore';
 import RecipeEditorPanel from './RecipeEditorPanel';
 import ConnectorCatalog from '../components/designer/ConnectorCatalog';
 import type { ConnectorItem } from '../components/designer/ConnectorCatalog';
@@ -316,9 +317,25 @@ function PipelineDesignerInner() {
     try {
       setLoading(true);
       if (id && id !== 'new') {
-        const data = await pipelines.get(parseInt(id));
-        setPipeline(data);
-        buildFlowFromStages(data.stages || []);
+        const pipelineId = parseInt(id);
+        try {
+          const data = await pipelines.get(pipelineId);
+          // Verify it's a real pipeline response (not HTML fallback)
+          if (data && typeof data === 'object' && data.id) {
+            setPipeline(data);
+            buildFlowFromStages(data.stages || []);
+            return;
+          }
+        } catch { /* API unavailable, try localStorage */ }
+
+        // Fallback: load from localStorage
+        const local = localPipelines.get(pipelineId);
+        if (local) {
+          setPipeline(local);
+          buildFlowFromStages(local.stages || []);
+        } else {
+          loadNewPipeline();
+        }
       } else {
         loadNewPipeline();
       }
@@ -555,15 +572,34 @@ function PipelineDesignerInner() {
         };
       }).filter(Boolean) as Partial<PipelineStage>[];
 
-      if (pipeline.id && pipeline.id > 0) {
-        await pipelines.update(pipeline.id, { ...pipeline, stages } as Partial<PipelineInstance>);
-      } else {
-        const created = await pipelines.create({ ...pipeline, stages } as Partial<PipelineInstance>);
-        setPipeline(created);
+      let saved = false;
+      try {
+        if (pipeline.id && pipeline.id > 0) {
+          const resp = await pipelines.update(pipeline.id, { ...pipeline, stages } as Partial<PipelineInstance>);
+          if (resp && typeof resp === 'object' && resp.id) saved = true;
+        } else {
+          const created = await pipelines.create({ ...pipeline, stages } as Partial<PipelineInstance>);
+          if (created && typeof created === 'object' && created.id) {
+            setPipeline(created);
+            saved = true;
+          }
+        }
+      } catch { /* API unavailable */ }
+
+      // Fallback: save to localStorage
+      if (!saved) {
+        if (pipeline.id && pipeline.id > 0) {
+          localPipelines.update(pipeline.id, { ...pipeline, stages } as Partial<PipelineInstance>);
+        } else {
+          const created = localPipelines.create({ ...pipeline, stages } as Partial<PipelineInstance>);
+          setPipeline(created);
+          // Update URL to reflect the new ID so reload works
+          window.history.replaceState(null, '', `/pipelines/${created.id}/designer`);
+        }
       }
       setDirty(false);
     } catch {
-      // Graceful fallback for demo mode
+      // Fatal error
     }
     setSaving(false);
   }
