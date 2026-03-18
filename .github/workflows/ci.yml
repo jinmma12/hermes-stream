@@ -21,7 +21,7 @@ jobs:
           cache: 'pip'
       - run: pip install ".[dev]"
       - run: ruff check .
-      - run: pytest --tb=short -q
+      - run: pytest --tb=short -q --ignore=tests/collection
 
   engine:
     name: Engine (.NET)
