@@ -11,18 +11,18 @@ public class HermesDbContext : DbContext, IUnitOfWork
     // Definitions
     public DbSet<CollectorDefinition> CollectorDefinitions => Set<CollectorDefinition>();
     public DbSet<CollectorDefinitionVersion> CollectorDefinitionVersions => Set<CollectorDefinitionVersion>();
-    public DbSet<AlgorithmDefinition> AlgorithmDefinitions => Set<AlgorithmDefinition>();
-    public DbSet<AlgorithmDefinitionVersion> AlgorithmDefinitionVersions => Set<AlgorithmDefinitionVersion>();
-    public DbSet<TransferDefinition> TransferDefinitions => Set<TransferDefinition>();
-    public DbSet<TransferDefinitionVersion> TransferDefinitionVersions => Set<TransferDefinitionVersion>();
+    public DbSet<ProcessDefinition> ProcessDefinitions => Set<ProcessDefinition>();
+    public DbSet<ProcessDefinitionVersion> ProcessDefinitionVersions => Set<ProcessDefinitionVersion>();
+    public DbSet<ExportDefinition> ExportDefinitions => Set<ExportDefinition>();
+    public DbSet<ExportDefinitionVersion> ExportDefinitionVersions => Set<ExportDefinitionVersion>();
 
     // Instances
     public DbSet<CollectorInstance> CollectorInstances => Set<CollectorInstance>();
     public DbSet<CollectorInstanceVersion> CollectorInstanceVersions => Set<CollectorInstanceVersion>();
-    public DbSet<AlgorithmInstance> AlgorithmInstances => Set<AlgorithmInstance>();
-    public DbSet<AlgorithmInstanceVersion> AlgorithmInstanceVersions => Set<AlgorithmInstanceVersion>();
-    public DbSet<TransferInstance> TransferInstances => Set<TransferInstance>();
-    public DbSet<TransferInstanceVersion> TransferInstanceVersions => Set<TransferInstanceVersion>();
+    public DbSet<ProcessInstance> ProcessInstances => Set<ProcessInstance>();
+    public DbSet<ProcessInstanceVersion> ProcessInstanceVersions => Set<ProcessInstanceVersion>();
+    public DbSet<ExportInstance> ExportInstances => Set<ExportInstance>();
+    public DbSet<ExportInstanceVersion> ExportInstanceVersions => Set<ExportInstanceVersion>();
 
     // Pipelines
     public DbSet<PipelineInstance> PipelineInstances => Set<PipelineInstance>();
@@ -64,17 +64,17 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.Property(x => x.DefaultConfig).HasColumnType(jsonColumnType);
         });
 
-        modelBuilder.Entity<AlgorithmDefinition>(e =>
+        modelBuilder.Entity<ProcessDefinition>(e =>
         {
-            e.ToTable("algorithm_definitions");
+            e.ToTable("process_definitions");
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             e.HasMany(x => x.Versions).WithOne(x => x.Definition).HasForeignKey(x => x.DefinitionId);
         });
-        modelBuilder.Entity<AlgorithmDefinitionVersion>(e =>
+        modelBuilder.Entity<ProcessDefinitionVersion>(e =>
         {
-            e.ToTable("algorithm_definition_versions");
+            e.ToTable("process_definition_versions");
             e.HasKey(x => x.Id);
             e.Property(x => x.ExecutionType).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.InputSchema).HasColumnType(jsonColumnType);
@@ -83,17 +83,17 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.Property(x => x.DefaultConfig).HasColumnType(jsonColumnType);
         });
 
-        modelBuilder.Entity<TransferDefinition>(e =>
+        modelBuilder.Entity<ExportDefinition>(e =>
         {
-            e.ToTable("transfer_definitions");
+            e.ToTable("export_definitions");
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             e.HasMany(x => x.Versions).WithOne(x => x.Definition).HasForeignKey(x => x.DefinitionId);
         });
-        modelBuilder.Entity<TransferDefinitionVersion>(e =>
+        modelBuilder.Entity<ExportDefinitionVersion>(e =>
         {
-            e.ToTable("transfer_definition_versions");
+            e.ToTable("export_definition_versions");
             e.HasKey(x => x.Id);
             e.Property(x => x.ExecutionType).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.InputSchema).HasColumnType(jsonColumnType);
@@ -118,31 +118,31 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.Property(x => x.SecretBindingJson).HasColumnType(jsonColumnType);
         });
 
-        modelBuilder.Entity<AlgorithmInstance>(e =>
+        modelBuilder.Entity<ProcessInstance>(e =>
         {
-            e.ToTable("algorithm_instances");
+            e.ToTable("process_instances");
             e.HasKey(x => x.Id);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             e.HasMany(x => x.Versions).WithOne(x => x.Instance).HasForeignKey(x => x.InstanceId);
         });
-        modelBuilder.Entity<AlgorithmInstanceVersion>(e =>
+        modelBuilder.Entity<ProcessInstanceVersion>(e =>
         {
-            e.ToTable("algorithm_instance_versions");
+            e.ToTable("process_instance_versions");
             e.HasKey(x => x.Id);
             e.Property(x => x.ConfigJson).HasColumnType(jsonColumnType);
             e.Property(x => x.SecretBindingJson).HasColumnType(jsonColumnType);
         });
 
-        modelBuilder.Entity<TransferInstance>(e =>
+        modelBuilder.Entity<ExportInstance>(e =>
         {
-            e.ToTable("transfer_instances");
+            e.ToTable("export_instances");
             e.HasKey(x => x.Id);
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             e.HasMany(x => x.Versions).WithOne(x => x.Instance).HasForeignKey(x => x.InstanceId);
         });
-        modelBuilder.Entity<TransferInstanceVersion>(e =>
+        modelBuilder.Entity<ExportInstanceVersion>(e =>
         {
-            e.ToTable("transfer_instance_versions");
+            e.ToTable("export_instance_versions");
             e.HasKey(x => x.Id);
             e.Property(x => x.ConfigJson).HasColumnType(jsonColumnType);
             e.Property(x => x.SecretBindingJson).HasColumnType(jsonColumnType);
@@ -236,8 +236,8 @@ public class HermesDbContext : DbContext, IUnitOfWork
             e.HasIndex(x => x.ExecutionId).IsUnique();
             e.Property(x => x.PipelineConfig).HasColumnType(jsonColumnType);
             e.Property(x => x.CollectorConfig).HasColumnType(jsonColumnType);
-            e.Property(x => x.AlgorithmConfig).HasColumnType(jsonColumnType);
-            e.Property(x => x.TransferConfig).HasColumnType(jsonColumnType);
+            e.Property(x => x.ProcessConfig).HasColumnType(jsonColumnType);
+            e.Property(x => x.ExportConfig).HasColumnType(jsonColumnType);
         });
         modelBuilder.Entity<ExecutionEventLog>(e =>
         {

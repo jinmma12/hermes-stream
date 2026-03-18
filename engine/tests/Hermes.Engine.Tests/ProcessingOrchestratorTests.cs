@@ -85,7 +85,7 @@ public class ProcessingOrchestratorTests
         var db = TestDbHelper.CreateInMemoryDb();
         var snapshotResolver = new SnapshotResolver(db);
         // Fail on step 1 (Collect), but step has OnError=Stop
-        // Step 2 (Algorithm) has OnError=Skip in seed data
+        // Step 2 (Process) has OnError=Skip in seed data
         var dispatcher = new FakeDispatcher(success: false);
         var orchestrator = new ProcessingOrchestrator(db, dispatcher, snapshotResolver,
             NullLogger<ProcessingOrchestrator>.Instance);

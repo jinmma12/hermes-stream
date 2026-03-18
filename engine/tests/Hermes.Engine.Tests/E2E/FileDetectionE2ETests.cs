@@ -314,8 +314,8 @@ public class FileDetectionE2ETests : IDisposable
 
         var execution = await orchestrator.ProcessWorkItemAsync(wi.Id);
 
-        // Step 2 (Algorithm) has OnError=Skip, so processing should continue
-        // Step 3 (Transfer) has OnError=Stop
+        // Step 2 (Process) has OnError=Skip, so processing should continue
+        // Step 3 (Export) has OnError=Stop
 
         // Check step executions
         var stepExecs = db.WorkItemStepExecutions
@@ -332,7 +332,7 @@ public class FileDetectionE2ETests : IDisposable
     }
 
     [Fact]
-    public async Task FullPipeline_Reprocess_FromAlgorithmStep()
+    public async Task FullPipeline_Reprocess_FromProcessStep()
     {
         var csv = "id,value\n1,42\n";
         await File.WriteAllTextAsync(Path.Combine(_inputDir, "reprocess_me.csv"), csv);
@@ -361,7 +361,7 @@ public class FileDetectionE2ETests : IDisposable
         Assert.Equal(ExecutionStatus.Completed, exec1.Status);
         Assert.Equal(1, exec1.ExecutionNo);
 
-        // Reprocess: start from step 2 (algorithm)
+        // Reprocess: start from step 2 (process)
         var exec2 = await orchestrator.ProcessWorkItemAsync(
             wi.Id,
             triggerType: TriggerType.Reprocess,
@@ -402,13 +402,13 @@ public class FileDetectionE2ETests : IDisposable
         var exec1 = await orchestrator.ProcessWorkItemAsync(wi1.Id);
         var snap1 = db.ExecutionSnapshots.First(s => s.ExecutionId == exec1.Id);
 
-        // Change recipe: add new algorithm version
-        var algoInst = db.AlgorithmInstances.First();
-        var oldVersion = db.AlgorithmInstanceVersions.First(v => v.InstanceId == algoInst.Id);
+        // Change recipe: add new process version
+        var algoInst = db.ProcessInstances.First();
+        var oldVersion = db.ProcessInstanceVersions.First(v => v.InstanceId == algoInst.Id);
         oldVersion.IsCurrent = false;
 
-        var algoDef = db.AlgorithmDefinitionVersions.First();
-        db.AlgorithmInstanceVersions.Add(new AlgorithmInstanceVersion
+        var algoDef = db.ProcessDefinitionVersions.First();
+        db.ProcessInstanceVersions.Add(new ProcessInstanceVersion
         {
             InstanceId = algoInst.Id,
             DefVersionId = algoDef.Id,
@@ -456,8 +456,8 @@ public class FileDetectionE2ETests : IDisposable
             return Task.FromResult(stepOrder switch
             {
                 "1" => SimulateCollect(configJson, workItemId),
-                "2" => SimulateAlgorithm(inputDataJson),
-                "3" => SimulateTransfer(inputDataJson, workItemId),
+                "2" => SimulateProcess(inputDataJson),
+                "3" => SimulateExport(inputDataJson, workItemId),
                 _ => new ExecutionResult(true, "{}", "{\"step\":\"unknown\"}", 10, new())
             });
         }
@@ -479,7 +479,7 @@ public class FileDetectionE2ETests : IDisposable
                 50, new List<LogEntry> { new(DateTimeOffset.UtcNow, "INFO", $"Collected {records.Length} records") });
         }
 
-        private ExecutionResult SimulateAlgorithm(string? inputDataJson)
+        private ExecutionResult SimulateProcess(string? inputDataJson)
         {
             // Simulate: filter records where value > 20
             var transformed = new
@@ -497,7 +497,7 @@ public class FileDetectionE2ETests : IDisposable
                 30, new List<LogEntry> { new(DateTimeOffset.UtcNow, "INFO", "Filtered: 2 records, 1 anomaly") });
         }
 
-        private ExecutionResult SimulateTransfer(string? inputDataJson, string workItemId)
+        private ExecutionResult SimulateExport(string? inputDataJson, string workItemId)
         {
             // Simulate writing output file
             var outputPath = Path.Combine(_outputDir, $"result_{workItemId[..8]}.json");

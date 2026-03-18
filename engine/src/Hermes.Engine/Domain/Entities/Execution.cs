@@ -63,8 +63,8 @@ public class ExecutionSnapshot : BaseEntity
     public Guid ExecutionId { get; set; }
     public string PipelineConfig { get; set; } = "{}";
     public string CollectorConfig { get; set; } = "{}";
-    public string AlgorithmConfig { get; set; } = "{}";
-    public string TransferConfig { get; set; } = "{}";
+    public string ProcessConfig { get; set; } = "{}";
+    public string ExportConfig { get; set; } = "{}";
     public string? SnapshotHash { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public WorkItemExecution Execution { get; set; } = null!;

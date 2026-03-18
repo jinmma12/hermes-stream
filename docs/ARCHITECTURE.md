@@ -56,7 +56,7 @@
    → 실패 건, 특정 건, 특정 Step부터 재처리 가능
 
 5. PLUGIN EVERYTHING
-   → Collector, Algorithm, Transfer 모두 플러그인으로 교체 가능
+   → Collect, Process, Export 모두 플러그인으로 교체 가능
 
 6. NiFi-FRIENDLY, NOT NiFi-DEPENDENT
    → NiFi가 있으면 활용, 없으면 자체 실행

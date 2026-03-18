@@ -36,7 +36,7 @@ public class PluginRegistryTests
     {
         _registry.RegisterPlugin(MakeManifest("my-collector", PluginType.Collector));
 
-        var result = _registry.GetPlugin(PluginType.Algorithm, "my-collector");
+        var result = _registry.GetPlugin(PluginType.Process, "my-collector");
 
         Assert.Null(result);
     }
@@ -45,8 +45,8 @@ public class PluginRegistryTests
     public void ListPlugins_NoFilter_ReturnsAll()
     {
         _registry.RegisterPlugin(MakeManifest("c1", PluginType.Collector));
-        _registry.RegisterPlugin(MakeManifest("a1", PluginType.Algorithm));
-        _registry.RegisterPlugin(MakeManifest("t1", PluginType.Transfer));
+        _registry.RegisterPlugin(MakeManifest("a1", PluginType.Process));
+        _registry.RegisterPlugin(MakeManifest("t1", PluginType.Export));
 
         Assert.Equal(3, _registry.ListPlugins().Count);
     }
@@ -56,19 +56,19 @@ public class PluginRegistryTests
     {
         _registry.RegisterPlugin(MakeManifest("c1", PluginType.Collector));
         _registry.RegisterPlugin(MakeManifest("c2", PluginType.Collector));
-        _registry.RegisterPlugin(MakeManifest("a1", PluginType.Algorithm));
+        _registry.RegisterPlugin(MakeManifest("a1", PluginType.Process));
 
         Assert.Equal(2, _registry.ListPlugins(PluginType.Collector).Count);
-        Assert.Single(_registry.ListPlugins(PluginType.Algorithm));
+        Assert.Single(_registry.ListPlugins(PluginType.Process));
     }
 
     [Fact]
     public void UnregisterPlugin_RemovesAndReturnsTrue()
     {
-        _registry.RegisterPlugin(MakeManifest("doomed", PluginType.Transfer));
+        _registry.RegisterPlugin(MakeManifest("doomed", PluginType.Export));
         Assert.Equal(1, _registry.Count);
 
-        var removed = _registry.UnregisterPlugin(PluginType.Transfer, "doomed");
+        var removed = _registry.UnregisterPlugin(PluginType.Export, "doomed");
 
         Assert.True(removed);
         Assert.Equal(0, _registry.Count);

@@ -29,16 +29,16 @@ public class SnapshotResolver : ISnapshotResolver
         });
 
         var collectorConfigs = new Dictionary<string, object>();
-        var algorithmConfigs = new Dictionary<string, object>();
-        var transferConfigs = new Dictionary<string, object>();
+        var processConfigs = new Dictionary<string, object>();
+        var exportConfigs = new Dictionary<string, object>();
 
         foreach (var step in steps.OrderBy(s => s.StepOrder))
         {
             var (configJson, executionType, executionRef, versionNo) = step.RefType switch
             {
                 RefType.Collector => await ResolveCollectorAsync(step.RefId, useLatestRecipe, ct),
-                RefType.Algorithm => await ResolveAlgorithmAsync(step.RefId, useLatestRecipe, ct),
-                RefType.Transfer => await ResolveTransferAsync(step.RefId, useLatestRecipe, ct),
+                RefType.Process => await ResolveProcessAsync(step.RefId, useLatestRecipe, ct),
+                RefType.Export => await ResolveExportAsync(step.RefId, useLatestRecipe, ct),
                 _ => ("{}",  ExecutionType.Internal, (string?)null, 0)
             };
 
@@ -57,8 +57,8 @@ public class SnapshotResolver : ISnapshotResolver
             var bucket = step.RefType switch
             {
                 RefType.Collector => collectorConfigs,
-                RefType.Algorithm => algorithmConfigs,
-                RefType.Transfer => transferConfigs,
+                RefType.Process => processConfigs,
+                RefType.Export => exportConfigs,
                 _ => collectorConfigs
             };
             bucket[step.Id.ToString()] = stepData;
@@ -66,8 +66,8 @@ public class SnapshotResolver : ISnapshotResolver
 
         var allConfigText = pipelineConfig +
             JsonSerializer.Serialize(collectorConfigs) +
-            JsonSerializer.Serialize(algorithmConfigs) +
-            JsonSerializer.Serialize(transferConfigs);
+            JsonSerializer.Serialize(processConfigs) +
+            JsonSerializer.Serialize(exportConfigs);
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(allConfigText))).ToLowerInvariant();
 
         var snapshot = new ExecutionSnapshot
@@ -75,8 +75,8 @@ public class SnapshotResolver : ISnapshotResolver
             ExecutionId = executionId,
             PipelineConfig = pipelineConfig,
             CollectorConfig = JsonSerializer.Serialize(collectorConfigs),
-            AlgorithmConfig = JsonSerializer.Serialize(algorithmConfigs),
-            TransferConfig = JsonSerializer.Serialize(transferConfigs),
+            ProcessConfig = JsonSerializer.Serialize(processConfigs),
+            ExportConfig = JsonSerializer.Serialize(exportConfigs),
             SnapshotHash = hash,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -94,7 +94,7 @@ public class SnapshotResolver : ISnapshotResolver
         var steps = new List<StepConfig>();
 
         // Parse all config buckets and rebuild StepConfigs
-        foreach (var bucket in new[] { snapshot.CollectorConfig, snapshot.AlgorithmConfig, snapshot.TransferConfig })
+        foreach (var bucket in new[] { snapshot.CollectorConfig, snapshot.ProcessConfig, snapshot.ExportConfig })
         {
             if (string.IsNullOrEmpty(bucket) || bucket == "{}") continue;
             var dict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(bucket);
@@ -132,29 +132,29 @@ public class SnapshotResolver : ISnapshotResolver
         return (version.ConfigJson, defVersion?.ExecutionType ?? ExecutionType.Plugin, defVersion?.ExecutionRef, version.VersionNo);
     }
 
-    private async Task<(string configJson, ExecutionType execType, string? execRef, int versionNo)> ResolveAlgorithmAsync(Guid refId, bool useLatest, CancellationToken ct)
+    private async Task<(string configJson, ExecutionType execType, string? execRef, int versionNo)> ResolveProcessAsync(Guid refId, bool useLatest, CancellationToken ct)
     {
         var version = useLatest
-            ? await _db.AlgorithmInstanceVersions.Where(v => v.InstanceId == refId && v.IsCurrent).FirstOrDefaultAsync(ct)
-              ?? await _db.AlgorithmInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct)
-            : await _db.AlgorithmInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct);
+            ? await _db.ProcessInstanceVersions.Where(v => v.InstanceId == refId && v.IsCurrent).FirstOrDefaultAsync(ct)
+              ?? await _db.ProcessInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct)
+            : await _db.ProcessInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct);
 
         if (version == null) return ("{}", ExecutionType.Plugin, null, 0);
 
-        var defVersion = await _db.AlgorithmDefinitionVersions.FindAsync(new object[] { version.DefVersionId }, ct);
+        var defVersion = await _db.ProcessDefinitionVersions.FindAsync(new object[] { version.DefVersionId }, ct);
         return (version.ConfigJson, defVersion?.ExecutionType ?? ExecutionType.Plugin, defVersion?.ExecutionRef, version.VersionNo);
     }
 
-    private async Task<(string configJson, ExecutionType execType, string? execRef, int versionNo)> ResolveTransferAsync(Guid refId, bool useLatest, CancellationToken ct)
+    private async Task<(string configJson, ExecutionType execType, string? execRef, int versionNo)> ResolveExportAsync(Guid refId, bool useLatest, CancellationToken ct)
     {
         var version = useLatest
-            ? await _db.TransferInstanceVersions.Where(v => v.InstanceId == refId && v.IsCurrent).FirstOrDefaultAsync(ct)
-              ?? await _db.TransferInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct)
-            : await _db.TransferInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct);
+            ? await _db.ExportInstanceVersions.Where(v => v.InstanceId == refId && v.IsCurrent).FirstOrDefaultAsync(ct)
+              ?? await _db.ExportInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct)
+            : await _db.ExportInstanceVersions.Where(v => v.InstanceId == refId).OrderByDescending(v => v.VersionNo).FirstOrDefaultAsync(ct);
 
         if (version == null) return ("{}", ExecutionType.Plugin, null, 0);
 
-        var defVersion = await _db.TransferDefinitionVersions.FindAsync(new object[] { version.DefVersionId }, ct);
+        var defVersion = await _db.ExportDefinitionVersions.FindAsync(new object[] { version.DefVersionId }, ct);
         return (version.ConfigJson, defVersion?.ExecutionType ?? ExecutionType.Plugin, defVersion?.ExecutionRef, version.VersionNo);
     }
 }

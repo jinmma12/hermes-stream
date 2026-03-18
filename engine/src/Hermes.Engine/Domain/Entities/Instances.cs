@@ -27,19 +27,19 @@ public class CollectorInstanceVersion : BaseEntity
     public CollectorDefinitionVersion DefVersion { get; set; } = null!;
 }
 
-// ── Algorithm Instance ──
+// ── Process Instance ──
 
-public class AlgorithmInstance : AuditableEntity
+public class ProcessInstance : AuditableEntity
 {
     public Guid DefinitionId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public InstanceStatus Status { get; set; } = InstanceStatus.Draft;
-    public AlgorithmDefinition Definition { get; set; } = null!;
-    public List<AlgorithmInstanceVersion> Versions { get; set; } = new();
+    public ProcessDefinition Definition { get; set; } = null!;
+    public List<ProcessInstanceVersion> Versions { get; set; } = new();
 }
 
-public class AlgorithmInstanceVersion : BaseEntity
+public class ProcessInstanceVersion : BaseEntity
 {
     public Guid InstanceId { get; set; }
     public Guid DefVersionId { get; set; }
@@ -50,23 +50,23 @@ public class AlgorithmInstanceVersion : BaseEntity
     public string? CreatedBy { get; set; }
     public string? ChangeNote { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public AlgorithmInstance Instance { get; set; } = null!;
-    public AlgorithmDefinitionVersion DefVersion { get; set; } = null!;
+    public ProcessInstance Instance { get; set; } = null!;
+    public ProcessDefinitionVersion DefVersion { get; set; } = null!;
 }
 
-// ── Transfer Instance ──
+// ── Export Instance ──
 
-public class TransferInstance : AuditableEntity
+public class ExportInstance : AuditableEntity
 {
     public Guid DefinitionId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public InstanceStatus Status { get; set; } = InstanceStatus.Draft;
-    public TransferDefinition Definition { get; set; } = null!;
-    public List<TransferInstanceVersion> Versions { get; set; } = new();
+    public ExportDefinition Definition { get; set; } = null!;
+    public List<ExportInstanceVersion> Versions { get; set; } = new();
 }
 
-public class TransferInstanceVersion : BaseEntity
+public class ExportInstanceVersion : BaseEntity
 {
     public Guid InstanceId { get; set; }
     public Guid DefVersionId { get; set; }
@@ -77,6 +77,6 @@ public class TransferInstanceVersion : BaseEntity
     public string? CreatedBy { get; set; }
     public string? ChangeNote { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public TransferInstance Instance { get; set; } = null!;
-    public TransferDefinitionVersion DefVersion { get; set; } = null!;
+    public ExportInstance Instance { get; set; } = null!;
+    public ExportDefinitionVersion DefVersion { get; set; } = null!;
 }

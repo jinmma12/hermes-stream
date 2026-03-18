@@ -8,7 +8,7 @@ interface Props {
  * Syntax-highlighted JSON viewer with collapsible sections.
  * Much better readability than raw <pre> tags.
  */
-export default function JsonViewer({ data, collapsed = false, maxHeight = '300px' }: Props) {
+export default function JsonViewer({ data, collapsed: _collapsed = false, maxHeight = '300px' }: Props) {
   const json = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 
   return (

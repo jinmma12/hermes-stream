@@ -21,19 +21,25 @@ export default function PluginMarketplacePage() {
     } catch {
       // Demo data
       setPluginList([
-        { name: 'rest-api-collector', version: '1.2.0', type: StageType.COLLECT, description: 'Collect data from REST APIs with support for authentication, pagination, and rate limiting.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'file-watcher', version: '1.0.0', type: StageType.COLLECT, description: 'Monitor directories for new files using inotify (Linux) or polling (cross-platform).', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'database-poller', version: '1.1.0', type: StageType.COLLECT, description: 'Poll database tables for changes using timestamp tracking or sequence IDs.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'mqtt-collector', version: '0.9.0', type: StageType.COLLECT, description: 'Subscribe to MQTT topics for real-time IoT data ingestion.', author: 'vessel-community', license: 'MIT', runtime: 'python', installed: false, icon_url: null },
-        { name: 'kafka-consumer', version: '0.8.0', type: StageType.COLLECT, description: 'Consume messages from Apache Kafka topics with consumer group management.', author: 'vessel-community', license: 'Apache-2.0', runtime: 'python', installed: false, icon_url: null },
-        { name: 'anomaly-detector', version: '1.0.0', type: StageType.ALGORITHM, description: 'Statistical anomaly detection with z-score, IQR, and modified z-score methods.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'data-transformer', version: '1.0.0', type: StageType.ALGORITHM, description: 'Transform data between JSON, CSV, XML formats with configurable mapping rules.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'dedup-filter', version: '1.0.0', type: StageType.ALGORITHM, description: 'Remove duplicate records based on configurable keys and time windows.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'ml-classifier', version: '0.5.0', type: StageType.ALGORITHM, description: 'Machine learning classification using scikit-learn models. Supports custom model loading.', author: 'vessel-community', license: 'MIT', runtime: 'python', installed: false, icon_url: null },
-        { name: 's3-uploader', version: '1.0.0', type: StageType.TRANSFER, description: 'Upload data to Amazon S3 with support for multipart upload, encryption, and compression.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'database-writer', version: '1.0.0', type: StageType.TRANSFER, description: 'Write data to PostgreSQL, MySQL, or MSSQL with upsert and batch insert support.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
-        { name: 'webhook-sender', version: '1.0.0', type: StageType.TRANSFER, description: 'Send results to external HTTP webhook endpoints with retry and backoff.', author: 'vessel-core', license: 'Apache-2.0', runtime: 'python', installed: false, icon_url: null },
-        { name: 'elasticsearch-writer', version: '0.7.0', type: StageType.TRANSFER, description: 'Index documents into Elasticsearch with configurable mappings and bulk operations.', author: 'vessel-community', license: 'Apache-2.0', runtime: 'python', installed: false, icon_url: null },
+        { name: 'ftp-sftp-collector', version: '1.0.0', type: StageType.COLLECT, description: 'Collect files from FTP/FTPS/SFTP servers. Recursive traversal, regex filters, completion checks, post-actions.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'rest-api-collector', version: '1.2.0', type: StageType.COLLECT, description: 'Collect data from REST APIs with authentication, pagination, and rate limiting.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'file-watcher', version: '1.0.0', type: StageType.COLLECT, description: 'Monitor local directories for new files using inotify or polling.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'database-poller', version: '1.1.0', type: StageType.COLLECT, description: 'Poll database tables for changes using timestamp or sequence tracking.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'kafka-consumer', version: '1.0.0', type: StageType.COLLECT, description: 'Consume messages from Kafka topics with consumer group and offset management.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'mqtt-subscriber', version: '0.9.0', type: StageType.COLLECT, description: 'Subscribe to MQTT topics for real-time IoT data ingestion.', author: 'hermes-community', license: 'MIT', runtime: 'python', installed: false, icon_url: null },
+        { name: 'anomaly-detector', version: '1.0.0', type: StageType.PROCESS, description: 'Statistical anomaly detection with z-score, IQR, and modified z-score.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'data-transformer', version: '1.0.0', type: StageType.PROCESS, description: 'Transform data between JSON, CSV, XML with mapping rules.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'json-transform', version: '1.0.0', type: StageType.PROCESS, description: 'JMESPath-based JSON transformation and extraction.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'csv-json-converter', version: '1.0.0', type: StageType.PROCESS, description: 'Bidirectional CSV/JSON conversion with header mapping.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'dedup-filter', version: '1.0.0', type: StageType.PROCESS, description: 'Remove duplicate records based on configurable keys and time windows.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'content-router', version: '1.0.0', type: StageType.PROCESS, description: 'Conditional routing based on content or attribute rules.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'merge-content', version: '1.0.0', type: StageType.PROCESS, description: 'Merge multiple records into batches (NiFi MergeContent equivalent).', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'split-records', version: '1.0.0', type: StageType.PROCESS, description: 'Split batches into individual records (NiFi SplitRecord equivalent).', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'kafka-producer', version: '1.0.0', type: StageType.EXPORT, description: 'Publish processed data to Kafka topics with partitioning and ack control.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'file-output', version: '1.0.0', type: StageType.EXPORT, description: 'Write processed data to local files in JSON, CSV, or text format.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'db-writer', version: '1.0.0', type: StageType.EXPORT, description: 'Write to PostgreSQL, MySQL, or MSSQL with insert, upsert, and batch support.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'webhook-sender', version: '1.0.0', type: StageType.EXPORT, description: 'Send results to HTTP webhook endpoints with retry and backoff.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
+        { name: 'ftp-sftp-upload', version: '1.0.0', type: StageType.EXPORT, description: 'Upload files to remote FTP/SFTP servers.', author: 'hermes-core', license: 'Apache-2.0', runtime: 'python', installed: true, icon_url: null },
       ]);
     } finally {
       setLoading(false);
@@ -64,8 +70,8 @@ export default function PluginMarketplacePage() {
 
   const typeColor: Record<StageType, { bg: string; text: string; iconBg: string }> = {
     [StageType.COLLECT]: { bg: 'bg-blue-50', text: 'text-blue-700', iconBg: 'bg-blue-500' },
-    [StageType.ALGORITHM]: { bg: 'bg-purple-50', text: 'text-purple-700', iconBg: 'bg-purple-500' },
-    [StageType.TRANSFER]: { bg: 'bg-emerald-50', text: 'text-emerald-700', iconBg: 'bg-emerald-500' },
+    [StageType.PROCESS]: { bg: 'bg-purple-50', text: 'text-purple-700', iconBg: 'bg-purple-500' },
+    [StageType.EXPORT]: { bg: 'bg-emerald-50', text: 'text-emerald-700', iconBg: 'bg-emerald-500' },
   };
 
   const filteredPlugins = filter === 'all'
@@ -85,7 +91,7 @@ export default function PluginMarketplacePage() {
 
       {/* Filter Tabs */}
       <div className="flex gap-2">
-        {(['all', StageType.COLLECT, StageType.ALGORITHM, StageType.TRANSFER] as const).map((f) => (
+        {(['all', StageType.COLLECT, StageType.PROCESS, StageType.EXPORT] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}

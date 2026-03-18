@@ -1,7 +1,7 @@
 # Hermes Stream Roadmap
 
-> Last updated: 2026-03-15
-> Status: Phase 0 (Design) → Phase 1 (MVP) 진입 준비
+> Last updated: 2026-03-16
+> Status: Phase 3 진행 중 (89%) — Collect/Process/Export 리네이밍 완료
 
 ---
 
@@ -11,6 +11,14 @@
 
 NiFi의 강점(per-item tracking, provenance)을 가져가되,
 .NET 기반으로 가볍고, non-developer가 Web UI에서 운영 가능한 플랫폼.
+
+### Pipeline Category Model
+
+| Stage | Purpose | Color | Examples |
+|---|---|---|---|
+| **Collect** | 데이터 수집 (Source/Ingest) | Blue | FTP/SFTP, Kafka Consumer, REST API, DB CDC, File Watcher, MQTT |
+| **Process** | 변환/분석/필터링/라우팅 | Purple | Anomaly Detector, Data Transformer, Dedup Filter, Content Router |
+| **Export** | 목적지 전달 (Sink/Deliver) | Emerald | Kafka Producer, S3 Upload, DB Writer, Webhook, TIBCO RV Publisher |
 
 ---
 
@@ -23,6 +31,7 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 ### 2. Recipe Management for Non-Developers
 > SW 개발자가 아닌 운영자가 Web UI에서 수집 설정, 알고리즘 파라미터를 변경.
 > JSON Schema → 자동 폼 생성. 버전 관리 + diff/compare.
+> 전역 Recipe Management 페이지에서 모든 Recipe를 중앙 관리.
 
 ### 3. First-Class Reprocessing
 > 실패 건 단건/일괄 재처리. 특정 Step부터 재시작. 최신 Recipe 적용 선택.
@@ -42,210 +51,368 @@ NiFi의 강점(per-item tracking, provenance)을 가져가되,
 
 ---
 
-## Phase 0: Design (Current) ✅
+## Phase 0: Design ✅ COMPLETE
 
 | Item | Status | 산출물 |
 |---|---|---|
-| 전체 아키텍처 설계 | ✅ Done | `docs/ARCHITECTURE.md` |
-| 데이터 수집 설계 | ✅ Done | `docs/DATA_COLLECTION_DESIGN.md` |
-| NiFi 연동 설계 | ✅ Done | `docs/NIFI_INTEGRATION.md` |
-| 테스트 전략 | ✅ Done | `docs/TEST_STRATEGY.md` |
-| DB 스키마 | ✅ Done | `backend/database/schema.sql` |
-| Python 프로토타입 | ✅ Done | `backend/`, `webapp/`, `plugins/` |
-| 벤치마크 Gap 분석 | ✅ Done | 17개 Gap 식별 (P0~P3) |
-| .NET Solution 설계 | ✅ Done | `docs/DOTNET_SOLUTION_DESIGN.md` |
-| gRPC Protocol 설계 | ✅ Done | `protos/hermes_plugin.proto`, `hermes_bridge.proto`, `hermes_cluster.proto` |
-| Domain Interface 설계 | ✅ Done | `docs/DOMAIN_INTERFACES.md` |
-| V2 아키텍처 (분산/디스크) | 🔄 In Progress | `docs/V2_ARCHITECTURE.md` |
+| 전체 아키텍처 설계 | ✅ | `docs/ARCHITECTURE.md` |
+| 데이터 수집 설계 | ✅ | `docs/DATA_COLLECTION_DESIGN.md` |
+| NiFi 연동 설계 | ✅ | `docs/NIFI_INTEGRATION.md` |
+| 테스트 전략 | ✅ | `docs/TEST_STRATEGY.md` |
+| DB 스키마 | ✅ | `backend/database/schema.sql` |
+| Python 프로토타입 | ✅ | `backend/`, `webapp/`, `plugins/` |
+| 벤치마크 Gap 분석 | ✅ | 17개 Gap 식별 (P0~P3) |
+| .NET Solution 설계 | ✅ | `docs/DOTNET_SOLUTION_DESIGN.md` |
+| gRPC Protocol 설계 | ✅ | `protos/` |
+| Domain Interface 설계 | ✅ | `docs/DOMAIN_INTERFACES.md` |
 
 ---
 
-## Phase 1: MVP (3 months)
+## Phase 1: MVP ✅ COMPLETE
 
-> 목표: 단일 노드에서 동작하는 핵심 기능. 사내 PoC 가능 수준.
-
-### Core Pipeline
-- [x] ASP.NET Core 8 Web API 프로젝트 셋업
-- [x] EF Core + PostgreSQL (Code First Migrations)
-- [x] Definition CRUD (Collector, Algorithm, Transfer + Versions)
-- [x] Instance CRUD + Recipe 버전 관리
-- [x] Pipeline CRUD + Step 순서 관리
-- [x] Pipeline Activation/Deactivation
-
-### Monitoring Engine
-- [x] File Watcher (FileSystemWatcher + polling fallback)
-- [x] API Poller (HttpClient + Polly)
-- [x] Kafka Consumer (Confluent.Kafka)
-- [x] Condition Evaluator + dedup
-
-### Processing Engine
-- [x] Job 생성 + 상태 관리
-- [x] Processing Orchestrator (순차 Step 실행)
-- [x] Execution Snapshot 캡처
-- [x] Event Log 기록
-- [x] Reprocess (단건 + 일괄 + 특정 Step부터)
-
-### Plugin System
-- [x] gRPC Plugin Protocol v2 (hermes_plugin.proto)
-- [x] Hermes.Plugins.Sdk NuGet 패키지
-- [x] Plugin 프로세스 관리 (spawn, health, kill)
-- [x] 빌트인 플러그인: REST API Collector, File Watcher, Passthrough, File Output
-
-### Web UI
-- [x] React + TypeScript + Vite 셋업
-- [x] Pipeline Designer (React Flow)
-- [x] Recipe Editor (react-jsonschema-form)
-- [x] Monitor Dashboard
-- [x] Job Explorer + Detail
-- [x] Definition Manager
-
-### Infrastructure
-- [x] Docker Compose (API + Worker + PostgreSQL)
-- [x] Health Check endpoints
-- [x] Structured logging (Serilog)
-- [x] appsettings.json 구조
-
-### Testing
-- [x] xUnit 프로젝트 셋업
-- [x] Domain 단위 테스트 (Recipe, Job lifecycle)
-- [ ] Application 서비스 테스트
-- [ ] API 통합 테스트 (WebApplicationFactory)
-- [ ] TestContainers (PostgreSQL)
-- [x] CI: GitHub Actions (build + test on PR)
-
-### Milestone Criteria
-```
-✅ docker compose up → API + Worker + UI 동작
-✅ Web UI에서 Pipeline 생성 → 수집 설정 → 활성화
-✅ 파일 생성 시 Job 자동 생성 + 처리
-✅ 실패 건 Web UI에서 재처리
-✅ Recipe 변경 → 새 버전 생성 → diff 확인
-✅ 전체 테스트 통과 (80%+ 커버리지)
-```
+- [x] ASP.NET Core 8 Web API + EF Core + PostgreSQL
+- [x] Definition/Instance/Pipeline CRUD + Recipe 버전 관리
+- [x] Monitoring Engine (File Watcher, API Poller, Kafka Consumer)
+- [x] Processing Engine (Orchestrator, Snapshot, Event Log, Reprocess)
+- [x] Plugin System (gRPC Protocol v2, SDK, 8 built-in plugins)
+- [x] Web UI (Pipeline Designer, Recipe Editor, Monitor, Job Explorer)
+- [x] Docker Compose, Health Check, Serilog
 
 ---
 
-## Phase 2: Production-Ready (+2 months)
+## Phase 2: Production-Ready ✅ COMPLETE
 
-> 목표: 실제 운영 환경 투입 가능. P0/P1 Gap 전부 해결.
-
-### P0 Gaps
-- [x] Back-pressure (큐 깊이 제한 + 모니터링 일시정지)
-- [x] Dead Letter Queue (실패 데이터 격리 + DLQ Explorer UI)
-- [x] Schema Discovery & Evolution (drift 감지 + 알림)
-
-### P1 Gaps
-- [x] Content Repository (디스크 기반 대용량 처리)
-- [x] Exactly-Once (Step별 checkpoint + 크래시 복구)
-- [x] Graceful Shutdown (drain mode + orphan 복구)
-- [x] Observability (Prometheus metrics + Grafana 대시보드)
+- [x] Back-pressure, Dead Letter Queue, Schema Discovery
+- [x] Content Repository (디스크 기반 대용량)
+- [x] Exactly-Once + Graceful Shutdown
+- [x] Observability (Prometheus + Grafana)
 - [x] Retry 정교화 (exponential backoff + jitter + Polly)
-
-### NiFi Integration
-- [x] NiFi REST API Client
-- [x] NiFi-Hermes Bridge (Process Group ↔ Pipeline 동기화)
-- [x] NiFi Provenance → Job 추적
-- [x] Recipe → NiFi Parameter Context 푸시
-
-### Testing
-- [x] E2E 시나리오 테스트 (파일 수집 → 분석 → 전송 전체 흐름)
-- [x] Back-pressure 부하 테스트
-- [x] DLQ 시나리오 테스트
-- [x] NiFi 연동 테스트 (Mock NiFi)
-- [x] 90%+ 커버리지
-
-### Milestone Criteria
-```
-✅ 1만 건/시간 처리 안정적 동작
-✅ 대용량 파일 (100MB+) 처리 가능
-✅ 외부 API 장애 시 Circuit Breaker 작동
-✅ 크래시 후 재시작 → 데이터 유실 없음
-✅ Grafana 대시보드에서 전체 상태 모니터링
-✅ NiFi 기존 Flow를 Hermes에서 관리 가능
-```
+- [x] NiFi Integration (Bridge, Provenance, Parameter Context)
+- [x] 161 tests, 90%+ coverage
 
 ---
 
-## Phase 3: Enterprise (+3 months)
+## Phase 3: Enterprise — IN PROGRESS (89%)
 
-> 목표: 다중 노드 운영 + 기업 기능. 상용화 기반.
+### 3A. Collect/Process/Export Module 강화 🔥 PRIORITY
 
-### Distributed Processing
+#### Collect Connectors (목표: 15+ native connectors)
+
+| Connector | Category | Priority | Status | Description |
+|---|---|---|---|---|
+| **FTP/SFTP Collector** | File | P0 | 🔄 | 재귀 탐색, 최신순/오래된순 정렬, regex 필터, 완료 감지 |
+| **Kafka Consumer** | Streaming | P0 | ✅ | Topic 구독, consumer group, offset 관리 |
+| **REST API Collector** | API | P0 | ✅ | GET/POST, auth, pagination, polling |
+| **File Watcher** | File | P0 | ✅ | Directory 감시, glob 패턴 |
+| **Database CDC** | Database | P0 | ✅ | Timestamp/sequence 기반 변경 추적 |
+| MQTT Subscriber | IoT | P1 | ⬜ | Topic 구독, QoS, retain 메시지 |
+| OPC-UA Client | Industrial | P1 | ⬜ | 설비 데이터 수집, subscription/polling |
+| TCP/UDP Socket | Network | P1 | ⬜ | Raw socket 데이터 수신 |
+| AMQP Consumer | Messaging | P1 | ⬜ | RabbitMQ, ActiveMQ 호환 |
+| JMS Consumer | Messaging | P2 | ⬜ | Java Message Service 호환 |
+| TIBCO RV Listener | Messaging | P2 | ⬜ | TIBCO Rendezvous 메시지 수신 |
+
+#### Process Connectors (목표: 10+ native processors)
+
+| Processor | Category | Priority | Status | Description |
+|---|---|---|---|---|
+| **Anomaly Detector** | Analytics | P0 | ✅ | Z-score, IQR, modified z-score |
+| **Data Transformer** | Transform | P0 | ✅ | JSON/CSV 변환, field mapping |
+| **Dedup Filter** | Filter | P0 | ✅ | Key 기반 중복 제거 |
+| **Content Router** | Routing | P0 | ✅ | 조건부 분기 |
+| JSON Transform | Transform | P0 | ✅ | JMESPath 기반 변환 |
+| CSV-JSON Converter | Transform | P0 | ✅ | 양방향 변환 |
+| Merge Content | Batch | P0 | ✅ | 다건 병합 (NiFi MergeContent) |
+| Split Records | Batch | P0 | ✅ | 배치 분할 (NiFi SplitRecord) |
+| Schema Validator | Validation | P1 | ⬜ | JSON Schema / Avro 검증 |
+| Record Enricher | Enrichment | P1 | ⬜ | 외부 API/DB lookup 보강 |
+
+#### Export Connectors (목표: 12+ native connectors)
+
+| Connector | Category | Priority | Status | Description |
+|---|---|---|---|---|
+| **Kafka Producer** | Streaming | P0 | ⬜ | Topic 발행, partitioning, acks |
+| **S3 Upload** | Storage | P0 | ⬜ | Bucket, prefix, format, compression |
+| **DB Writer** | Database | P0 | ⬜ | PostgreSQL/MSSQL upsert |
+| **File Output** | File | P0 | ✅ | JSON/CSV/text 파일 출력 |
+| **Webhook Sender** | API | P0 | ⬜ | HTTP POST, retry, auth |
+| FTP/SFTP Upload | File | P1 | ⬜ | 원격 서버 파일 전송 |
+| TIBCO RV Publisher | Messaging | P1 | ⬜ | TIBCO Rendezvous 메시지 발행 |
+| AMQP Producer | Messaging | P1 | ⬜ | RabbitMQ, ActiveMQ 발행 |
+| Elasticsearch Writer | Search | P1 | ⬜ | Index, bulk insert |
+| Email/SMTP Sender | Notification | P2 | ⬜ | 알림 이메일 발송 |
+| Slack/Teams Notifier | Notification | P2 | ⬜ | 채널 메시지 발송 |
+| InfluxDB Writer | TimeSeries | P2 | ⬜ | 시계열 데이터 적재 |
+
+### 3B. FTP/SFTP Collector 상세 스펙 🔥
+
+산업 현장의 핵심 시나리오: **설비 → FTP/SFTP → 파이프라인**
+
+```
+설비/장비 → FTP 서버에 파일 생성 → Hermes가 감지 → Collect → Process → Export
+```
+
+#### Settings (프로세서 설정)
+| Setting | Type | Description |
+|---|---|---|
+| host | string | FTP/SFTP 서버 주소 |
+| port | number | 포트 (FTP:21, SFTP:22, FTPS:990) |
+| protocol | select | FTP / FTPS / SFTP |
+| username | string | 인증 사용자명 |
+| password | password | 인증 비밀번호 |
+| private_key | password | SFTP 키 인증 |
+| passive_mode | boolean | FTP passive mode (default: true) |
+| poll_interval | string | 폴링 주기 (예: 30s, 5m, 1h) |
+| connection_timeout | number | 연결 타임아웃 (초) |
+| max_connections | number | 최대 동시 연결 수 |
+
+#### Recipe (운영 파라미터 — 버전 관리됨)
+| Parameter | Type | Description |
+|---|---|---|
+| remote_path | string | 수집 대상 디렉토리 |
+| recursive | boolean | 하위 폴더 재귀 탐색 |
+| max_depth | number | 최대 탐색 깊이 (-1: 무제한) |
+| file_filter_regex | string | 파일명 필터 (예: `.*\.csv$`) |
+| path_filter_regex | string | 경로 필터 (예: `^/data/2026`) |
+| ordering | select | NEWEST_FIRST / OLDEST_FIRST / NAME_ASC / NAME_DESC |
+| discovery_mode | select | ALL / LATEST / BATCH / ALL_NEW |
+| batch_size | number | BATCH 모드일 때 한 번에 가져올 파일 수 |
+| completion_check | select | NONE / MARKER_FILE / SIZE_STABLE |
+| marker_suffix | string | 완료 마커 파일 확장자 (예: .done, .complete) |
+| stable_seconds | number | SIZE_STABLE 체크 대기 시간 |
+| post_action | select | KEEP / DELETE / MOVE / RENAME |
+| post_action_target | string | MOVE 대상 경로 또는 RENAME 접미사 |
+| min_file_size | number | 최소 파일 크기 (bytes, 0=무제한) |
+| max_file_age_hours | number | 최대 파일 나이 (시간, 0=무제한) |
+
+#### 예외처리 시나리오 (빡빡하게)
+```
+Connection Failures:
+  ├── 서버 연결 실패 → exponential backoff (1s, 2s, 4s, 8s... max 5m)
+  ├── 인증 실패 → 즉시 STOP + Alert (재시도 무의미)
+  ├── Connection refused → Circuit breaker OPEN (5분 후 HALF_OPEN)
+  ├── DNS resolution 실패 → STOP + Alert
+  └── TLS 핸드셰이크 실패 → STOP + Alert (인증서 문제)
+
+Listing Failures:
+  ├── Permission denied → SKIP + log warning (해당 디렉토리만)
+  ├── Directory not found → STOP + Alert
+  ├── Timeout → retry 3회 후 SKIP
+  └── 서버 busy (421) → Retry-After 헤더 존중
+
+Download Failures:
+  ├── 다운로드 중 연결 끊김 → resume (부분 다운로드)
+  ├── 파일이 다운로드 중 삭제됨 → SKIP + DLQ
+  ├── 파일이 다운로드 중 변경됨 → 재다운로드
+  ├── 체크섬 불일치 → retry 3회 후 DLQ
+  ├── 디스크 공간 부족 → STOP + Alert
+  └── 파일 크기 0 bytes → SKIP (설정 가능)
+
+Post-Action Failures:
+  ├── DELETE 실패 (permission) → log warning, 다음 폴링에서 재감지됨
+  ├── MOVE 대상 디렉토리 없음 → 자동 생성 시도
+  ├── MOVE 파일명 충돌 → timestamp 접미사 추가
+  └── RENAME 실패 → log warning, 원본 유지
+```
+
+### 3C. 예외처리 프레임워크 (전체 모듈 공통)
+
+```
+모든 Connector 공통 패턴:
+├── Connection Management
+│   ├── Connection Pool (min/max/idle 설정)
+│   ├── Health Check (주기적 ping)
+│   ├── Auto-reconnect (configurable backoff)
+│   └── Circuit Breaker (failure_threshold, recovery_timeout)
+│
+├── Error Classification
+│   ├── TRANSIENT → auto-retry (네트워크, timeout)
+│   ├── PERMANENT → STOP + Alert (인증, 설정 오류)
+│   ├── THROTTLED → backoff + respect rate limits
+│   └── UNKNOWN → DLQ + manual investigation
+│
+├── Retry Strategy
+│   ├── Exponential backoff: base * 2^attempt (1s→2s→4s→8s)
+│   ├── Jitter: ±25% randomization
+│   ├── Max attempts: configurable (default: 5)
+│   ├── Max delay: configurable (default: 5m)
+│   └── Retry budget: 시간당 최대 재시도 횟수 제한
+│
+├── Dead Letter Queue
+│   ├── 실패 데이터 격리 (원본 보존)
+│   ├── 실패 사유 + stack trace 기록
+│   ├── Manual replay / auto-replay 선택
+│   └── DLQ 크기 제한 + 알림
+│
+└── Observability
+    ├── Metrics: success/failure count, latency p50/p95/p99
+    ├── Logs: structured JSON (correlation_id 포함)
+    ├── Alerts: configurable threshold (실패율 > N%)
+    └── Dashboard: Grafana 자동 생성
+```
+
+### 3D. 테스트 시나리오 확장 (목표: 300+ tests)
+
+현재: 161 tests → 목표: 300+ tests
+
+#### FTP/SFTP Collector Tests (60+)
+```
+Connection (10):
+  - FTP/FTPS/SFTP 각각 connect/login 성공
+  - 잘못된 credentials → 인증 실패
+  - Connection refused → circuit breaker 작동
+  - DNS 실패, TLS 실패, timeout
+  - Passive mode fallback
+
+Directory Traversal (15):
+  - 단일/재귀 디렉토리 탐색
+  - max_depth 제한 (0, 1, 3, -1)
+  - 날짜 폴더 패턴 (yyyyMMdd, yyyy/MM/dd)
+  - 정렬 (newest_first, oldest_first, name_asc)
+  - 빈 디렉토리, 권한 없는 디렉토리
+  - 심볼릭 링크 순환 방지
+  - 10,000+ 파일 대규모 디렉토리
+
+File Matching (15):
+  - Regex 필터 (*.csv, *.json, 날짜 패턴)
+  - Discovery mode (ALL, LATEST, BATCH, ALL_NEW)
+  - 파일 크기 필터 (min/max)
+  - 파일 나이 필터 (max_age)
+  - Completion check (marker_file, size_stable)
+  - Unicode 파일명
+
+Download & Integrity (10):
+  - 정상 다운로드 + checksum 검증
+  - 대용량 (100MB+) 파일 스트리밍
+  - 다운로드 중 연결 끊김 → resume
+  - 다운로드 중 파일 변경/삭제
+  - 0-byte 파일 처리
+
+Post-Action (5):
+  - KEEP/DELETE/MOVE/RENAME 각각
+  - MOVE 충돌 해결 (timestamp suffix)
+
+Error Recovery (5):
+  - Circuit breaker open → half-open → close
+  - DLQ 격리 + replay
+  - Backpressure → 수집 일시정지 → 재개
+```
+
+#### Kafka Consumer/Producer Tests (30+)
+```
+Consumer (15):
+  - 단일/다중 topic 구독
+  - Consumer group 참여/탈퇴
+  - Offset commit (auto/manual)
+  - Partition rebalance 처리
+  - Deserialization 실패 → DLQ
+  - 메시지 크기 제한 초과
+  - Broker 장애 → 자동 재연결
+  - SSL/SASL 인증
+
+Producer (15):
+  - 단건/배치 발행
+  - Partitioning (key-based, round-robin)
+  - Ack 모드 (0, 1, all)
+  - Serialization 실패
+  - Broker 장애 → 버퍼링 + 재전송
+  - 메시지 순서 보장
+  - Idempotent producer
+  - Transaction support
+```
+
+#### Export Connector Tests (30+)
+```
+S3 Upload (8):
+  - 단건/배치 업로드
+  - Multipart upload (대용량)
+  - 파티셔닝 (date/source/custom)
+  - Compression (gzip/snappy/zstd)
+  - 권한 오류, 버킷 없음
+  - 네트워크 실패 → retry
+
+DB Writer (8):
+  - INSERT/UPSERT/MERGE
+  - Batch insert (1000건)
+  - Schema mismatch → DLQ
+  - Connection pool exhaustion
+  - Deadlock → retry
+  - Transaction rollback
+
+Webhook (7):
+  - POST 성공 (200/201/202)
+  - 서버 오류 (500/502/503) → retry
+  - Timeout → retry with backoff
+  - Auth (Bearer, Basic, API Key)
+  - Rate limit (429) → Retry-After
+  - SSL 인증서 오류
+
+Messaging (7):
+  - AMQP publish + confirm
+  - TIBCO RV publish
+  - MQTT publish (QoS 0/1/2)
+  - Connection lost → 버퍼링
+```
+
+#### End-to-End Pipeline Tests (20+)
+```
+Happy Path (5):
+  - FTP → Anomaly Detection → S3
+  - Kafka → Transform → DB
+  - REST API → Filter → Kafka
+  - File → Split → Merge → File
+  - DB CDC → Transform → Webhook
+
+Error Scenarios (10):
+  - 중간 Step 실패 → 재처리
+  - Source 장애 → 파이프라인 일시정지 → 복구
+  - Export 장애 → DLQ → manual replay
+  - Recipe 버전 변경 → 다음 실행부터 적용
+  - Back-pressure → 수집 throttle
+  - 다중 파이프라인 동시 실행
+  - 파이프라인 비활성화 중 실행 완료 대기
+
+Performance (5):
+  - 1,000건 동시 처리 (throughput)
+  - 10MB 파일 100개 파이프라인
+  - 장시간 안정성 (1시간 연속)
+```
+
+### 3E. 기존 Phase 3 항목
+
+#### Distributed Processing
 - [x] Worker 노드 수평 확장 (in-process 시뮬레이션)
 - [ ] Coordinator-Worker 아키텍처 (Orleans)
 - [x] 작업 분배 + 리밸런싱 (round-robin)
 - [x] Worker 장애 → 자동 재할당
 - [ ] Split-brain 방지 (PostgreSQL advisory locks)
 
-### P2 Gaps
+#### P2 Gaps
 - [x] Authentication (JWT/OIDC)
 - [x] RBAC (Viewer/Operator/Admin)
-- [x] Audit Log (사용자 행동 추적)
-- [x] Data Preview (파이프라인 실행 전 미리보기)
-- [x] Content-Based Routing (조건부 분기)
-- [x] Rate Limiting
-- [x] Circuit Breaker
+- [x] Audit Log
+- [x] Data Preview
+- [x] Content-Based Routing
+- [x] Rate Limiting + Circuit Breaker
 
-### Deployment
-- [x] Kubernetes Helm Chart
-- [ ] K8s Operator (CRD for Pipeline)
-- [x] Grafana Dashboard 템플릿 제공
-- [ ] 운영 가이드 문서
-
-### Testing
-- [x] 분산 환경 테스트 (multi-node 시뮬레이션)
-- [x] 장애 주입 테스트 (worker failure + reassignment)
-- [ ] 성능 벤치마크 (NiFi/Airbyte 대비)
-- [x] 95%+ 커버리지
-
-### Milestone Criteria
-```
-✅ 3+ Worker 노드 클러스터 안정 운영
-✅ Worker 1대 kill → 자동 복구 (데이터 유실 없음)
-✅ RBAC: Operator는 Recipe만, Admin은 Pipeline도 관리
-✅ Helm chart로 K8s 배포 5분 내 완료
-```
+#### UI Enhancements (완료)
+- [x] Pipeline Designer: Settings/Recipe 분리
+- [x] 전역 Recipe Management 페이지
+- [x] Recipe Diff Viewer (Git-style)
+- [x] Connector Catalog (drag-and-drop)
+- [x] Collect/Process/Export 카테고리 리네이밍
 
 ---
 
 ## Phase 4: Exit-Ready (+3 months)
 
-> 목표: 인수/투자 유치 가능한 상용 제품 수준.
-
-### Enterprise Features
 - [ ] Multi-tenancy (Workspace 격리)
 - [ ] Plugin Marketplace (내부/외부)
-- [ ] Pipeline Git Integration (version control)
+- [ ] Pipeline Git Integration
 - [ ] Environment Promotion (dev → staging → prod)
 - [ ] SLA Monitoring + Alerting
-- [ ] Cost Tracking (compute, storage)
-- [ ] Custom Dashboard Builder
-
-### Compliance
-- [ ] SOC2 readiness
-- [ ] GDPR 지원 (데이터 삭제 요청)
-- [ ] Data Retention Policy
-- [ ] Encryption at Rest
-
-### Ecosystem
-- [ ] Plugin SDK 문서 사이트
-- [ ] Hermes Hub (플러그인 공유)
-- [ ] Terraform Provider
-- [ ] CLI 도구
-
-### Community
-- [ ] Documentation site (Docusaurus)
-- [ ] Getting Started 튜토리얼
-- [ ] Video demos
-- [ ] Discord/Slack community
-
-### Milestone Criteria
-```
-✅ 10+ 기업에서 프로덕션 사용
-✅ 50+ 커뮤니티 플러그인
-✅ 엔터프라이즈 고객 3+ (유료 지원)
-✅ 기술 블로그 / 컨퍼런스 발표
-```
+- [ ] SOC2 readiness, GDPR
+- [ ] Documentation site, CLI, Terraform Provider
 
 ---
 
@@ -261,58 +428,39 @@ main          ← 안정 릴리스
 └── release/x.y.z    ← 릴리스 준비
 ```
 
-### PR Checklist (모든 PR 필수)
+### PR Checklist
 ```
-□ 기존 테스트 전부 통과 (dotnet test)
+□ 기존 테스트 전부 통과
 □ 새 기능에 대한 테스트 코드 포함
 □ 커버리지 하락 없음
-□ lint 통과 (dotnet format)
+□ lint 통과
 □ 보안 검사 통과 (no hardcoded secrets)
 □ ROADMAP.md 업데이트 (해당 시)
-□ CHANGELOG.md 업데이트
-```
-
-### Test-Driven Development
-```
-1. 새 기능 시작 전:
-   → 기존 테스트 전부 통과 확인 (dotnet test)
-
-2. 새 기능 개발:
-   → 테스트 먼저 작성 (Red)
-   → 구현 (Green)
-   → 리팩토링 (Refactor)
-
-3. PR 전:
-   → 전체 테스트 통과
-   → 커버리지 리포트 확인
-   → 통합 테스트 통과 (TestContainers)
-```
-
-### CI/CD Pipeline
-```
-PR → Build → Unit Tests → Integration Tests → Coverage Check → Security Scan
-                                                                      │
-                                                                      ▼
-                                                              Merge to develop
-                                                                      │
-                                                                      ▼
-                                                         Release → Docker Build
-                                                                      │
-                                                                      ▼
-                                                              Push to Registry
 ```
 
 ---
 
 ## Changelog
 
-### v0.1.0 (2026-03-15) — Phase 0
-- Initial project setup
-- Python prototype (FastAPI + React)
+### v0.3.0 (2026-03-16) — Phase 3
+- Collect/Process/Export 카테고리 리네이밍 (ALGORITHM→PROCESS, TRANSFER→EXPORT)
+- 전역 Recipe Management 페이지 (버전 타임라인, diff, 파이프라인 영향 범위)
+- Pipeline Designer: Settings/Recipe 분리 (Settings=프로세서 설정, Recipe=전역 관리)
+- Sidebar 네비게이션에 Recipes 추가
+- FTP/SFTP Collector 상세 스펙 + 예외처리 시나리오
+- 커넥터 확장 로드맵 (37+ connectors 목표)
+- 테스트 시나리오 확장 계획 (300+ tests 목표)
+
+### v0.2.0 (2026-03-15) — Phase 2
+- NiFi-style processor config: Settings/Recipe/History tabs
+- 8 native plugins (REST API, File Watcher, Passthrough, File Output + 4 NiFi-equivalent)
+- FTP/SFTP collector with recursive traversal, regex filters
+- Recipe Diff Viewer (Git-style side-by-side)
+- 161 tests across collection, matching, traversal
+
+### v0.1.0 (2026-03-15) — Phase 0/1
+- Initial project setup (Python prototype + React UI)
 - Architecture design documents
 - DB schema (19 tables)
 - Plugin system (6 built-in plugins)
 - 90 test scenarios
-- NiFi integration design
-- Benchmark gap analysis (17 gaps identified)
-- .NET solution design (in progress)

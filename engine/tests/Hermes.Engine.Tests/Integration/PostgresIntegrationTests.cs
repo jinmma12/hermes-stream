@@ -57,11 +57,11 @@ public class PostgresIntegrationTests : IAsyncLifetime
         Assert.Contains("execution_event_logs", tables);
         Assert.Contains("reprocess_requests", tables);
         Assert.Contains("collector_definitions", tables);
-        Assert.Contains("algorithm_definitions", tables);
-        Assert.Contains("transfer_definitions", tables);
+        Assert.Contains("process_definitions", tables);
+        Assert.Contains("export_definitions", tables);
         Assert.Contains("collector_instances", tables);
-        Assert.Contains("algorithm_instances", tables);
-        Assert.Contains("transfer_instances", tables);
+        Assert.Contains("process_instances", tables);
+        Assert.Contains("export_instances", tables);
     }
 
     [Fact]
@@ -140,32 +140,32 @@ public class PostgresIntegrationTests : IAsyncLifetime
     {
         // 1. Seed definitions + instances
         var collDef = new CollectorDefinition { Code = "pg-coll", Name = "PG Collector", Status = DefinitionStatus.Active };
-        var algoDef = new AlgorithmDefinition { Code = "pg-algo", Name = "PG Algorithm", Status = DefinitionStatus.Active };
-        var transDef = new TransferDefinition { Code = "pg-trans", Name = "PG Transfer", Status = DefinitionStatus.Active };
+        var algoDef = new ProcessDefinition { Code = "pg-algo", Name = "PG Algorithm", Status = DefinitionStatus.Active };
+        var transDef = new ExportDefinition { Code = "pg-trans", Name = "PG Transfer", Status = DefinitionStatus.Active };
         _db.CollectorDefinitions.Add(collDef);
-        _db.AlgorithmDefinitions.Add(algoDef);
-        _db.TransferDefinitions.Add(transDef);
+        _db.ProcessDefinitions.Add(algoDef);
+        _db.ExportDefinitions.Add(transDef);
         await _db.SaveChangesAsync();
 
         var collDefV = new CollectorDefinitionVersion { DefinitionId = collDef.Id, VersionNo = 1, ExecutionType = ExecutionType.Plugin, ExecutionRef = "COLLECTOR:pg-coll", IsPublished = true };
-        var algoDefV = new AlgorithmDefinitionVersion { DefinitionId = algoDef.Id, VersionNo = 1, ExecutionType = ExecutionType.Plugin, ExecutionRef = "ALGORITHM:pg-algo", IsPublished = true };
-        var transDefV = new TransferDefinitionVersion { DefinitionId = transDef.Id, VersionNo = 1, ExecutionType = ExecutionType.Plugin, ExecutionRef = "TRANSFER:pg-trans", IsPublished = true };
+        var algoDefV = new ProcessDefinitionVersion { DefinitionId = algoDef.Id, VersionNo = 1, ExecutionType = ExecutionType.Plugin, ExecutionRef = "ALGORITHM:pg-algo", IsPublished = true };
+        var transDefV = new ExportDefinitionVersion { DefinitionId = transDef.Id, VersionNo = 1, ExecutionType = ExecutionType.Plugin, ExecutionRef = "TRANSFER:pg-trans", IsPublished = true };
         _db.CollectorDefinitionVersions.Add(collDefV);
-        _db.AlgorithmDefinitionVersions.Add(algoDefV);
-        _db.TransferDefinitionVersions.Add(transDefV);
+        _db.ProcessDefinitionVersions.Add(algoDefV);
+        _db.ExportDefinitionVersions.Add(transDefV);
         await _db.SaveChangesAsync();
 
         var collInst = new CollectorInstance { DefinitionId = collDef.Id, Name = "PG Coll Inst", Status = InstanceStatus.Active };
-        var algoInst = new AlgorithmInstance { DefinitionId = algoDef.Id, Name = "PG Algo Inst", Status = InstanceStatus.Active };
-        var transInst = new TransferInstance { DefinitionId = transDef.Id, Name = "PG Trans Inst", Status = InstanceStatus.Active };
+        var algoInst = new ProcessInstance { DefinitionId = algoDef.Id, Name = "PG Algo Inst", Status = InstanceStatus.Active };
+        var transInst = new ExportInstance { DefinitionId = transDef.Id, Name = "PG Trans Inst", Status = InstanceStatus.Active };
         _db.CollectorInstances.Add(collInst);
-        _db.AlgorithmInstances.Add(algoInst);
-        _db.TransferInstances.Add(transInst);
+        _db.ProcessInstances.Add(algoInst);
+        _db.ExportInstances.Add(transInst);
         await _db.SaveChangesAsync();
 
         _db.CollectorInstanceVersions.Add(new() { InstanceId = collInst.Id, DefVersionId = collDefV.Id, VersionNo = 1, ConfigJson = "{\"source\":\"pg\"}", IsCurrent = true });
-        _db.AlgorithmInstanceVersions.Add(new() { InstanceId = algoInst.Id, DefVersionId = algoDefV.Id, VersionNo = 1, ConfigJson = "{\"mode\":\"test\"}", IsCurrent = true });
-        _db.TransferInstanceVersions.Add(new() { InstanceId = transInst.Id, DefVersionId = transDefV.Id, VersionNo = 1, ConfigJson = "{\"dest\":\"pg\"}", IsCurrent = true });
+        _db.ProcessInstanceVersions.Add(new() { InstanceId = algoInst.Id, DefVersionId = algoDefV.Id, VersionNo = 1, ConfigJson = "{\"mode\":\"test\"}", IsCurrent = true });
+        _db.ExportInstanceVersions.Add(new() { InstanceId = transInst.Id, DefVersionId = transDefV.Id, VersionNo = 1, ConfigJson = "{\"dest\":\"pg\"}", IsCurrent = true });
         await _db.SaveChangesAsync();
 
         // 2. Create pipeline with steps
@@ -178,8 +178,8 @@ public class PostgresIntegrationTests : IAsyncLifetime
             Steps = new List<PipelineStep>
             {
                 new() { StepOrder = 1, StepType = StageType.Collect, RefType = RefType.Collector, RefId = collInst.Id },
-                new() { StepOrder = 2, StepType = StageType.Algorithm, RefType = RefType.Algorithm, RefId = algoInst.Id, OnError = OnErrorAction.Skip },
-                new() { StepOrder = 3, StepType = StageType.Transfer, RefType = RefType.Transfer, RefId = transInst.Id },
+                new() { StepOrder = 2, StepType = StageType.Process, RefType = RefType.Process, RefId = algoInst.Id, OnError = OnErrorAction.Skip },
+                new() { StepOrder = 3, StepType = StageType.Export, RefType = RefType.Export, RefId = transInst.Id },
             }
         };
         _db.PipelineInstances.Add(pipeline);
@@ -332,7 +332,7 @@ public class PostgresIntegrationTests : IAsyncLifetime
             Steps = new List<PipelineStep>
             {
                 new() { StepOrder = 1, StepType = StageType.Collect, RefType = RefType.Collector, RefId = Guid.NewGuid() },
-                new() { StepOrder = 2, StepType = StageType.Algorithm, RefType = RefType.Algorithm, RefId = Guid.NewGuid() },
+                new() { StepOrder = 2, StepType = StageType.Process, RefType = RefType.Process, RefId = Guid.NewGuid() },
             }
         };
         _db.PipelineInstances.Add(pipeline);

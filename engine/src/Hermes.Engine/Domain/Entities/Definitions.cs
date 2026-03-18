@@ -28,9 +28,9 @@ public class CollectorDefinitionVersion : BaseEntity
     public CollectorDefinition Definition { get; set; } = null!;
 }
 
-// ── Algorithm ──
+// ── Process ──
 
-public class AlgorithmDefinition : AuditableEntity
+public class ProcessDefinition : AuditableEntity
 {
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -38,10 +38,10 @@ public class AlgorithmDefinition : AuditableEntity
     public string? Category { get; set; }
     public string? IconUrl { get; set; }
     public DefinitionStatus Status { get; set; } = DefinitionStatus.Draft;
-    public List<AlgorithmDefinitionVersion> Versions { get; set; } = new();
+    public List<ProcessDefinitionVersion> Versions { get; set; } = new();
 }
 
-public class AlgorithmDefinitionVersion : BaseEntity
+public class ProcessDefinitionVersion : BaseEntity
 {
     public Guid DefinitionId { get; set; }
     public int VersionNo { get; set; }
@@ -53,12 +53,12 @@ public class AlgorithmDefinitionVersion : BaseEntity
     public string? ExecutionRef { get; set; }
     public bool IsPublished { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public AlgorithmDefinition Definition { get; set; } = null!;
+    public ProcessDefinition Definition { get; set; } = null!;
 }
 
-// ── Transfer ──
+// ── Export ──
 
-public class TransferDefinition : AuditableEntity
+public class ExportDefinition : AuditableEntity
 {
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -66,10 +66,10 @@ public class TransferDefinition : AuditableEntity
     public string? Category { get; set; }
     public string? IconUrl { get; set; }
     public DefinitionStatus Status { get; set; } = DefinitionStatus.Draft;
-    public List<TransferDefinitionVersion> Versions { get; set; } = new();
+    public List<ExportDefinitionVersion> Versions { get; set; } = new();
 }
 
-public class TransferDefinitionVersion : BaseEntity
+public class ExportDefinitionVersion : BaseEntity
 {
     public Guid DefinitionId { get; set; }
     public int VersionNo { get; set; }
@@ -81,5 +81,5 @@ public class TransferDefinitionVersion : BaseEntity
     public string? ExecutionRef { get; set; }
     public bool IsPublished { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public TransferDefinition Definition { get; set; } = null!;
+    public ExportDefinition Definition { get; set; } = null!;
 }

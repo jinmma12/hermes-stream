@@ -4,8 +4,8 @@
 
 export enum StageType {
   COLLECT = 'COLLECT',
-  ALGORITHM = 'ALGORITHM',
-  TRANSFER = 'TRANSFER',
+  PROCESS = 'PROCESS',
+  EXPORT = 'EXPORT',
 }
 
 export enum ExecutionType {
@@ -117,7 +117,7 @@ export interface CollectorDefinition {
   versions?: DefinitionVersion[];
 }
 
-export interface AlgorithmDefinition {
+export interface ProcessDefinition {
   id: number;
   code: string;
   name: string;
@@ -129,7 +129,7 @@ export interface AlgorithmDefinition {
   versions?: DefinitionVersion[];
 }
 
-export interface TransferDefinition {
+export interface ExportDefinition {
   id: number;
   code: string;
   name: string;
@@ -170,10 +170,10 @@ export interface CollectorInstance {
   current_version?: InstanceVersion;
 }
 
-export interface AlgorithmInstance {
+export interface ProcessInstance {
   id: number;
   definition_id: number;
-  definition?: AlgorithmDefinition;
+  definition?: ProcessDefinition;
   name: string;
   description: string;
   status: DefinitionStatus;
@@ -181,10 +181,10 @@ export interface AlgorithmInstance {
   current_version?: InstanceVersion;
 }
 
-export interface TransferInstance {
+export interface ExportInstance {
   id: number;
   definition_id: number;
-  definition?: TransferDefinition;
+  definition?: ExportDefinition;
   name: string;
   description: string;
   status: DefinitionStatus;
@@ -311,8 +311,8 @@ export interface ExecutionSnapshot {
   execution_id: number;
   pipeline_config: Record<string, unknown>;
   collector_config: Record<string, unknown>;
-  algorithm_config: Record<string, unknown>;
-  transfer_config: Record<string, unknown>;
+  process_config: Record<string, unknown>;
+  export_config: Record<string, unknown>;
   snapshot_hash: string;
   created_at: string;
 }

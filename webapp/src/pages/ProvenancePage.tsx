@@ -5,7 +5,7 @@ interface ProvenanceEvent {
   eventType: string;
   timestamp: string;
   componentName: string;
-  componentType: 'COLLECT' | 'ALGORITHM' | 'TRANSFER';
+  componentType: 'COLLECT' | 'PROCESS' | 'EXPORT';
   duration: string;
   inputSize: string;
   outputSize: string;
@@ -25,10 +25,10 @@ export default function ProvenancePage() {
       setEvents([
         { id: 'prov-1', eventType: 'RECEIVE', timestamp: '2026-03-15T10:00:00.123Z', componentName: 'REST API Collector', componentType: 'COLLECT', duration: '523ms', inputSize: '-', outputSize: '24.5 KB', details: 'Received 150 records from https://api.vendor.com/orders', status: 'SUCCESS' },
         { id: 'prov-2', eventType: 'CONTENT_MODIFIED', timestamp: '2026-03-15T10:00:00.650Z', componentName: 'REST API Collector', componentType: 'COLLECT', duration: '12ms', inputSize: '24.5 KB', outputSize: '24.5 KB', details: 'Content stored: claim SHA-256 a1b2c3d4...', status: 'SUCCESS' },
-        { id: 'prov-3', eventType: 'ROUTE', timestamp: '2026-03-15T10:00:01.100Z', componentName: 'Anomaly Detector', componentType: 'ALGORITHM', duration: '1,247ms', inputSize: '24.5 KB', outputSize: '18.2 KB', details: 'Processed 150 records: 147 normal, 3 anomalies (z-score > 2.5)', status: 'SUCCESS' },
-        { id: 'prov-4', eventType: 'ATTRIBUTES_MODIFIED', timestamp: '2026-03-15T10:00:02.350Z', componentName: 'Anomaly Detector', componentType: 'ALGORITHM', duration: '3ms', inputSize: '-', outputSize: '-', details: 'Added attributes: anomaly_count=3, severity=HIGH', status: 'SUCCESS' },
-        { id: 'prov-5', eventType: 'SEND', timestamp: '2026-03-15T10:00:02.400Z', componentName: 'S3 Upload', componentType: 'TRANSFER', duration: '2,341ms', inputSize: '18.2 KB', outputSize: '-', details: 'Uploaded to s3://hermes-output/2026/03/15/batch_001.json', status: 'SUCCESS' },
-        { id: 'prov-6', eventType: 'DROP', timestamp: '2026-03-15T10:00:04.750Z', componentName: 'S3 Upload', componentType: 'TRANSFER', duration: '1ms', inputSize: '-', outputSize: '-', details: 'Content claim released after successful transfer', status: 'SUCCESS' },
+        { id: 'prov-3', eventType: 'ROUTE', timestamp: '2026-03-15T10:00:01.100Z', componentName: 'Anomaly Detector', componentType: 'PROCESS', duration: '1,247ms', inputSize: '24.5 KB', outputSize: '18.2 KB', details: 'Processed 150 records: 147 normal, 3 anomalies (z-score > 2.5)', status: 'SUCCESS' },
+        { id: 'prov-4', eventType: 'ATTRIBUTES_MODIFIED', timestamp: '2026-03-15T10:00:02.350Z', componentName: 'Anomaly Detector', componentType: 'PROCESS', duration: '3ms', inputSize: '-', outputSize: '-', details: 'Added attributes: anomaly_count=3, severity=HIGH', status: 'SUCCESS' },
+        { id: 'prov-5', eventType: 'SEND', timestamp: '2026-03-15T10:00:02.400Z', componentName: 'S3 Upload', componentType: 'EXPORT', duration: '2,341ms', inputSize: '18.2 KB', outputSize: '-', details: 'Uploaded to s3://hermes-output/2026/03/15/batch_001.json', status: 'SUCCESS' },
+        { id: 'prov-6', eventType: 'DROP', timestamp: '2026-03-15T10:00:04.750Z', componentName: 'S3 Upload', componentType: 'EXPORT', duration: '1ms', inputSize: '-', outputSize: '-', details: 'Content claim released after successful transfer', status: 'SUCCESS' },
       ]);
       setLoading(false);
     }, 500);
@@ -36,8 +36,8 @@ export default function ProvenancePage() {
 
   const typeColors: Record<string, string> = {
     COLLECT: 'bg-blue-500',
-    ALGORITHM: 'bg-purple-500',
-    TRANSFER: 'bg-emerald-500',
+    PROCESS: 'bg-purple-500',
+    EXPORT: 'bg-emerald-500',
   };
 
   const eventIcons: Record<string, string> = {
@@ -81,7 +81,7 @@ export default function ProvenancePage() {
           {/* Vertical line */}
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-slate-200" />
 
-          {events.map((evt, idx) => (
+          {events.map((evt, _idx) => (
             <div key={evt.id} className="relative mb-4 ml-14">
               {/* Timeline dot */}
               <div className={`absolute -left-[3.25rem] flex h-7 w-7 items-center justify-center rounded-full ${typeColors[evt.componentType]} text-white shadow-md`}>

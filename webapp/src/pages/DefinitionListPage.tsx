@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { CollectorDefinition, AlgorithmDefinition, TransferDefinition } from '../types';
+import type { CollectorDefinition as _C, ProcessDefinition as _A, ExportDefinition as _T } from '../types';
 import { DefinitionStatus, StageType } from '../types';
 import { definitions } from '../api/client';
 import StatusBadge from '../components/common/StatusBadge';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 
-type Tab = 'collectors' | 'algorithms' | 'transfers';
+type Tab = 'collectors' | 'processors' | 'exports';
 
 interface DefinitionCard {
   id: number;
@@ -36,34 +36,43 @@ export default function DefinitionListPage() {
       if (activeTab === 'collectors') {
         const defs = await definitions.listCollectors();
         data = defs.map((d) => ({ ...d, type: StageType.COLLECT, versionCount: d.versions?.length || 0 }));
-      } else if (activeTab === 'algorithms') {
-        const defs = await definitions.listAlgorithms();
-        data = defs.map((d) => ({ ...d, type: StageType.ALGORITHM, versionCount: d.versions?.length || 0 }));
+      } else if (activeTab === 'processors') {
+        const defs = await definitions.listProcessors();
+        data = defs.map((d) => ({ ...d, type: StageType.PROCESS, versionCount: d.versions?.length || 0 }));
       } else {
-        const defs = await definitions.listTransfers();
-        data = defs.map((d) => ({ ...d, type: StageType.TRANSFER, versionCount: d.versions?.length || 0 }));
+        const defs = await definitions.listExports();
+        data = defs.map((d) => ({ ...d, type: StageType.EXPORT, versionCount: d.versions?.length || 0 }));
       }
       setCards(data);
     } catch {
       // Demo data
       if (activeTab === 'collectors') {
         setCards([
-          { id: 1, code: 'rest-api', name: 'REST API Collector', description: 'Polls REST API endpoints for new data. Supports GET/POST, authentication, pagination.', category: 'API', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 2 },
-          { id: 2, code: 'file-watcher', name: 'File Watcher', description: 'Monitors file system directories for new or modified files. Supports glob patterns.', category: 'File', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 1 },
-          { id: 3, code: 'db-poller', name: 'Database Poller', description: 'Polls database tables for new or changed records using timestamp or sequence tracking.', category: 'Database', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 3 },
-          { id: 4, code: 'mqtt-subscriber', name: 'MQTT Subscriber', description: 'Subscribes to MQTT topics for real-time IoT data collection.', category: 'IoT', icon_url: null, status: DefinitionStatus.DRAFT, type: StageType.COLLECT, versionCount: 1 },
+          { id: 1, code: 'ftp-sftp-collector', name: 'FTP/SFTP Collector', description: 'Collects files from FTP/FTPS/SFTP servers. Recursive traversal, regex filters, completion checks.', category: 'File', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 3 },
+          { id: 2, code: 'rest-api-collector', name: 'REST API Collector', description: 'Polls REST API endpoints. GET/POST, authentication, pagination.', category: 'API', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 2 },
+          { id: 3, code: 'file-watcher', name: 'File Watcher', description: 'Monitors local directories for new or modified files. Glob patterns.', category: 'File', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 1 },
+          { id: 4, code: 'database-poller', name: 'Database CDC', description: 'Polls database tables for changes using timestamp or sequence tracking.', category: 'Database', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 2 },
+          { id: 5, code: 'kafka-consumer', name: 'Kafka Consumer', description: 'Consumes messages from Kafka topics. Consumer group, offset management.', category: 'Streaming', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.COLLECT, versionCount: 1 },
+          { id: 6, code: 'mqtt-subscriber', name: 'MQTT Subscriber', description: 'Subscribes to MQTT topics for real-time IoT data collection.', category: 'IoT', icon_url: null, status: DefinitionStatus.DRAFT, type: StageType.COLLECT, versionCount: 1 },
         ]);
-      } else if (activeTab === 'algorithms') {
+      } else if (activeTab === 'processors') {
         setCards([
-          { id: 1, code: 'anomaly-detector', name: 'Anomaly Detector', description: 'Statistical anomaly detection using z-score, IQR, or modified z-score methods.', category: 'Analytics', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.ALGORITHM, versionCount: 2 },
-          { id: 2, code: 'data-transformer', name: 'Data Transformer', description: 'Transforms data between formats with mapping rules. JSON, CSV, XML supported.', category: 'Transform', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.ALGORITHM, versionCount: 1 },
-          { id: 3, code: 'dedup-filter', name: 'Deduplication Filter', description: 'Removes duplicate records based on configurable key fields and time windows.', category: 'Filter', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.ALGORITHM, versionCount: 1 },
+          { id: 1, code: 'anomaly-detector', name: 'Anomaly Detector', description: 'Statistical anomaly detection using z-score, IQR, or modified z-score.', category: 'Analytics', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 2 },
+          { id: 2, code: 'data-transformer', name: 'Data Transformer', description: 'Transforms data between formats with mapping rules. JSON, CSV, XML.', category: 'Transform', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 1 },
+          { id: 3, code: 'json-transform', name: 'JSON Transform', description: 'JMESPath-based JSON transformation and extraction.', category: 'Transform', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 1 },
+          { id: 4, code: 'csv-json-converter', name: 'CSV-JSON Converter', description: 'Bidirectional CSV/JSON conversion with header mapping.', category: 'Transform', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 1 },
+          { id: 5, code: 'dedup-filter', name: 'Dedup Filter', description: 'Removes duplicates based on configurable key fields and time windows.', category: 'Filter', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 1 },
+          { id: 6, code: 'content-router', name: 'Content Router', description: 'Routes data to different outputs based on content conditions.', category: 'Routing', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 1 },
+          { id: 7, code: 'merge-content', name: 'Merge Content', description: 'Merges multiple records into batches (NiFi MergeContent).', category: 'Batch', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 1 },
+          { id: 8, code: 'split-records', name: 'Split Records', description: 'Splits batches into individual records (NiFi SplitRecord).', category: 'Batch', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.PROCESS, versionCount: 1 },
         ]);
       } else {
         setCards([
-          { id: 1, code: 's3-upload', name: 'S3 Upload', description: 'Uploads processed data to Amazon S3 with configurable bucket, prefix, and format.', category: 'Cloud Storage', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.TRANSFER, versionCount: 2 },
-          { id: 2, code: 'db-writer', name: 'Database Writer', description: 'Writes processed data to PostgreSQL, MySQL, or MSSQL databases.', category: 'Database', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.TRANSFER, versionCount: 1 },
-          { id: 3, code: 'webhook-sender', name: 'Webhook Sender', description: 'Sends results to external webhook endpoints with retry support.', category: 'API', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.TRANSFER, versionCount: 1 },
+          { id: 1, code: 'kafka-producer', name: 'Kafka Producer', description: 'Publishes processed data to Kafka topics. Partitioning, acks.', category: 'Streaming', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.EXPORT, versionCount: 1 },
+          { id: 2, code: 'file-output', name: 'File Output', description: 'Writes processed data to local files. JSON, CSV, text formats.', category: 'File', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.EXPORT, versionCount: 1 },
+          { id: 3, code: 'db-writer', name: 'Database Writer', description: 'Writes to PostgreSQL, MySQL, or MSSQL. Insert, upsert, merge.', category: 'Database', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.EXPORT, versionCount: 2 },
+          { id: 4, code: 'webhook-sender', name: 'Webhook Sender', description: 'Sends results to external webhook endpoints with retry.', category: 'API', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.EXPORT, versionCount: 1 },
+          { id: 5, code: 'ftp-sftp-upload', name: 'FTP/SFTP Upload', description: 'Uploads files to remote FTP/SFTP servers.', category: 'File', icon_url: null, status: DefinitionStatus.ACTIVE, type: StageType.EXPORT, versionCount: 1 },
         ]);
       }
     } finally {
@@ -73,14 +82,14 @@ export default function DefinitionListPage() {
 
   const tabConfig = {
     collectors: { label: 'Collectors', color: 'blue', icon: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3' },
-    algorithms: { label: 'Algorithms', color: 'purple', icon: 'M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5' },
-    transfers: { label: 'Transfers', color: 'emerald', icon: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5' },
+    processors: { label: 'Processors', color: 'purple', icon: 'M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5' },
+    exports: { label: 'Exports', color: 'emerald', icon: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5' },
   };
 
   const typeColorMap: Record<StageType, { bg: string; text: string; iconBg: string }> = {
     [StageType.COLLECT]: { bg: 'bg-blue-50', text: 'text-blue-700', iconBg: 'bg-blue-500' },
-    [StageType.ALGORITHM]: { bg: 'bg-purple-50', text: 'text-purple-700', iconBg: 'bg-purple-500' },
-    [StageType.TRANSFER]: { bg: 'bg-emerald-50', text: 'text-emerald-700', iconBg: 'bg-emerald-500' },
+    [StageType.PROCESS]: { bg: 'bg-purple-50', text: 'text-purple-700', iconBg: 'bg-purple-500' },
+    [StageType.EXPORT]: { bg: 'bg-emerald-50', text: 'text-emerald-700', iconBg: 'bg-emerald-500' },
   };
 
   return (

@@ -59,13 +59,13 @@ export default function JobDetailPage() {
 
     const demoStages1: JobStageExecution[] = [
       { id: 1, execution_id: 2001, pipeline_stage_id: 1, stage_type: StageType.COLLECT, stage_order: 1, status: StageExecutionStatus.COMPLETED, started_at: '2026-03-15T14:15:00Z', ended_at: '2026-03-15T14:15:02Z', duration_ms: 2300, input_summary: null, output_summary: { records: 200 }, error_code: null, error_message: null, retry_attempt: 0 },
-      { id: 2, execution_id: 2001, pipeline_stage_id: 2, stage_type: StageType.ALGORITHM, stage_order: 2, status: StageExecutionStatus.FAILED, started_at: '2026-03-15T14:15:02Z', ended_at: '2026-03-15T14:15:03Z', duration_ms: 800, input_summary: { records: 200 }, output_summary: null, error_code: 'THRESHOLD_ERROR', error_message: 'Threshold 2.5 too aggressive for this dataset', retry_attempt: 0 },
-      { id: 3, execution_id: 2001, pipeline_stage_id: 3, stage_type: StageType.TRANSFER, stage_order: 3, status: StageExecutionStatus.SKIPPED, started_at: null, ended_at: null, duration_ms: null, input_summary: null, output_summary: null, error_code: null, error_message: null, retry_attempt: 0 },
+      { id: 2, execution_id: 2001, pipeline_stage_id: 2, stage_type: StageType.PROCESS, stage_order: 2, status: StageExecutionStatus.FAILED, started_at: '2026-03-15T14:15:02Z', ended_at: '2026-03-15T14:15:03Z', duration_ms: 800, input_summary: { records: 200 }, output_summary: null, error_code: 'THRESHOLD_ERROR', error_message: 'Threshold 2.5 too aggressive for this dataset', retry_attempt: 0 },
+      { id: 3, execution_id: 2001, pipeline_stage_id: 3, stage_type: StageType.EXPORT, stage_order: 3, status: StageExecutionStatus.SKIPPED, started_at: null, ended_at: null, duration_ms: null, input_summary: null, output_summary: null, error_code: null, error_message: null, retry_attempt: 0 },
     ];
 
     const demoStages2: JobStageExecution[] = [
-      { id: 4, execution_id: 2002, pipeline_stage_id: 2, stage_type: StageType.ALGORITHM, stage_order: 2, status: StageExecutionStatus.COMPLETED, started_at: '2026-03-15T14:32:01Z', ended_at: '2026-03-15T14:32:02Z', duration_ms: 1100, input_summary: { records: 200 }, output_summary: { anomalies: 3 }, error_code: null, error_message: null, retry_attempt: 0 },
-      { id: 5, execution_id: 2002, pipeline_stage_id: 3, stage_type: StageType.TRANSFER, stage_order: 3, status: StageExecutionStatus.COMPLETED, started_at: '2026-03-15T14:32:02Z', ended_at: '2026-03-15T14:32:03Z', duration_ms: 500, input_summary: { anomalies: 3 }, output_summary: { destination: 's3://bucket/results/1002.json' }, error_code: null, error_message: null, retry_attempt: 0 },
+      { id: 4, execution_id: 2002, pipeline_stage_id: 2, stage_type: StageType.PROCESS, stage_order: 2, status: StageExecutionStatus.COMPLETED, started_at: '2026-03-15T14:32:01Z', ended_at: '2026-03-15T14:32:02Z', duration_ms: 1100, input_summary: { records: 200 }, output_summary: { anomalies: 3 }, error_code: null, error_message: null, retry_attempt: 0 },
+      { id: 5, execution_id: 2002, pipeline_stage_id: 3, stage_type: StageType.EXPORT, stage_order: 3, status: StageExecutionStatus.COMPLETED, started_at: '2026-03-15T14:32:02Z', ended_at: '2026-03-15T14:32:03Z', duration_ms: 500, input_summary: { anomalies: 3 }, output_summary: { destination: 's3://bucket/results/1002.json' }, error_code: null, error_message: null, retry_attempt: 0 },
     ];
 
     setExecutions([
@@ -287,15 +287,15 @@ export default function JobDetailPage() {
                 onClick={() => handleReprocess(2)}
                 className="w-full rounded-lg border border-slate-200 px-4 py-3 text-left transition-colors hover:bg-slate-50"
               >
-                <p className="text-sm font-medium text-slate-900">From Algorithm Stage</p>
-                <p className="text-xs text-slate-500">Skip collection, re-run algorithm and transfer stages</p>
+                <p className="text-sm font-medium text-slate-900">From Process Stage</p>
+                <p className="text-xs text-slate-500">Skip collection, re-run process and export stages</p>
               </button>
               <button
                 onClick={() => handleReprocess(3)}
                 className="w-full rounded-lg border border-slate-200 px-4 py-3 text-left transition-colors hover:bg-slate-50"
               >
-                <p className="text-sm font-medium text-slate-900">Transfer Only</p>
-                <p className="text-xs text-slate-500">Re-run only the transfer stage</p>
+                <p className="text-sm font-medium text-slate-900">Export Only</p>
+                <p className="text-xs text-slate-500">Re-run only the export stage</p>
               </button>
             </div>
 

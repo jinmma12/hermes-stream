@@ -1,0 +1,343 @@
+{
+  "name": "ftp-sftp-collector",
+  "version": "1.0.0",
+  "type": "collector",
+  "description": "Collects files from FTP/FTPS/SFTP servers with recursive directory traversal, pattern matching, ordering, completion checks, and post-collection actions.",
+  "author": "hermes-core",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "entrypoint": "main.py",
+  "settings_schema": {
+    "type": "object",
+    "title": "Connection Settings",
+    "description": "FTP/SFTP server connection and polling configuration. These rarely change.",
+    "properties": {
+      "protocol": {
+        "type": "string",
+        "title": "Protocol",
+        "description": "Connection protocol. FTP (plain, port 21), FTPS (FTP over TLS, port 990), SFTP (SSH File Transfer, port 22).",
+        "enum": ["FTP", "FTPS", "SFTP"],
+        "default": "SFTP"
+      },
+      "host": {
+        "type": "string",
+        "title": "Host",
+        "description": "FTP/SFTP server hostname or IP address."
+      },
+      "port": {
+        "type": "integer",
+        "title": "Port",
+        "description": "Server port. Defaults: FTP=21, FTPS=990, SFTP=22. Set 0 to use protocol default.",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "username": {
+        "type": "string",
+        "title": "Username",
+        "description": "Authentication username."
+      },
+      "password": {
+        "type": "string",
+        "title": "Password",
+        "description": "Authentication password. For SFTP with key auth, leave empty."
+      },
+      "private_key_path": {
+        "type": "string",
+        "title": "Private Key Path",
+        "description": "Path to SSH private key file (SFTP only). Takes precedence over password if set."
+      },
+      "private_key_passphrase": {
+        "type": "string",
+        "title": "Key Passphrase",
+        "description": "Passphrase for encrypted private key (SFTP only)."
+      },
+      "passive_mode": {
+        "type": "boolean",
+        "title": "Passive Mode",
+        "description": "Use passive mode for FTP/FTPS. Required when server is behind NAT/firewall. Recommended: true.",
+        "default": true
+      },
+      "poll_interval": {
+        "type": "string",
+        "title": "Poll Interval",
+        "description": "How often to check for new files. Examples: 30s, 5m, 1h, 6h. Minimum 10s to avoid overloading servers.",
+        "default": "5m"
+      },
+      "connection_timeout_seconds": {
+        "type": "integer",
+        "title": "Connection Timeout (sec)",
+        "description": "Maximum time to wait for initial connection. If exceeded, triggers retry with backoff.",
+        "default": 30,
+        "minimum": 5,
+        "maximum": 300
+      },
+      "data_timeout_seconds": {
+        "type": "integer",
+        "title": "Data Timeout (sec)",
+        "description": "Maximum time to wait for data transfer response. Applies to listing and download operations.",
+        "default": 60,
+        "minimum": 10,
+        "maximum": 600
+      },
+      "max_concurrent_downloads": {
+        "type": "integer",
+        "title": "Max Concurrent Downloads",
+        "description": "Maximum number of simultaneous file downloads. Higher values = faster but more server load.",
+        "default": 4,
+        "minimum": 1,
+        "maximum": 16
+      },
+      "retry_max_attempts": {
+        "type": "integer",
+        "title": "Max Retry Attempts",
+        "description": "Maximum retries for transient failures (connection lost, timeout). Uses exponential backoff.",
+        "default": 5,
+        "minimum": 0,
+        "maximum": 20
+      },
+      "retry_base_delay_seconds": {
+        "type": "number",
+        "title": "Retry Base Delay (sec)",
+        "description": "Base delay for exponential backoff. Actual delay: base * 2^attempt ± 25% jitter. Example: base=2 → delays: 2s, 4s, 8s, 16s...",
+        "default": 2.0,
+        "minimum": 0.5,
+        "maximum": 30
+      },
+      "retry_max_delay_seconds": {
+        "type": "integer",
+        "title": "Max Retry Delay (sec)",
+        "description": "Cap on retry delay. Backoff will never exceed this value.",
+        "default": 300,
+        "minimum": 10,
+        "maximum": 3600
+      },
+      "circuit_breaker_threshold": {
+        "type": "integer",
+        "title": "Circuit Breaker Failure Threshold",
+        "description": "Number of consecutive failures before circuit breaker opens (stops retrying). Set 0 to disable.",
+        "default": 5,
+        "minimum": 0,
+        "maximum": 50
+      },
+      "circuit_breaker_recovery_seconds": {
+        "type": "integer",
+        "title": "Circuit Breaker Recovery (sec)",
+        "description": "Time to wait in OPEN state before attempting HALF_OPEN probe.",
+        "default": 300,
+        "minimum": 30,
+        "maximum": 3600
+      },
+      "host_key_checking": {
+        "type": "boolean",
+        "title": "Host Key Checking",
+        "description": "Verify SSH host key on SFTP connections. Disable only for testing. Production should always enable.",
+        "default": true
+      }
+    },
+    "required": ["host", "username"]
+  },
+  "input_schema": {
+    "type": "object",
+    "title": "Collection Recipe",
+    "description": "Business parameters for file collection. These change frequently and are version-controlled.",
+    "properties": {
+      "remote_path": {
+        "type": "string",
+        "title": "Remote Path",
+        "description": "Root directory to scan for files. Example: /data/incoming, /logs/equipment. Relative paths are resolved from user's home directory.",
+        "default": "/"
+      },
+      "recursive": {
+        "type": "boolean",
+        "title": "Recursive Traversal",
+        "description": "Scan subdirectories recursively. When enabled, all files matching filters in all subdirectories will be collected.",
+        "default": false
+      },
+      "max_depth": {
+        "type": "integer",
+        "title": "Max Traversal Depth",
+        "description": "Maximum directory depth for recursive traversal. 0 = remote_path only, 1 = immediate subdirectories, -1 = unlimited. Ignored if recursive is false.",
+        "default": -1,
+        "minimum": -1,
+        "maximum": 100
+      },
+      "folder_pattern": {
+        "type": "object",
+        "title": "Folder Pattern",
+        "description": "Date-based folder pattern for targeted traversal. Only folders matching this pattern will be scanned.",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enable Folder Pattern",
+            "description": "When enabled, only traverse folders matching the date pattern. Dramatically reduces scan time for date-organized directories.",
+            "default": false
+          },
+          "format": {
+            "type": "string",
+            "title": "Date Format",
+            "description": "Date format of folder names. Examples: yyyyMMdd (20260316), yyyy/MM/dd (2026/03/16), yyyy-MM-dd, yyyyMM.",
+            "default": "yyyyMMdd"
+          },
+          "lookback_days": {
+            "type": "integer",
+            "title": "Lookback Days",
+            "description": "How many days back to scan. 0 = today only, 7 = last week, 30 = last month.",
+            "default": 7,
+            "minimum": 0,
+            "maximum": 365
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "Timezone for date calculations. Examples: UTC, Asia/Seoul, US/Eastern.",
+            "default": "UTC"
+          }
+        }
+      },
+      "file_filter": {
+        "type": "object",
+        "title": "File Filter",
+        "description": "Rules for selecting which files to collect.",
+        "properties": {
+          "filename_regex": {
+            "type": "string",
+            "title": "Filename Regex",
+            "description": "Regular expression to match filenames. Only files whose name matches will be collected. Example: .*\\.csv$, data_\\d{8}\\.json, ^report_.*\\.xlsx$",
+            "default": ".*"
+          },
+          "path_regex": {
+            "type": "string",
+            "title": "Path Regex",
+            "description": "Regular expression to match full file paths. Example: .*/2026/03/.*, .*/equipment_[A-Z]+/.*",
+            "default": ""
+          },
+          "min_size_bytes": {
+            "type": "integer",
+            "title": "Min File Size (bytes)",
+            "description": "Minimum file size in bytes. Files smaller than this are skipped. 0 = no minimum. Useful to skip empty or incomplete files.",
+            "default": 0,
+            "minimum": 0
+          },
+          "max_size_bytes": {
+            "type": "integer",
+            "title": "Max File Size (bytes)",
+            "description": "Maximum file size in bytes. Files larger are skipped. 0 = no maximum. Prevents accidentally downloading huge files.",
+            "default": 0,
+            "minimum": 0
+          },
+          "max_age_hours": {
+            "type": "number",
+            "title": "Max File Age (hours)",
+            "description": "Skip files older than this many hours (by modification time). 0 = no age limit. Example: 24 = only files from last 24 hours.",
+            "default": 0,
+            "minimum": 0
+          },
+          "exclude_patterns": {
+            "type": "array",
+            "title": "Exclude Patterns",
+            "description": "List of regex patterns to EXCLUDE from collection. Files matching any pattern are skipped. Example: [\"\\.tmp$\", \"^\\.\", \".*\\.bak$\"]",
+            "items": { "type": "string" },
+            "default": ["\\.tmp$", "^\\."]
+          },
+          "exclude_zero_byte": {
+            "type": "boolean",
+            "title": "Exclude Zero-Byte Files",
+            "description": "Skip files with size 0. Useful for placeholder files that haven't been written yet.",
+            "default": true
+          }
+        }
+      },
+      "ordering": {
+        "type": "string",
+        "title": "File Ordering",
+        "description": "Order in which discovered files are processed. NEWEST_FIRST: most recently modified first (common for real-time). OLDEST_FIRST: oldest first (common for batch catch-up). NAME_ASC/NAME_DESC: alphabetical.",
+        "enum": ["NEWEST_FIRST", "OLDEST_FIRST", "NAME_ASC", "NAME_DESC"],
+        "default": "NEWEST_FIRST"
+      },
+      "discovery_mode": {
+        "type": "string",
+        "title": "Discovery Mode",
+        "description": "How many files to pick per poll cycle. ALL: every matching file. LATEST: only the newest file. BATCH: up to batch_size files. ALL_NEW: only files not seen in previous polls (requires state tracking).",
+        "enum": ["ALL", "LATEST", "BATCH", "ALL_NEW"],
+        "default": "ALL_NEW"
+      },
+      "batch_size": {
+        "type": "integer",
+        "title": "Batch Size",
+        "description": "Maximum number of files to collect per poll cycle in BATCH mode. Ignored in other modes.",
+        "default": 100,
+        "minimum": 1,
+        "maximum": 10000
+      },
+      "completion_check": {
+        "type": "object",
+        "title": "Completion Check",
+        "description": "Verify that a file is complete before collecting it. Prevents collecting files that are still being written.",
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "title": "Strategy",
+            "description": "NONE: collect immediately (fastest, risk of partial files). MARKER_FILE: wait for companion file (e.g., data.csv.done). SIZE_STABLE: wait until file size stops changing.",
+            "enum": ["NONE", "MARKER_FILE", "SIZE_STABLE"],
+            "default": "NONE"
+          },
+          "marker_suffix": {
+            "type": "string",
+            "title": "Marker File Suffix",
+            "description": "Suffix for marker/companion file. When strategy=MARKER_FILE, a file is only collected if <filename><suffix> exists. Example: .done, .complete, .ok, .ready",
+            "default": ".done"
+          },
+          "stable_seconds": {
+            "type": "integer",
+            "title": "Stable Duration (sec)",
+            "description": "When strategy=SIZE_STABLE, the file size must remain unchanged for this many seconds before collection. Typical: 10-30 seconds.",
+            "default": 10,
+            "minimum": 2,
+            "maximum": 300
+          }
+        }
+      },
+      "post_action": {
+        "type": "object",
+        "title": "Post-Collection Action",
+        "description": "What to do with the file on the remote server after successful collection.",
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "KEEP: leave file in place (use with ALL_NEW to avoid re-processing). DELETE: remove file after collection. MOVE: move to archive directory. RENAME: add suffix to filename.",
+            "enum": ["KEEP", "DELETE", "MOVE", "RENAME"],
+            "default": "KEEP"
+          },
+          "move_target": {
+            "type": "string",
+            "title": "Move Target Directory",
+            "description": "Target directory for MOVE action. Created automatically if not exists. Example: /data/archive, /processed/{date}",
+            "default": "/archive"
+          },
+          "rename_suffix": {
+            "type": "string",
+            "title": "Rename Suffix",
+            "description": "Suffix appended for RENAME action. Example: .processed, .done, .collected",
+            "default": ".processed"
+          },
+          "conflict_resolution": {
+            "type": "string",
+            "title": "Conflict Resolution",
+            "description": "How to handle name conflicts during MOVE. TIMESTAMP: append _yyyyMMddHHmmss. OVERWRITE: replace existing. SKIP: do nothing.",
+            "enum": ["TIMESTAMP", "OVERWRITE", "SKIP"],
+            "default": "TIMESTAMP"
+          }
+        }
+      },
+      "checksum_verification": {
+        "type": "boolean",
+        "title": "Checksum Verification",
+        "description": "Compute SHA-256 checksum after download and compare with re-read. Ensures data integrity but adds overhead.",
+        "default": true
+      }
+    },
+    "required": ["remote_path"]
+  }
+}

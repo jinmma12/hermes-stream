@@ -6,6 +6,7 @@ import MonitorDashboardPage from './pages/MonitorDashboardPage';
 import JobListPage from './pages/WorkItemListPage';
 import JobDetailPage from './pages/WorkItemDetailPage';
 import DefinitionListPage from './pages/DefinitionListPage';
+import RecipeManagementPage from './pages/RecipeManagementPage';
 import PluginMarketplacePage from './pages/PluginMarketplacePage';
 import SystemLogsPage from './pages/SystemLogsPage';
 import ProvenancePage from './pages/ProvenancePage';
@@ -21,6 +22,7 @@ function App() {
         <Route path="jobs" element={<JobListPage />} />
         <Route path="jobs/:id" element={<JobDetailPage />} />
         <Route path="definitions" element={<DefinitionListPage />} />
+        <Route path="recipes" element={<RecipeManagementPage />} />
         <Route path="plugins" element={<PluginMarketplacePage />} />
         <Route path="logs" element={<SystemLogsPage />} />
         <Route path="provenance" element={<ProvenancePage />} />

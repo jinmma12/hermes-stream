@@ -23,8 +23,8 @@ public class SnapshotResolverTests
         Assert.NotNull(snapshot.SnapshotHash);
         Assert.NotEmpty(snapshot.SnapshotHash);
         Assert.NotEqual("{}", snapshot.CollectorConfig);
-        Assert.NotEqual("{}", snapshot.AlgorithmConfig);
-        Assert.NotEqual("{}", snapshot.TransferConfig);
+        Assert.NotEqual("{}", snapshot.ProcessConfig);
+        Assert.NotEqual("{}", snapshot.ExportConfig);
     }
 
     [Fact]
@@ -43,8 +43,8 @@ public class SnapshotResolverTests
         Assert.NotNull(resolved);
         Assert.Equal(3, resolved.Steps.Count);
         Assert.Equal(StageType.Collect, resolved.Steps[0].StepType);
-        Assert.Equal(StageType.Algorithm, resolved.Steps[1].StepType);
-        Assert.Equal(StageType.Transfer, resolved.Steps[2].StepType);
+        Assert.Equal(StageType.Process, resolved.Steps[1].StepType);
+        Assert.Equal(StageType.Export, resolved.Steps[2].StepType);
     }
 
     [Fact]

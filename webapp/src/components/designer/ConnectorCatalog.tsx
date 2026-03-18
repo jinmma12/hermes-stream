@@ -12,35 +12,43 @@ interface ConnectorItem {
 }
 
 const CONNECTORS: ConnectorItem[] = [
-  // Collectors
+  // Collectors — Native
+  { code: 'ftp-sftp-collector', name: 'FTP/SFTP', description: 'Collect files from FTP/FTPS/SFTP servers', type: StageType.COLLECT, category: 'File', source: 'native' },
   { code: 'rest-api-collector', name: 'REST API', description: 'Poll REST endpoints', type: StageType.COLLECT, category: 'API', source: 'native' },
-  { code: 'file-watcher', name: 'File Watcher', description: 'Monitor directories', type: StageType.COLLECT, category: 'File', source: 'native' },
+  { code: 'file-watcher', name: 'File Watcher', description: 'Monitor local directories', type: StageType.COLLECT, category: 'File', source: 'native' },
   { code: 'database-poller', name: 'Database CDC', description: 'Track DB changes', type: StageType.COLLECT, category: 'Database', source: 'native' },
-  { code: 'kafka-consumer', name: 'Kafka', description: 'Consume Kafka topics', type: StageType.COLLECT, category: 'Streaming', source: 'native' },
+  { code: 'kafka-consumer', name: 'Kafka Consumer', description: 'Consume Kafka topics', type: StageType.COLLECT, category: 'Streaming', source: 'native' },
+  { code: 'mqtt-subscriber', name: 'MQTT', description: 'Subscribe to MQTT topics', type: StageType.COLLECT, category: 'IoT', source: 'native' },
+  { code: 'tcp-listener', name: 'TCP/UDP Socket', description: 'Receive raw socket data', type: StageType.COLLECT, category: 'Network', source: 'native' },
+  // Collectors — Airbyte
   { code: 'source-postgres', name: 'PostgreSQL', description: 'Airbyte PostgreSQL source', type: StageType.COLLECT, category: 'Database', source: 'airbyte' },
   { code: 'source-mysql', name: 'MySQL', description: 'Airbyte MySQL source', type: StageType.COLLECT, category: 'Database', source: 'airbyte' },
   { code: 'source-mongodb', name: 'MongoDB', description: 'Airbyte MongoDB source', type: StageType.COLLECT, category: 'Database', source: 'airbyte' },
   { code: 'source-salesforce', name: 'Salesforce', description: 'Airbyte Salesforce source', type: StageType.COLLECT, category: 'SaaS', source: 'airbyte' },
-  { code: 'source-stripe', name: 'Stripe', description: 'Airbyte Stripe source', type: StageType.COLLECT, category: 'SaaS', source: 'airbyte' },
-  { code: 'source-github', name: 'GitHub', description: 'Airbyte GitHub source', type: StageType.COLLECT, category: 'SaaS', source: 'airbyte' },
-  { code: 'source-hubspot', name: 'HubSpot', description: 'Airbyte HubSpot source', type: StageType.COLLECT, category: 'SaaS', source: 'airbyte' },
-  { code: 'source-google-sheets', name: 'Google Sheets', description: 'Airbyte Google Sheets', type: StageType.COLLECT, category: 'SaaS', source: 'airbyte' },
   { code: 'source-s3', name: 'Amazon S3', description: 'Airbyte S3 source', type: StageType.COLLECT, category: 'Storage', source: 'airbyte' },
   { code: 'tap-csv', name: 'CSV Files', description: 'Singer CSV tap', type: StageType.COLLECT, category: 'File', source: 'singer' },
-  // Algorithms
-  { code: 'passthrough', name: 'Passthrough', description: 'No-op (testing)', type: StageType.ALGORITHM, category: 'Utility', source: 'native' },
-  { code: 'anomaly-detector', name: 'Anomaly Detector', description: 'Z-score analysis', type: StageType.ALGORITHM, category: 'Analytics', source: 'native' },
-  { code: 'data-transformer', name: 'Data Transformer', description: 'Map/filter/transform', type: StageType.ALGORITHM, category: 'Transform', source: 'native' },
-  { code: 'dedup-filter', name: 'Dedup Filter', description: 'Remove duplicates', type: StageType.ALGORITHM, category: 'Filter', source: 'native' },
-  { code: 'content-router', name: 'Content Router', description: 'Conditional routing', type: StageType.ALGORITHM, category: 'Routing', source: 'native' },
-  // Transfers
-  { code: 'file-output', name: 'File Output', description: 'Write to files', type: StageType.TRANSFER, category: 'File', source: 'native' },
-  { code: 'destination-postgres', name: 'PostgreSQL', description: 'Airbyte PG destination', type: StageType.TRANSFER, category: 'Database', source: 'airbyte' },
-  { code: 'destination-bigquery', name: 'BigQuery', description: 'Airbyte BigQuery dest', type: StageType.TRANSFER, category: 'Data Warehouse', source: 'airbyte' },
-  { code: 'destination-snowflake', name: 'Snowflake', description: 'Airbyte Snowflake dest', type: StageType.TRANSFER, category: 'Data Warehouse', source: 'airbyte' },
-  { code: 'destination-s3', name: 'Amazon S3', description: 'Airbyte S3 destination', type: StageType.TRANSFER, category: 'Storage', source: 'airbyte' },
-  { code: 'webhook-sender', name: 'Webhook', description: 'HTTP POST results', type: StageType.TRANSFER, category: 'API', source: 'native' },
-  { code: 'destination-elasticsearch', name: 'Elasticsearch', description: 'Airbyte ES dest', type: StageType.TRANSFER, category: 'Search', source: 'airbyte' },
+  // Processors — Native
+  { code: 'anomaly-detector', name: 'Anomaly Detector', description: 'Z-score analysis', type: StageType.PROCESS, category: 'Analytics', source: 'native' },
+  { code: 'data-transformer', name: 'Data Transformer', description: 'Map/filter/transform', type: StageType.PROCESS, category: 'Transform', source: 'native' },
+  { code: 'json-transform', name: 'JSON Transform', description: 'JMESPath expressions', type: StageType.PROCESS, category: 'Transform', source: 'native' },
+  { code: 'csv-json-converter', name: 'CSV-JSON Converter', description: 'Bidirectional conversion', type: StageType.PROCESS, category: 'Transform', source: 'native' },
+  { code: 'dedup-filter', name: 'Dedup Filter', description: 'Remove duplicates', type: StageType.PROCESS, category: 'Filter', source: 'native' },
+  { code: 'content-router', name: 'Content Router', description: 'Conditional routing', type: StageType.PROCESS, category: 'Routing', source: 'native' },
+  { code: 'merge-content', name: 'Merge Content', description: 'Merge records into batches', type: StageType.PROCESS, category: 'Batch', source: 'native' },
+  { code: 'split-records', name: 'Split Records', description: 'Split batches', type: StageType.PROCESS, category: 'Batch', source: 'native' },
+  { code: 'passthrough', name: 'Passthrough', description: 'No-op (testing)', type: StageType.PROCESS, category: 'Utility', source: 'native' },
+  // Exports — Native
+  { code: 'kafka-producer', name: 'Kafka Producer', description: 'Publish to Kafka topics', type: StageType.EXPORT, category: 'Streaming', source: 'native' },
+  { code: 'file-output', name: 'File Output', description: 'Write to local files', type: StageType.EXPORT, category: 'File', source: 'native' },
+  { code: 'ftp-sftp-upload', name: 'FTP/SFTP Upload', description: 'Upload files to remote servers', type: StageType.EXPORT, category: 'File', source: 'native' },
+  { code: 'webhook-sender', name: 'Webhook', description: 'HTTP POST results', type: StageType.EXPORT, category: 'API', source: 'native' },
+  { code: 'db-writer', name: 'Database Writer', description: 'Insert/upsert to DB', type: StageType.EXPORT, category: 'Database', source: 'native' },
+  // Exports — Airbyte
+  { code: 'destination-postgres', name: 'PostgreSQL', description: 'Airbyte PG destination', type: StageType.EXPORT, category: 'Database', source: 'airbyte' },
+  { code: 'destination-bigquery', name: 'BigQuery', description: 'Airbyte BigQuery dest', type: StageType.EXPORT, category: 'Data Warehouse', source: 'airbyte' },
+  { code: 'destination-snowflake', name: 'Snowflake', description: 'Airbyte Snowflake dest', type: StageType.EXPORT, category: 'Data Warehouse', source: 'airbyte' },
+  { code: 'destination-s3', name: 'Amazon S3', description: 'Airbyte S3 destination', type: StageType.EXPORT, category: 'Storage', source: 'airbyte' },
+  { code: 'destination-elasticsearch', name: 'Elasticsearch', description: 'Airbyte ES dest', type: StageType.EXPORT, category: 'Search', source: 'airbyte' },
 ];
 
 interface Props {
@@ -49,8 +57,8 @@ interface Props {
 
 const typeColors: Record<StageType, { bg: string; text: string; border: string }> = {
   [StageType.COLLECT]: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  [StageType.ALGORITHM]: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  [StageType.TRANSFER]: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  [StageType.PROCESS]: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+  [StageType.EXPORT]: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
 };
 
 const sourceLabels: Record<string, { label: string; color: string }> = {
@@ -73,8 +81,8 @@ export default function ConnectorCatalog({ onAddNode }: Props) {
 
   const grouped = {
     [StageType.COLLECT]: filtered.filter(c => c.type === StageType.COLLECT),
-    [StageType.ALGORITHM]: filtered.filter(c => c.type === StageType.ALGORITHM),
-    [StageType.TRANSFER]: filtered.filter(c => c.type === StageType.TRANSFER),
+    [StageType.PROCESS]: filtered.filter(c => c.type === StageType.PROCESS),
+    [StageType.EXPORT]: filtered.filter(c => c.type === StageType.EXPORT),
   };
 
   return (
@@ -89,7 +97,7 @@ export default function ConnectorCatalog({ onAddNode }: Props) {
           className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-vessel-500 focus:outline-none"
         />
         <div className="mt-2 flex gap-1">
-          {(['all', StageType.COLLECT, StageType.ALGORITHM, StageType.TRANSFER] as const).map(t => (
+          {(['all', StageType.COLLECT, StageType.PROCESS, StageType.EXPORT] as const).map(t => (
             <button
               key={t}
               onClick={() => setTypeFilter(t)}
@@ -111,7 +119,7 @@ export default function ConnectorCatalog({ onAddNode }: Props) {
           return (
             <div key={type} className="mb-3">
               <p className={`mb-1 rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${colors.bg} ${colors.text}`}>
-                {type === StageType.COLLECT ? 'Collectors' : type === StageType.ALGORITHM ? 'Algorithms' : 'Transfers'}
+                {type === StageType.COLLECT ? 'Collectors' : type === StageType.PROCESS ? 'Processors' : 'Exports'}
                 <span className="ml-1 font-normal">({connectors.length})</span>
               </p>
               {connectors.map(c => {

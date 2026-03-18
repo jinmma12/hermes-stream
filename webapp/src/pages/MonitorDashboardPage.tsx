@@ -51,7 +51,7 @@ export default function MonitorDashboardPage() {
       setActivations([
         {
           id: 1, pipeline_instance_id: 1,
-          pipeline: { id: 1, name: 'Order Monitoring Pipeline', description: '', monitoring_type: 'API_POLL' as PipelineActivation['pipeline']&{} extends never ? never : 'API_POLL' as any, monitoring_config: {}, status: 'ACTIVE' as any, created_at: '', updated_at: '' },
+          pipeline: { id: 1, name: 'Vendor-A 주문 수집', description: '', monitoring_type: 'API_POLL' as any, monitoring_config: {}, status: 'ACTIVE' as any, created_at: '', updated_at: '' },
           status: ActivationStatus.RUNNING,
           started_at: '2026-03-15T09:00:00Z',
           stopped_at: null,
@@ -63,7 +63,7 @@ export default function MonitorDashboardPage() {
         },
         {
           id: 2, pipeline_instance_id: 2,
-          pipeline: { id: 2, name: 'Equipment File Collection', description: '', monitoring_type: 'FILE_MONITOR' as any, monitoring_config: {}, status: 'ACTIVE' as any, created_at: '', updated_at: '' },
+          pipeline: { id: 2, name: '장비 데이터 수집', description: '', monitoring_type: 'FILE_MONITOR' as any, monitoring_config: {}, status: 'ACTIVE' as any, created_at: '', updated_at: '' },
           status: ActivationStatus.RUNNING,
           started_at: '2026-03-15T08:00:00Z',
           stopped_at: null,
@@ -75,7 +75,7 @@ export default function MonitorDashboardPage() {
         },
         {
           id: 3, pipeline_instance_id: 3,
-          pipeline: { id: 3, name: 'ERP Database Sync', description: '', monitoring_type: 'DB_POLL' as any, monitoring_config: {}, status: 'PAUSED' as any, created_at: '', updated_at: '' },
+          pipeline: { id: 3, name: 'ERP DB 동기화', description: '', monitoring_type: 'DB_POLL' as any, monitoring_config: {}, status: 'PAUSED' as any, created_at: '', updated_at: '' },
           status: ActivationStatus.STOPPED,
           started_at: '2026-03-14T09:00:00Z',
           stopped_at: '2026-03-14T18:00:00Z',
@@ -87,23 +87,23 @@ export default function MonitorDashboardPage() {
         },
         {
           id: 4, pipeline_instance_id: 4,
-          pipeline: { id: 4, name: 'Equipment C Log Collection', description: '', monitoring_type: 'FILE_MONITOR' as any, monitoring_config: {}, status: 'ACTIVE' as any, created_at: '', updated_at: '' },
+          pipeline: { id: 4, name: '센서 데이터 분석', description: '', monitoring_type: 'EVENT_STREAM' as any, monitoring_config: {}, status: 'ACTIVE' as any, created_at: '', updated_at: '' },
           status: ActivationStatus.ERROR,
           started_at: '2026-03-15T06:00:00Z',
           stopped_at: null,
           last_heartbeat_at: new Date(Date.now() - 1800000).toISOString(),
           last_polled_at: null,
-          error_message: 'Connection timeout after 3 retries',
+          error_message: 'Kafka broker connection timeout after 3 retries',
           worker_id: 'worker-2',
           job_count: 56,
         },
       ]);
       setRecentItems([
-        { id: 1003, pipeline_activation_id: 1, pipeline_instance_id: 1, pipeline_name: 'Order Monitoring', source_type: 'API_RESPONSE' as any, source_key: 'order_batch_0315_003', source_metadata: {}, dedup_key: 'ob003', detected_at: '2026-03-15T14:30:00Z', status: JobStatus.COMPLETED, current_execution_id: 1003, execution_count: 1, last_completed_at: '2026-03-15T14:30:02Z' },
-        { id: 1002, pipeline_activation_id: 1, pipeline_instance_id: 1, pipeline_name: 'Order Monitoring', source_type: 'API_RESPONSE' as any, source_key: 'order_batch_0315_002', source_metadata: {}, dedup_key: 'ob002', detected_at: '2026-03-15T14:15:00Z', status: JobStatus.FAILED, current_execution_id: 1002, execution_count: 1, last_completed_at: null },
-        { id: 1001, pipeline_activation_id: 1, pipeline_instance_id: 1, pipeline_name: 'Order Monitoring', source_type: 'API_RESPONSE' as any, source_key: 'order_batch_0315_001', source_metadata: {}, dedup_key: 'ob001', detected_at: '2026-03-15T14:00:00Z', status: JobStatus.COMPLETED, current_execution_id: 1001, execution_count: 1, last_completed_at: '2026-03-15T14:00:02Z' },
-        { id: 1000, pipeline_activation_id: 2, pipeline_instance_id: 2, pipeline_name: 'Equipment File Collection', source_type: 'FILE' as any, source_key: 'equipment_A_20260315.csv', source_metadata: {}, dedup_key: 'eqa315', detected_at: '2026-03-15T13:45:00Z', status: JobStatus.COMPLETED, current_execution_id: 1000, execution_count: 1, last_completed_at: '2026-03-15T13:45:05Z' },
-        { id: 999, pipeline_activation_id: 2, pipeline_instance_id: 2, pipeline_name: 'Equipment File Collection', source_type: 'FILE' as any, source_key: 'equipment_B_20260315.csv', source_metadata: {}, dedup_key: 'eqb315', detected_at: '2026-03-15T13:30:00Z', status: JobStatus.PROCESSING, current_execution_id: 999, execution_count: 1, last_completed_at: null },
+        { id: 1003, pipeline_activation_id: 1, pipeline_instance_id: 1, pipeline_name: 'Vendor-A 주문 수집', source_type: 'API_RESPONSE' as any, source_key: 'order_batch_0315_003', source_metadata: {}, dedup_key: 'ob003', detected_at: '2026-03-15T14:30:00Z', status: JobStatus.COMPLETED, current_execution_id: 1003, execution_count: 1, last_completed_at: '2026-03-15T14:30:02Z' },
+        { id: 1002, pipeline_activation_id: 1, pipeline_instance_id: 1, pipeline_name: 'Vendor-A 주문 수집', source_type: 'API_RESPONSE' as any, source_key: 'order_batch_0315_002', source_metadata: {}, dedup_key: 'ob002', detected_at: '2026-03-15T14:15:00Z', status: JobStatus.FAILED, current_execution_id: 1002, execution_count: 1, last_completed_at: null },
+        { id: 1001, pipeline_activation_id: 1, pipeline_instance_id: 1, pipeline_name: 'Vendor-A 주문 수집', source_type: 'API_RESPONSE' as any, source_key: 'order_batch_0315_001', source_metadata: {}, dedup_key: 'ob001', detected_at: '2026-03-15T14:00:00Z', status: JobStatus.COMPLETED, current_execution_id: 1001, execution_count: 1, last_completed_at: '2026-03-15T14:00:02Z' },
+        { id: 1000, pipeline_activation_id: 2, pipeline_instance_id: 2, pipeline_name: '장비 데이터 수집', source_type: 'FILE' as any, source_key: 'equipment_A_20260315.csv', source_metadata: {}, dedup_key: 'eqa315', detected_at: '2026-03-15T13:45:00Z', status: JobStatus.COMPLETED, current_execution_id: 1000, execution_count: 1, last_completed_at: '2026-03-15T13:45:05Z' },
+        { id: 999, pipeline_activation_id: 2, pipeline_instance_id: 2, pipeline_name: '장비 데이터 수집', source_type: 'FILE' as any, source_key: 'equipment_B_20260315.csv', source_metadata: {}, dedup_key: 'eqb315', detected_at: '2026-03-15T13:30:00Z', status: JobStatus.PROCESSING, current_execution_id: 999, execution_count: 1, last_completed_at: null },
       ]);
     } finally {
       setLoading(false);
