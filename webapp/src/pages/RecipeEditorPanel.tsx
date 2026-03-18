@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import { StageType } from '../types';
-import type { Recipe } from '../types';
 
 // ============================================================
 // Types
@@ -10,7 +8,7 @@ import type { Recipe } from '../types';
 
 type OnErrorAction = 'STOP' | 'SKIP' | 'RETRY';
 type BulletinLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
-type TabId = 'SETTINGS' | 'PROPERTIES' | 'RECIPE';
+type TabId = 'SETTINGS' | 'PROPERTIES';
 
 interface ProcessSettings {
   name: string;
@@ -29,11 +27,10 @@ interface ProcessorConfigProps {
   stageType: StageType;
   processorName?: string;
   connectorCode?: string;
-  initialTab?: 'SETTINGS' | 'RECIPE';
+  initialTab?: TabId;
   processSettings?: ProcessSettings;
   onClose: () => void;
   onSaveSettings?: (settings: ProcessSettings) => void;
-  onSaveRecipe?: (config: unknown, changeNote: string) => void;
 }
 
 // Backward compat: old prop shape still works
@@ -57,15 +54,8 @@ const DEFAULT_SETTINGS: ProcessSettings = {
 const TAB_CONFIG: Record<TabId, { label: string; headerClass: string; borderClass: string }> = {
   SETTINGS: { label: 'Settings', headerClass: 'bg-slate-600', borderClass: 'border-slate-500' },
   PROPERTIES: { label: 'Properties', headerClass: 'bg-blue-600', borderClass: 'border-blue-500' },
-  RECIPE: { label: 'Recipe', headerClass: 'bg-purple-600', borderClass: 'border-purple-500' },
 };
 
-// Demo recipe versions (inline view in pipeline designer)
-const demoRecipeVersions: Recipe[] = [
-  { version_no: 3, config_json: { threshold: 3.5, method: 'modified-z-score', window_size: 200, sensitivity: 'high' }, change_note: 'Switch to modified z-score', is_current: true, created_by: 'operator:alex', created_at: '2026-03-16T10:15:00Z' },
-  { version_no: 2, config_json: { threshold: 3.0, method: 'z-score', window_size: 100 }, change_note: 'Threshold 3.0으로 상향', is_current: false, created_by: 'operator:kim', created_at: '2026-03-15T14:30:00Z' },
-  { version_no: 1, config_json: { threshold: 2.5, method: 'z-score', window_size: 100 }, change_note: '초기 설정', is_current: false, created_by: 'admin', created_at: '2026-03-01T09:00:00Z' },
-];
 
 const STAGE_META: Record<StageType, { label: string; color: string }> = {
   [StageType.COLLECT]: { label: 'Collector', color: 'blue' },
@@ -252,8 +242,17 @@ function SettingsTab({
   onChange: (s: ProcessSettings) => void;
   onSave?: (s: ProcessSettings) => void;
 }) {
+  const [hasChanges, setHasChanges] = useState(false);
+
   const update = <K extends keyof ProcessSettings>(key: K, value: ProcessSettings[K]) => {
-    onChange({ ...settings, [key]: value });
+    const next = { ...settings, [key]: value };
+    onChange(next);
+    setHasChanges(true);
+  };
+
+  const handleApply = () => {
+    onSave?.(settings);
+    setHasChanges(false);
   };
 
   const rows: { label: string; tooltip: string; render: () => React.ReactNode }[] = [
@@ -345,9 +344,15 @@ function SettingsTab({
           </PropertyRow>
         ))}
       </div>
-      {onSave && (
-        <button onClick={() => onSave(settings)} className="btn-primary w-full justify-center">
-          Apply Settings
+      {hasChanges && onSave && (
+        <button
+          onClick={handleApply}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          Apply Changes
         </button>
       )}
     </div>
@@ -637,9 +642,6 @@ export default function RecipeEditorPanel({
             />
           </div>
         )}
-        {activeTab === 'RECIPE' && (
-          <RecipeInlineTab versions={demoRecipeVersions} />
-        )}
       </div>
     </div>
   );
@@ -666,66 +668,3 @@ function JsonPreview({ data }: { data: unknown }) {
   );
 }
 
-function RecipeInlineTab({ versions }: { versions: Recipe[] }) {
-  const [selectedIdx, setSelectedIdx] = useState(0);
-  const current = versions[selectedIdx];
-
-  return (
-    <div className="flex h-full">
-      {/* Version list (left) */}
-      <div className="w-[130px] shrink-0 overflow-auto border-r border-slate-200 bg-slate-50">
-        <div className="border-b border-slate-200 p-2">
-          <Link
-            to="/recipes"
-            className="flex w-full items-center justify-center gap-1 rounded border border-purple-200 bg-purple-50 px-2 py-1.5 text-[10px] font-medium text-purple-700 hover:bg-purple-100"
-          >
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-            </svg>
-            Manage All
-          </Link>
-        </div>
-        {versions.map((v, idx) => (
-          <button
-            key={v.version_no}
-            onClick={() => setSelectedIdx(idx)}
-            className={`flex w-full flex-col border-b border-slate-200 px-3 py-2 text-left transition-colors ${
-              selectedIdx === idx ? 'bg-white shadow-sm' : 'hover:bg-slate-100'
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">v{v.version_no}</span>
-              {v.is_current && (
-                <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[9px] font-bold text-green-700">current</span>
-              )}
-            </div>
-            <span className="mt-1 text-[10px] text-slate-500 line-clamp-2">{v.change_note}</span>
-            <span className="mt-0.5 text-[9px] text-slate-400">{v.created_by}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Detail (right) */}
-      <div className="flex-1 overflow-auto p-4">
-        {current && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="rounded bg-slate-700 px-2 py-0.5 text-xs font-bold text-white">v{current.version_no}</span>
-                {current.is_current && (
-                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700">current</span>
-                )}
-              </div>
-            </div>
-            <div className="space-y-1 text-xs text-slate-600">
-              <p><span className="font-medium text-slate-500">Author:</span> {current.created_by}</p>
-              <p><span className="font-medium text-slate-500">Date:</span> {new Date(current.created_at).toLocaleString()}</p>
-              <p><span className="font-medium text-slate-500">Note:</span> {current.change_note}</p>
-            </div>
-            <JsonPreview data={current.config_json} />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}

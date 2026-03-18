@@ -49,8 +49,8 @@ interface StageNodeData {
   connectorCode?: string;
   recipeName?: string;
   recipeVersion?: number;
-  onOpenSettings: (stageId: number, refId: number, stageType: StageType, connectorCode?: string) => void;
-  onOpenRecipe: (stageId: number, refId: number, stageType: StageType, connectorCode?: string) => void;
+  onOpenSettings: (stageId: number, refId: number, stageType: StageType, connectorCode?: string, nodeId?: string) => void;
+  onOpenProperties: (stageId: number, refId: number, stageType: StageType, connectorCode?: string, nodeId?: string) => void;
   onDeleteNode: (nodeId: string) => void;
   nodeId: string;
   [key: string]: unknown;
@@ -98,16 +98,16 @@ function CollectNode({ data }: { data: StageNodeData }) {
         )}
         <div className="mt-2 flex gap-1.5">
           <button
-            onClick={() => data.onOpenSettings(data.stageId, data.refId, data.stageType, data.connectorCode)}
+            onClick={() => data.onOpenSettings(data.stageId, data.refId, data.stageType, data.connectorCode, data.nodeId)}
             className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100"
           >
             Settings
           </button>
           <button
-            onClick={() => data.onOpenRecipe(data.stageId, data.refId, data.stageType, data.connectorCode)}
+            onClick={() => data.onOpenProperties(data.stageId, data.refId, data.stageType, data.connectorCode, data.nodeId)}
             className="flex-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1.5 text-[10px] font-medium text-blue-700 transition-colors hover:bg-blue-100"
           >
-            Recipe
+            Properties
           </button>
         </div>
       </div>
@@ -158,16 +158,16 @@ function ProcessNode({ data }: { data: StageNodeData }) {
         )}
         <div className="mt-2 flex gap-1.5">
           <button
-            onClick={() => data.onOpenSettings(data.stageId, data.refId, data.stageType, data.connectorCode)}
+            onClick={() => data.onOpenSettings(data.stageId, data.refId, data.stageType, data.connectorCode, data.nodeId)}
             className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100"
           >
             Settings
           </button>
           <button
-            onClick={() => data.onOpenRecipe(data.stageId, data.refId, data.stageType, data.connectorCode)}
+            onClick={() => data.onOpenProperties(data.stageId, data.refId, data.stageType, data.connectorCode, data.nodeId)}
             className="flex-1 rounded-lg border border-purple-200 bg-purple-50 px-2 py-1.5 text-[10px] font-medium text-purple-700 transition-colors hover:bg-purple-100"
           >
-            Recipe
+            Properties
           </button>
         </div>
       </div>
@@ -218,16 +218,16 @@ function ExportNode({ data }: { data: StageNodeData }) {
         )}
         <div className="mt-2 flex gap-1.5">
           <button
-            onClick={() => data.onOpenSettings(data.stageId, data.refId, data.stageType, data.connectorCode)}
+            onClick={() => data.onOpenSettings(data.stageId, data.refId, data.stageType, data.connectorCode, data.nodeId)}
             className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100"
           >
             Settings
           </button>
           <button
-            onClick={() => data.onOpenRecipe(data.stageId, data.refId, data.stageType, data.connectorCode)}
+            onClick={() => data.onOpenProperties(data.stageId, data.refId, data.stageType, data.connectorCode, data.nodeId)}
             className="flex-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-[10px] font-medium text-emerald-700 transition-colors hover:bg-emerald-100"
           >
-            Recipe
+            Properties
           </button>
         </div>
       </div>
@@ -259,7 +259,8 @@ function PipelineDesignerInner() {
     refId: number;
     stageType: StageType;
     connectorCode?: string;
-    initialTab?: 'SETTINGS' | 'RECIPE';
+    nodeId: string;
+    initialTab?: 'SETTINGS' | 'PROPERTIES';
   } | null>(null);
 
   const nodeTypes: NodeTypes = useMemo(
@@ -271,13 +272,33 @@ function PipelineDesignerInner() {
     []
   );
 
-  const handleOpenSettings = useCallback((stageId: number, refId: number, stageType: StageType, connectorCode?: string) => {
-    setRecipePanel({ stageId, refId, stageType, connectorCode, initialTab: 'SETTINGS' as const });
+  const handleOpenSettings = useCallback((stageId: number, refId: number, stageType: StageType, connectorCode?: string, nodeId?: string) => {
+    setRecipePanel({ stageId, refId, stageType, connectorCode, nodeId: nodeId || '', initialTab: 'SETTINGS' as const });
   }, []);
 
-  const handleOpenRecipe = useCallback((stageId: number, refId: number, stageType: StageType, connectorCode?: string) => {
-    setRecipePanel({ stageId, refId, stageType, connectorCode, initialTab: 'RECIPE' as const });
+  const handleOpenProperties = useCallback((stageId: number, refId: number, stageType: StageType, connectorCode?: string, nodeId?: string) => {
+    setRecipePanel({ stageId, refId, stageType, connectorCode, nodeId: nodeId || '', initialTab: 'PROPERTIES' as const });
   }, []);
+
+  // When settings change in the panel, update the canvas node label + trigger save
+  const handleSaveSettings = useCallback((settings: { name: string; is_enabled: boolean; on_error: string; retry_count: number; retry_delay_seconds: number; penalty_duration: string; yield_duration: string; bulletin_level: string }) => {
+    if (!recipePanel) return;
+    setNodes((nds) => nds.map((n) => {
+      if (n.id === recipePanel.nodeId) {
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            label: settings.name,
+            instanceName: settings.name,
+            isEnabled: settings.is_enabled,
+          },
+        };
+      }
+      return n;
+    }));
+    setDirty(true);
+  }, [recipePanel]);
 
   const handleDeleteNode = useCallback((nodeId: string) => {
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
@@ -343,7 +364,7 @@ function PipelineDesignerInner() {
         stageId: stage.id,
         refId: stage.ref_id,
         onOpenSettings: handleOpenSettings,
-        onOpenRecipe: handleOpenRecipe,
+        onOpenProperties: handleOpenProperties,
         onDeleteNode: handleDeleteNode,
         nodeId: `stage-${stage.id}`,
       },
@@ -439,7 +460,7 @@ function PipelineDesignerInner() {
           refId: 0,
           connectorCode: connector.code,
           onOpenSettings: handleOpenSettings,
-          onOpenRecipe: handleOpenRecipe,
+          onOpenProperties: handleOpenProperties,
           onDeleteNode: handleDeleteNode,
           nodeId: `stage-${id}`,
         },
@@ -479,7 +500,7 @@ function PipelineDesignerInner() {
 
       setDirty(true);
     },
-    [nodes, handleOpenSettings, handleOpenRecipe, handleDeleteNode]
+    [nodes, handleOpenSettings, handleOpenProperties, handleDeleteNode]
   );
 
   // ---- Drag and Drop ----
@@ -882,6 +903,18 @@ function PipelineDesignerInner() {
             stageType={recipePanel.stageType}
             connectorCode={recipePanel.connectorCode}
             initialTab={recipePanel.initialTab}
+            processorName={nodes.find(n => n.id === recipePanel.nodeId)?.data?.label as string}
+            processSettings={{
+              name: (nodes.find(n => n.id === recipePanel.nodeId)?.data?.label as string) || 'Unnamed',
+              is_enabled: (nodes.find(n => n.id === recipePanel.nodeId)?.data?.isEnabled as boolean) ?? true,
+              on_error: 'STOP',
+              retry_count: 3,
+              retry_delay_seconds: 10,
+              penalty_duration: '30s',
+              yield_duration: '1s',
+              bulletin_level: 'WARN',
+            }}
+            onSaveSettings={handleSaveSettings}
             onClose={() => setRecipePanel(null)}
           />
         )}
