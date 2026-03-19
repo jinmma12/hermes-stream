@@ -230,6 +230,7 @@ export interface PipelineStage {
   ref_type: string;
   ref_id: number;
   ref_name?: string;
+  connector_code?: string;
   is_enabled: boolean;
   on_error: OnErrorAction;
   retry_count: number;
