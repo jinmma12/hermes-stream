@@ -41,6 +41,26 @@ class StageLifecycleManager:
     # State mutations
     # ------------------------------------------------------------------
 
+    async def _validate_step_in_activation(
+        self, activation_id: uuid.UUID, step_id: uuid.UUID
+    ) -> None:
+        """Verify the step belongs to the pipeline of the given activation."""
+        from hermes.domain.models.monitoring import PipelineActivation
+
+        activation = await self.db.get(PipelineActivation, activation_id)
+        if activation is None:
+            raise ValueError(f"Activation {activation_id} not found")
+
+        step = await self.db.get(PipelineStep, step_id)
+        if step is None:
+            raise ValueError(f"Step {step_id} not found")
+
+        if step.pipeline_instance_id != activation.pipeline_instance_id:
+            raise ValueError(
+                f"Step {step_id} belongs to pipeline {step.pipeline_instance_id}, "
+                f"not activation's pipeline {activation.pipeline_instance_id}"
+            )
+
     async def stop_stage(
         self,
         activation_id: uuid.UUID,
@@ -52,6 +72,7 @@ class StageLifecycleManager:
         Creates a new ``StageRuntimeState`` row if one does not yet exist for
         this (activation, step) pair.
         """
+        await self._validate_step_in_activation(activation_id, step_id)
         state = await self.get_stage_runtime(activation_id, step_id)
         now = datetime.now(UTC)
 
@@ -84,6 +105,7 @@ class StageLifecycleManager:
 
         Creates a new ``StageRuntimeState`` row if one does not yet exist.
         """
+        await self._validate_step_in_activation(activation_id, step_id)
         state = await self.get_stage_runtime(activation_id, step_id)
         now = datetime.now(UTC)
 
@@ -269,11 +291,12 @@ class StageLifecycleManager:
             (row.work_item_id, row.pipeline_step_id) for row in inflight_result
         }
 
-        # Completed: count per step_id where status is terminal success.
+        # Completed: count DISTINCT work items per step (retry-safe).
+        # Without distinct, retries/reprocesses would inflate the count.
         completed_count_stmt = (
             select(
                 WorkItemStepExecution.pipeline_step_id,
-                sa_func.count(WorkItemStepExecution.id).label("cnt"),
+                sa_func.count(sa_func.distinct(WorkItemExecution.work_item_id)).label("cnt"),
             )
             .join(WorkItemExecution, WorkItemExecution.id == WorkItemStepExecution.execution_id)
             .join(WorkItem, WorkItem.id == WorkItemExecution.work_item_id)

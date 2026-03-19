@@ -263,8 +263,9 @@ class PipelineManager:
         pipeline.status = "ACTIVE"
         await self.db.flush()
 
-        # Initialise a RUNNING StageRuntimeState for every enabled step.
-        step_ids = [step.id for step in pipeline.steps]
+        # Initialise a RUNNING StageRuntimeState for enabled steps only.
+        # Disabled steps (is_enabled=False) are skipped — they don't get runtime state.
+        step_ids = [step.id for step in pipeline.steps if step.is_enabled]
         if step_ids:
             stage_manager = StageLifecycleManager(self.db)
             await stage_manager.initialize_stage_states(activation.id, step_ids)

@@ -133,6 +133,28 @@ class ProcessingOrchestrator:
             if not step.is_enabled:
                 continue
 
+            # Check stage runtime state — do not dispatch into STOPPED stages
+            from hermes.domain.models.monitoring import StageRuntimeState
+            stage_state_stmt = select(StageRuntimeState).where(
+                StageRuntimeState.pipeline_step_id == step.id,
+                StageRuntimeState.runtime_status == "STOPPED",
+            )
+            stage_state_result = await self.db.execute(stage_state_stmt)
+            if stage_state_result.scalar_one_or_none() is not None:
+                await self._log_event(
+                    execution.id,
+                    None,
+                    "WARN",
+                    f"{step.step_type}_BLOCKED",
+                    f"Stage {step.step_type} (order={step.step_order}) is STOPPED — work item queued",
+                )
+                # Mark work item as QUEUED_BEFORE_STAGE and stop processing further
+                work_item.status = "QUEUED"
+                execution.status = "QUEUED"
+                execution.ended_at = datetime.now(UTC)
+                await self.db.flush()
+                return execution
+
             step_start = datetime.now(UTC)
 
             step_execution = WorkItemStepExecution(
