@@ -7,7 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 PROTO_DIR="$ROOT_DIR/protos"
-OUT_DIR="$ROOT_DIR/backend/vessel/generated"
+OUT_DIR="$ROOT_DIR/backend/hermes/generated"
 
 mkdir -p "$OUT_DIR"
 

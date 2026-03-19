@@ -1,13 +1,13 @@
-"""Vessel Plugin Protocol v1.
+"""Hermes Plugin Protocol v1.
 
-Language-agnostic JSON line protocol for communication between Vessel Core
+Language-agnostic JSON line protocol for communication between Hermes Core
 and plugin subprocesses via stdin/stdout.
 
-Direction: Vessel Core -> Plugin (stdin)
+Direction: Hermes Core -> Plugin (stdin)
   CONFIGURE - send plugin configuration and context
   EXECUTE   - send input data for processing
 
-Direction: Plugin -> Vessel Core (stdout)
+Direction: Plugin -> Hermes Core (stdout)
   LOG    - log message with level
   OUTPUT - output data record
   ERROR  - error with code and message
@@ -26,13 +26,13 @@ from typing import Any, Optional
 
 
 class MessageType(str, Enum):
-    """Types of messages in the Vessel Plugin Protocol."""
+    """Types of messages in the Hermes Plugin Protocol."""
 
-    # Vessel Core -> Plugin
+    # Hermes Core -> Plugin
     CONFIGURE = "CONFIGURE"
     EXECUTE = "EXECUTE"
 
-    # Plugin -> Vessel Core
+    # Plugin -> Hermes Core
     LOG = "LOG"
     OUTPUT = "OUTPUT"
     ERROR = "ERROR"
@@ -41,8 +41,8 @@ class MessageType(str, Enum):
 
 
 @dataclass
-class VesselMessage:
-    """A single message in the Vessel Plugin Protocol.
+class HermesMessage:
+    """A single message in the Hermes Plugin Protocol.
 
     Messages are serialized as single-line JSON objects, one per line.
     """
@@ -57,7 +57,7 @@ class VesselMessage:
         return json.dumps(payload, ensure_ascii=False)
 
     @classmethod
-    def from_json(cls, line: str) -> VesselMessage:
+    def from_json(cls, line: str) -> HermesMessage:
         """Deserialize from a JSON line string.
 
         Raises:
@@ -85,22 +85,22 @@ class VesselMessage:
     # Convenience factory methods for outbound (Plugin -> Core) messages
 
     @classmethod
-    def log(cls, message: str, level: str = "INFO") -> VesselMessage:
+    def log(cls, message: str, level: str = "INFO") -> HermesMessage:
         """Create a LOG message."""
         return cls(type=MessageType.LOG, data={"level": level, "message": message})
 
     @classmethod
-    def output(cls, data: Any) -> VesselMessage:
+    def output(cls, data: Any) -> HermesMessage:
         """Create an OUTPUT message."""
         return cls(type=MessageType.OUTPUT, data={"data": data})
 
     @classmethod
-    def error(cls, message: str, code: str = "PLUGIN_ERROR") -> VesselMessage:
+    def error(cls, message: str, code: str = "PLUGIN_ERROR") -> HermesMessage:
         """Create an ERROR message."""
         return cls(type=MessageType.ERROR, data={"code": code, "message": message})
 
     @classmethod
-    def status(cls, progress: float) -> VesselMessage:
+    def status(cls, progress: float) -> HermesMessage:
         """Create a STATUS message with progress (0.0 to 1.0)."""
         return cls(
             type=MessageType.STATUS,
@@ -108,7 +108,7 @@ class VesselMessage:
         )
 
     @classmethod
-    def done(cls, summary: Optional[dict[str, Any]] = None) -> VesselMessage:
+    def done(cls, summary: Optional[dict[str, Any]] = None) -> HermesMessage:
         """Create a DONE message."""
         return cls(type=MessageType.DONE, data={"summary": summary or {}})
 
@@ -119,7 +119,7 @@ class VesselMessage:
         cls,
         config: dict[str, Any],
         context: Optional[dict[str, Any]] = None,
-    ) -> VesselMessage:
+    ) -> HermesMessage:
         """Create a CONFIGURE message."""
         return cls(
             type=MessageType.CONFIGURE,
@@ -127,25 +127,25 @@ class VesselMessage:
         )
 
     @classmethod
-    def execute(cls, input_data: Any) -> VesselMessage:
+    def execute(cls, input_data: Any) -> HermesMessage:
         """Create an EXECUTE message."""
         return cls(type=MessageType.EXECUTE, data={"input": input_data})
 
 
 class PluginProtocol:
-    """Handles reading and writing Vessel protocol messages over streams.
+    """Handles reading and writing Hermes protocol messages over streams.
 
-    This class is used both by the Vessel Core (writing to plugin stdin,
+    This class is used both by the Hermes Core (writing to plugin stdin,
     reading from plugin stdout) and by plugins themselves (reading from
     their own stdin, writing to their own stdout).
     """
 
     @staticmethod
-    def send_message(message: VesselMessage, stream: TextIOBase | Any = None) -> None:
+    def send_message(message: HermesMessage, stream: TextIOBase | Any = None) -> None:
         """Write a message as a JSON line to the given stream.
 
         Args:
-            message: The VesselMessage to send.
+            message: The HermesMessage to send.
             stream: Writable text stream. Defaults to sys.stdout.
         """
         output = stream if stream is not None else sys.stdout
@@ -154,7 +154,7 @@ class PluginProtocol:
         output.flush()
 
     @staticmethod
-    def read_message(stream: TextIOBase | Any = None) -> Optional[VesselMessage]:
+    def read_message(stream: TextIOBase | Any = None) -> Optional[HermesMessage]:
         """Read a single message from the given stream.
 
         Blocks until a line is available. Returns None on EOF.
@@ -163,7 +163,7 @@ class PluginProtocol:
             stream: Readable text stream. Defaults to sys.stdin.
 
         Returns:
-            Parsed VesselMessage, or None on EOF.
+            Parsed HermesMessage, or None on EOF.
 
         Raises:
             ValueError: If the line is not a valid protocol message.
@@ -172,21 +172,21 @@ class PluginProtocol:
         line = input_stream.readline()
         if not line:
             return None  # EOF
-        return VesselMessage.from_json(line)
+        return HermesMessage.from_json(line)
 
     @staticmethod
     def read_all_messages(
         stream: TextIOBase | Any = None,
-    ) -> list[VesselMessage]:
+    ) -> list[HermesMessage]:
         """Read all available messages from the stream until EOF.
 
         Args:
             stream: Readable text stream. Defaults to sys.stdin.
 
         Returns:
-            List of parsed VesselMessages.
+            List of parsed HermesMessages.
         """
-        messages: list[VesselMessage] = []
+        messages: list[HermesMessage] = []
         while True:
             msg = PluginProtocol.read_message(stream)
             if msg is None:

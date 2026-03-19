@@ -66,7 +66,7 @@ docker compose up -d
 ```
 hermes/
   backend/              # Python Web API (FastAPI)
-    vessel/             # Python package
+    hermes/             # Python package
       main.py           # App entrypoint
       engine_client.py  # gRPC client to .NET Engine
       api/              # REST route handlers
@@ -103,7 +103,7 @@ hermes/
 docker compose up -d
 
 # Backend only (local dev)
-cd backend && pip install -e ".[dev]" && uvicorn vessel.main:app --reload
+cd backend && pip install -e ".[dev]" && uvicorn hermes.main:app --reload
 
 # Engine only (local dev, requires .NET 8 SDK)
 cd engine && dotnet run --project src/Hermes.Engine

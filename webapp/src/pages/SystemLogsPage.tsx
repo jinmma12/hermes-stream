@@ -122,7 +122,7 @@ export default function SystemLogsPage() {
           <button
             onClick={() => setAutoScroll(!autoScroll)}
             className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-              autoScroll ? 'bg-vessel-600 text-white' : 'bg-slate-100 text-slate-600'
+              autoScroll ? 'bg-hermes-600 text-white' : 'bg-slate-100 text-slate-600'
             }`}
           >
             {autoScroll ? 'Auto-scroll ON' : 'Auto-scroll OFF'}

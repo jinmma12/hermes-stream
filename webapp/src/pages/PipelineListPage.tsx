@@ -225,7 +225,7 @@ export default function PipelineListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search pipelines by name or description..."
-            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-vessel-400 focus:outline-none focus:ring-2 focus:ring-vessel-100"
+            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-hermes-400 focus:outline-none focus:ring-2 focus:ring-hermes-100"
           />
           {search && (
             <button
@@ -250,7 +250,7 @@ export default function PipelineListPage() {
                 onClick={() => setStatusFilter(s)}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   isActive
-                    ? 'bg-vessel-600 text-white'
+                    ? 'bg-hermes-600 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -276,7 +276,7 @@ export default function PipelineListPage() {
             <p className="mt-2 text-sm font-medium text-slate-500">No pipelines match your filters</p>
             <button
               onClick={() => { setSearch(''); setStatusFilter('ALL'); }}
-              className="mt-2 text-xs font-medium text-vessel-600 hover:text-vessel-700"
+              className="mt-2 text-xs font-medium text-hermes-600 hover:text-hermes-700"
             >
               Clear filters
             </button>
@@ -317,8 +317,8 @@ export default function PipelineListPage() {
                         className="absolute inset-0 z-0 rounded-xl"
                       />
                       <div className="relative z-10 flex items-start justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-vessel-50">
-                          <svg className="h-5 w-5 text-vessel-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-hermes-50">
+                          <svg className="h-5 w-5 text-hermes-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
                           </svg>
                         </div>
@@ -335,7 +335,7 @@ export default function PipelineListPage() {
                         </div>
                       </div>
 
-                      <h3 className="relative z-10 mt-3 text-sm font-semibold text-slate-900 group-hover:text-vessel-700">
+                      <h3 className="relative z-10 mt-3 text-sm font-semibold text-slate-900 group-hover:text-hermes-700">
                         {pipeline.name}
                       </h3>
                       <p className="relative z-10 mt-1 line-clamp-2 text-xs text-slate-500">

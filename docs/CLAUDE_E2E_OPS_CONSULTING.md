@@ -148,7 +148,7 @@ Risk:
 
 ### 5.2 `EngineClient` stub mode can hide missing integration
 
-`backend/vessel/engine_client.py` falls back to stub mode when gRPC or generated stubs are missing.
+`backend/hermes/engine_client.py` falls back to stub mode when gRPC or generated stubs are missing.
 
 Risk:
 

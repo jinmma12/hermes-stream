@@ -13,10 +13,10 @@ import uuid
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from vessel.domain.models.execution import ReprocessRequest, WorkItem
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.snapshot_resolver import SnapshotResolver
+from hermes.domain.models.execution import ReprocessRequest, WorkItem
+from hermes.domain.services.execution_dispatcher import ExecutionDispatcher
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.snapshot_resolver import SnapshotResolver
 
 logger = logging.getLogger(__name__)
 

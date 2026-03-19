@@ -94,7 +94,7 @@ export default function ConnectorCatalog({ onAddNode }: Props) {
           placeholder="Search connectors..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-vessel-500 focus:outline-none"
+          className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-hermes-500 focus:outline-none"
         />
         <div className="mt-2 flex gap-1">
           {(['all', StageType.COLLECT, StageType.PROCESS, StageType.EXPORT] as const).map(t => (
@@ -102,7 +102,7 @@ export default function ConnectorCatalog({ onAddNode }: Props) {
               key={t}
               onClick={() => setTypeFilter(t)}
               className={`rounded px-2 py-0.5 text-[10px] font-medium ${
-                typeFilter === t ? 'bg-vessel-600 text-white' : 'bg-slate-100 text-slate-500'
+                typeFilter === t ? 'bg-hermes-600 text-white' : 'bg-slate-100 text-slate-500'
               }`}
             >
               {t === 'all' ? 'All' : t}

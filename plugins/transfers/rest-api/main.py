@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vessel REST API Transfer Plugin.
+"""Hermes REST API Transfer Plugin.
 
 Sends processed data to a REST API endpoint via HTTP.
 """

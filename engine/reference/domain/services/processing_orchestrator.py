@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     ReprocessRequest,
@@ -20,9 +20,9 @@ from vessel.domain.models.execution import (
     WorkItemExecution,
     WorkItemStepExecution,
 )
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
-from vessel.domain.services.snapshot_resolver import SnapshotResolver
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
+from hermes.domain.services.snapshot_resolver import SnapshotResolver
 
 logger = logging.getLogger(__name__)
 

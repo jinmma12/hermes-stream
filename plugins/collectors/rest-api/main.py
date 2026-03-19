@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Vessel REST API Collector Plugin.
+"""Hermes REST API Collector Plugin.
 
 Fetches data from a REST API endpoint and outputs the records
-via the Vessel plugin protocol.
+via the Hermes plugin protocol.
 """
 
 from __future__ import annotations

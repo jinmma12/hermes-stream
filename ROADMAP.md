@@ -1,466 +1,542 @@
 # Hermes Stream Roadmap
 
-> Last updated: 2026-03-16
-> Status: Phase 3 진행 중 (89%) — Collect/Process/Export 리네이밍 완료
+> Last updated: 2026-03-18
+> Current priority: Integrity-first runtime hardening
+> Current state: strong prototype, not yet production-trustworthy
 
 ---
 
 ## Vision
 
-**"The .NET NiFi"** — Enterprise-grade, lightweight data processing platform.
+**Hermes Stream** is a lightweight data pipeline platform for operators who need:
 
-NiFi의 강점(per-item tracking, provenance)을 가져가되,
-.NET 기반으로 가볍고, non-developer가 Web UI에서 운영 가능한 플랫폼.
+- non-developer-friendly configuration from the web
+- per-item provenance and execution history
+- recipe/version management
+- first-class replay and reprocessing
+- NiFi-style observability without NiFi's operational weight
 
-### Pipeline Category Model
+The long-term product direction remains:
 
-| Stage | Purpose | Color | Examples |
+- **.NET Engine** = runtime source of truth
+- **Python API** = management/query facade and migration/reference layer
+- **React UI** = operator console
+
+That split is not optional. If runtime semantics live in Python tests/docs but not in
+the .NET engine, Hermes will look more complete than it actually is.
+
+---
+
+## Product Truths
+
+These are the rules that shape all roadmap decisions.
+
+### 1. Integrity before breadth
+
+Hermes is intended for real internal operational use. That means:
+
+- duplicate collection behavior must be understood
+- restart behavior must be deterministic
+- retry and DLQ behavior must be explicit
+- recipe snapshots must be reproducible
+- replay/reprocess must be auditable
+
+Adding more connectors before these guarantees are solid is a liability.
+
+### 2. Runtime truth belongs to the .NET engine
+
+The .NET engine must own:
+
+- activation/deactivation semantics
+- collect/process/export execution
+- dedup/checkpointing
+- retry/backoff/circuit breaker
+- snapshot capture and replay
+- provenance event generation
+- cluster coordination and reassignment
+- Kafka delivery semantics
+
+Python may provide:
+
+- CRUD APIs
+- read/query APIs
+- admin/auth/websocket façade
+- migration parity tests
+- plugin/reference utilities
+
+### 3. Support level must be explicit
+
+A connector or feature is only `Production-Ready` when it has:
+
+1. deterministic restart behavior
+2. explicit failure classification
+3. metrics/logging/alert surfaces
+4. integration tests against a real service or deterministic harness
+5. documented operating limits
+
+UI presence or mock-only coverage is not enough.
+
+---
+
+## Stage Model
+
+| Stage | Purpose | Examples |
+|---|---|---|
+| **Collect** | Read or detect data from a source | File Watcher, FTP/SFTP, Kafka Consumer, REST API, DB Query |
+| **Process** | Transform, validate, enrich, analyze, route | Transformer, Dedup, Router, Anomaly Detector |
+| **Export** | Deliver to a destination | Kafka Producer, DB Writer, File Output, S3 Upload, Webhook |
+
+---
+
+## Support Levels
+
+Hermes uses four support levels in this roadmap.
+
+| Level | Meaning |
+|---|---|
+| **Production-Ready** | Integrity guarantees and real integration coverage exist |
+| **Beta** | Functionally usable but still missing some operational guarantees |
+| **Prototype** | Demo/reference quality, not yet safe for trusted workloads |
+| **Planned** | Design intent only |
+
+---
+
+## What Is Actually Required for v1
+
+Hermes does not need every connector category to be complete before it becomes useful.
+It does need one coherent, trustworthy operating slice.
+
+### v1 trustworthy slice
+
+1. File Watcher Collect
+2. FTP/SFTP Collect
+3. Kafka Consumer Collect
+4. REST API Collect
+5. Basic Process chain
+6. Kafka Producer Export
+7. DB Writer Export
+8. File Output Export
+9. Replay/Reprocess
+10. Provenance and monitoring
+
+Everything else can come later.
+
+---
+
+## Current Assessment
+
+### Strong
+
+- product concept and differentiation
+- UI direction and operator workflow thinking
+- recipe/versioning model
+- provenance/reprocess intent
+- breadth of documented scenarios
+
+### Weak
+
+- runtime/documentation mismatch
+- too much implied support from UI and docs
+- insufficiently explicit support-level boundaries
+- connector breadth outpacing integrity guarantees
+- cluster claims ahead of runtime hardening
+- Python reference layer still richer than some .NET runtime paths
+
+### Immediate Risks
+
+1. engine stub mode can hide missing runtime connectivity
+2. FTP/SFTP dedup appears process-local instead of persisted
+3. connector capability promises exceed current runtime enforcement
+4. cluster failover semantics are not yet closed
+5. mock-heavy tests can overstate runtime safety
+
+---
+
+## Phase 0: Design and Prototype Foundation ✅ COMPLETE
+
+Delivered:
+
+- architecture and collection design docs
+- plugin protocol and initial runtime split
+- Python prototype backend
+- React operator UI
+- .NET engine foundation
+- pipeline/recipe/provenance domain model
+
+Key outputs:
+
+- `docs/ARCHITECTURE.md`
+- `docs/DATA_COLLECTION_DESIGN.md`
+- `docs/TEST_STRATEGY.md`
+- `docs/CLUSTER_DESIGN.md`
+- `backend/`
+- `engine/`
+- `webapp/`
+
+---
+
+## Phase 1: Functional Prototype ✅ COMPLETE
+
+Delivered:
+
+- definitions, instances, pipelines, recipes
+- activation and processing model
+- initial collect/process/export flow
+- reprocess model
+- operator UI with pipeline and recipe surfaces
+- initial built-in connector set
+
+This phase proves the product idea.
+It does **not** by itself prove operational trust.
+
+---
+
+## Phase 2: Integrity Track 🔥 CURRENT PRIORITY
+
+This phase matters more than adding more connector count.
+
+### 2A. Runtime Contract Hardening
+
+- [ ] Mark `.NET Engine` as the runtime authority in docs and code comments
+- [ ] Prevent production startup from silently using EngineClient stub mode
+- [ ] Surface engine transport health in `/api/v1/health` and system status
+- [ ] Define and document delivery guarantees per connector
+- [ ] Define supported replay semantics per stage
+
+Acceptance criteria:
+
+1. A disconnected engine cannot look healthy in production mode
+2. Runtime ownership of collect/process/export is documented and testable
+3. Operator-facing health surfaces expose degraded transport state
+
+### 2B. Checkpoint and Dedup Safety
+
+- [ ] Persist monitor checkpoints outside process memory
+- [ ] Persist dedup identity for collect sources
+- [ ] Document dedup key strategy by source type
+- [ ] Add restart recovery tests for file, FTP/SFTP, and Kafka
+- [ ] Add replay tests proving no accidental recollect on restart
+
+Acceptance criteria:
+
+1. process restart does not blindly recollect already-accepted data
+2. dedup key calculation is documented and asserted in tests
+3. checkpoint ownership survives normal restarts
+
+### 2C. Replay and Snapshot Correctness
+
+- [ ] Verify execution snapshots are immutable and replay-safe
+- [ ] Verify reprocess from step N reuses prior successful state correctly
+- [ ] Verify `use_latest_recipe` and `use_original_recipe` behavior
+- [ ] Add audit/log coverage for manual and bulk replay
+
+Acceptance criteria:
+
+1. replay intent is visible in DB and UI
+2. snapshot hash changes only when config meaningfully changes
+3. replay from later stages does not silently rerun earlier stages unless requested
+
+### 2D. Failure Classification Framework
+
+- [ ] Standardize error categories: transient, permanent, throttled, unknown
+- [ ] Standardize retry policy contract by connector category
+- [ ] Standardize DLQ payload and replay metadata
+- [ ] Expose retry/DLQ counters in metrics
+
+Acceptance criteria:
+
+1. every connector failure path maps to a known class
+2. DLQ entries preserve source identity and failure reason
+3. retry behavior is deterministic and configurable
+
+---
+
+## Phase 3: Core Connectors to Production-Ready
+
+This phase is about making the essential connectors safe enough to trust.
+
+### 3A. Collect Connectors
+
+| Connector | Target | Current | Notes |
 |---|---|---|---|
-| **Collect** | 데이터 수집 (Source/Ingest) | Blue | FTP/SFTP, Kafka Consumer, REST API, DB CDC, File Watcher, MQTT |
-| **Process** | 변환/분석/필터링/라우팅 | Purple | Anomaly Detector, Data Transformer, Dedup Filter, Content Router |
-| **Export** | 목적지 전달 (Sink/Deliver) | Emerald | Kafka Producer, S3 Upload, DB Writer, Webhook, TIBCO RV Publisher |
+| File Watcher | Production-Ready | Beta | Must close checkpoint/restart semantics |
+| FTP/SFTP Collector | Production-Ready | Beta | Highest industrial priority |
+| Kafka Consumer | Production-Ready | Beta | Must close offset, rebalance, replay semantics |
+| REST API Collector | Production-Ready | Beta | Must close pagination/retry/idempotency behavior |
+| Database Query / CDC | Beta | Prototype | Narrow scope before broad DB promise |
+
+#### FTP/SFTP work
+
+- [ ] host key verification and key-based auth support
+- [ ] FTPS/TLS error handling and certificate behavior
+- [ ] completion checks: marker-file and size-stable
+- [ ] post-actions: keep/delete/move/rename
+- [ ] persisted discovery state
+- [ ] large directory traversal limits and safeguards
+- [ ] real FTP/SFTP integration tests
+
+Acceptance criteria:
+
+1. restart-safe collection behavior
+2. no silent duplicate collection after normal restart
+3. real FTP and real SFTP integration coverage
+4. documented handling for partial files, renamed files, deleted files
+
+#### Kafka Consumer work
+
+- [ ] explicit manual commit timing
+- [ ] define default guarantee: at-least-once
+- [ ] partition rebalance handling
+- [ ] poison message strategy
+- [ ] retry and DLQ behavior
+- [ ] restart/resume tests
+- [ ] real Kafka integration tests
+
+Acceptance criteria:
+
+1. commit point is explicit and tested
+2. rebalance does not lose observability
+3. poison messages do not deadlock the pipeline
+4. duplicate handling strategy is documented
+
+### 3B. Export Connectors
+
+| Connector | Target | Current | Notes |
+|---|---|---|---|
+| File Output | Production-Ready | Beta | Needs stronger failure and idempotency guarantees |
+| Kafka Producer | Production-Ready | Prototype | Must land in this phase |
+| DB Writer | Production-Ready | Prototype | Narrow scope: PostgreSQL and SQL Server only |
+| S3 Upload | Beta | Prototype | Useful, but not ahead of Kafka/DB |
+| Webhook | Beta | Prototype | Useful after core export guarantees are clear |
+
+#### Kafka Producer work
+
+- [ ] keying and partition strategy
+- [ ] acks and retry policy
+- [ ] idempotent producer support where feasible
+- [ ] ordering expectations documentation
+- [ ] produce-failure visibility and metrics
+
+Acceptance criteria:
+
+1. operator can explain when a message is considered delivered
+2. producer errors surface clearly in execution logs and metrics
+3. retry and duplicate expectations are documented
+
+#### DB Writer work
+
+- [ ] insert/upsert modes
+- [ ] schema mismatch classification
+- [ ] transaction and rollback behavior
+- [ ] deadlock retry behavior
+- [ ] integration tests for PostgreSQL and SQL Server
+
+Acceptance criteria:
+
+1. upsert semantics are explicit
+2. failure modes are observable and replayable
+3. DB writer behavior is covered for both supported providers
 
 ---
 
-## Hermes의 핵심 강점 (Differentiators)
+## Phase 4: Operator UX and Trust Surfaces
 
-### 1. Job-Level Tracking
-> 모든 데이터 아이템의 수집→분석→전송 전 과정을 개별 추적.
-> NiFi 외에는 아무도 하지 않는 기능.
+Once runtime behavior is trustworthy, the UI can become a real operating console.
 
-### 2. Recipe Management for Non-Developers
-> SW 개발자가 아닌 운영자가 Web UI에서 수집 설정, 알고리즘 파라미터를 변경.
-> JSON Schema → 자동 폼 생성. 버전 관리 + diff/compare.
-> 전역 Recipe Management 페이지에서 모든 Recipe를 중앙 관리.
+- [ ] support-level badges in UI: Production-Ready/Beta/Prototype
+- [ ] connector capability pages with operating notes
+- [ ] test-connection and preview behavior aligned with runtime reality
+- [ ] replay UX showing original vs latest recipe clearly
+- [ ] DLQ explorer and replay queue UX
+- [ ] cluster health and connector health dashboards
 
-### 3. First-Class Reprocessing
-> 실패 건 단건/일괄 재처리. 특정 Step부터 재시작. 최신 Recipe 적용 선택.
-> 경쟁 제품 중 이걸 제대로 하는 곳이 없음.
+Acceptance criteria:
 
-### 4. NiFi-Friendly, Not NiFi-Dependent
-> 기존 NiFi 레거시를 그대로 활용하면서 Hermes의 UI/추적/재처리 레이어를 씌울 수 있음.
-> NiFi 없이도 독립 실행 가능.
-
-### 5. Plugin Protocol (gRPC, Language-Agnostic)
-> 알고리즘은 Docker container로 격리. gRPC/Kafka로 통신.
-> Python, R, C++, Java 등 어떤 언어로든 플러그인 작성 가능.
-
-### 6. Disk-Based Content Repository
-> NiFi처럼 대용량 데이터를 디스크 기반으로 처리.
-> 메모리 부족 없이 GB 단위 데이터 파이프라인 운영.
+1. UI does not imply unsupported runtime capability
+2. operator can distinguish preview success from production runtime readiness
+3. replay intent and connector support level are obvious
 
 ---
 
-## Phase 0: Design ✅ COMPLETE
+## Phase 5: Distributed Runtime
 
-| Item | Status | 산출물 |
-|---|---|---|
-| 전체 아키텍처 설계 | ✅ | `docs/ARCHITECTURE.md` |
-| 데이터 수집 설계 | ✅ | `docs/DATA_COLLECTION_DESIGN.md` |
-| NiFi 연동 설계 | ✅ | `docs/NIFI_INTEGRATION.md` |
-| 테스트 전략 | ✅ | `docs/TEST_STRATEGY.md` |
-| DB 스키마 | ✅ | `backend/database/schema.sql` |
-| Python 프로토타입 | ✅ | `backend/`, `webapp/`, `plugins/` |
-| 벤치마크 Gap 분석 | ✅ | 17개 Gap 식별 (P0~P3) |
-| .NET Solution 설계 | ✅ | `docs/DOTNET_SOLUTION_DESIGN.md` |
-| gRPC Protocol 설계 | ✅ | `protos/` |
-| Domain Interface 설계 | ✅ | `docs/DOMAIN_INTERFACES.md` |
+Distributed execution is important, but it must come after single-node integrity is real.
 
----
+- [ ] coordinator/worker lease model
+- [ ] split-brain prevention
+- [ ] failover without duplicate collection
+- [ ] checkpoint ownership transfer
+- [ ] worker crash recovery for in-flight executions
+- [ ] cluster-aware provenance and logs
 
-## Phase 1: MVP ✅ COMPLETE
+Acceptance criteria:
 
-- [x] ASP.NET Core 8 Web API + EF Core + PostgreSQL
-- [x] Definition/Instance/Pipeline CRUD + Recipe 버전 관리
-- [x] Monitoring Engine (File Watcher, API Poller, Kafka Consumer)
-- [x] Processing Engine (Orchestrator, Snapshot, Event Log, Reprocess)
-- [x] Plugin System (gRPC Protocol v2, SDK, 8 built-in plugins)
-- [x] Web UI (Pipeline Designer, Recipe Editor, Monitor, Job Explorer)
-- [x] Docker Compose, Health Check, Serilog
+1. coordinator failover does not create double collectors
+2. worker crash does not orphan execution state invisibly
+3. ownership transfer is observable and auditable
 
 ---
 
-## Phase 2: Production-Ready ✅ COMPLETE
+## Phase 6: Ecosystem and Enterprise Add-ons
 
-- [x] Back-pressure, Dead Letter Queue, Schema Discovery
-- [x] Content Repository (디스크 기반 대용량)
-- [x] Exactly-Once + Graceful Shutdown
-- [x] Observability (Prometheus + Grafana)
-- [x] Retry 정교화 (exponential backoff + jitter + Polly)
-- [x] NiFi Integration (Bridge, Provenance, Parameter Context)
-- [x] 161 tests, 90%+ coverage
+- [ ] multi-tenancy
+- [ ] plugin marketplace
+- [ ] environment promotion
+- [ ] Git-backed pipeline promotion
+- [ ] documentation site
+- [ ] CLI
+- [ ] Terraform provider
+- [ ] compliance/security hardening
 
----
-
-## Phase 3: Enterprise — IN PROGRESS (89%)
-
-### 3A. Collect/Process/Export Module 강화 🔥 PRIORITY
-
-#### Collect Connectors (목표: 15+ native connectors)
-
-| Connector | Category | Priority | Status | Description |
-|---|---|---|---|---|
-| **FTP/SFTP Collector** | File | P0 | 🔄 | 재귀 탐색, 최신순/오래된순 정렬, regex 필터, 완료 감지 |
-| **Kafka Consumer** | Streaming | P0 | ✅ | Topic 구독, consumer group, offset 관리 |
-| **REST API Collector** | API | P0 | ✅ | GET/POST, auth, pagination, polling |
-| **File Watcher** | File | P0 | ✅ | Directory 감시, glob 패턴 |
-| **Database CDC** | Database | P0 | ✅ | Timestamp/sequence 기반 변경 추적 |
-| MQTT Subscriber | IoT | P1 | ⬜ | Topic 구독, QoS, retain 메시지 |
-| OPC-UA Client | Industrial | P1 | ⬜ | 설비 데이터 수집, subscription/polling |
-| TCP/UDP Socket | Network | P1 | ⬜ | Raw socket 데이터 수신 |
-| AMQP Consumer | Messaging | P1 | ⬜ | RabbitMQ, ActiveMQ 호환 |
-| JMS Consumer | Messaging | P2 | ⬜ | Java Message Service 호환 |
-| TIBCO RV Listener | Messaging | P2 | ⬜ | TIBCO Rendezvous 메시지 수신 |
-
-#### Process Connectors (목표: 10+ native processors)
-
-| Processor | Category | Priority | Status | Description |
-|---|---|---|---|---|
-| **Anomaly Detector** | Analytics | P0 | ✅ | Z-score, IQR, modified z-score |
-| **Data Transformer** | Transform | P0 | ✅ | JSON/CSV 변환, field mapping |
-| **Dedup Filter** | Filter | P0 | ✅ | Key 기반 중복 제거 |
-| **Content Router** | Routing | P0 | ✅ | 조건부 분기 |
-| JSON Transform | Transform | P0 | ✅ | JMESPath 기반 변환 |
-| CSV-JSON Converter | Transform | P0 | ✅ | 양방향 변환 |
-| Merge Content | Batch | P0 | ✅ | 다건 병합 (NiFi MergeContent) |
-| Split Records | Batch | P0 | ✅ | 배치 분할 (NiFi SplitRecord) |
-| Schema Validator | Validation | P1 | ⬜ | JSON Schema / Avro 검증 |
-| Record Enricher | Enrichment | P1 | ⬜ | 외부 API/DB lookup 보강 |
-
-#### Export Connectors (목표: 12+ native connectors)
-
-| Connector | Category | Priority | Status | Description |
-|---|---|---|---|---|
-| **Kafka Producer** | Streaming | P0 | ⬜ | Topic 발행, partitioning, acks |
-| **S3 Upload** | Storage | P0 | ⬜ | Bucket, prefix, format, compression |
-| **DB Writer** | Database | P0 | ⬜ | PostgreSQL/MSSQL upsert |
-| **File Output** | File | P0 | ✅ | JSON/CSV/text 파일 출력 |
-| **Webhook Sender** | API | P0 | ⬜ | HTTP POST, retry, auth |
-| FTP/SFTP Upload | File | P1 | ⬜ | 원격 서버 파일 전송 |
-| TIBCO RV Publisher | Messaging | P1 | ⬜ | TIBCO Rendezvous 메시지 발행 |
-| AMQP Producer | Messaging | P1 | ⬜ | RabbitMQ, ActiveMQ 발행 |
-| Elasticsearch Writer | Search | P1 | ⬜ | Index, bulk insert |
-| Email/SMTP Sender | Notification | P2 | ⬜ | 알림 이메일 발송 |
-| Slack/Teams Notifier | Notification | P2 | ⬜ | 채널 메시지 발송 |
-| InfluxDB Writer | TimeSeries | P2 | ⬜ | 시계열 데이터 적재 |
-
-### 3B. FTP/SFTP Collector 상세 스펙 🔥
-
-산업 현장의 핵심 시나리오: **설비 → FTP/SFTP → 파이프라인**
-
-```
-설비/장비 → FTP 서버에 파일 생성 → Hermes가 감지 → Collect → Process → Export
-```
-
-#### Settings (프로세서 설정)
-| Setting | Type | Description |
-|---|---|---|
-| host | string | FTP/SFTP 서버 주소 |
-| port | number | 포트 (FTP:21, SFTP:22, FTPS:990) |
-| protocol | select | FTP / FTPS / SFTP |
-| username | string | 인증 사용자명 |
-| password | password | 인증 비밀번호 |
-| private_key | password | SFTP 키 인증 |
-| passive_mode | boolean | FTP passive mode (default: true) |
-| poll_interval | string | 폴링 주기 (예: 30s, 5m, 1h) |
-| connection_timeout | number | 연결 타임아웃 (초) |
-| max_connections | number | 최대 동시 연결 수 |
-
-#### Recipe (운영 파라미터 — 버전 관리됨)
-| Parameter | Type | Description |
-|---|---|---|
-| remote_path | string | 수집 대상 디렉토리 |
-| recursive | boolean | 하위 폴더 재귀 탐색 |
-| max_depth | number | 최대 탐색 깊이 (-1: 무제한) |
-| file_filter_regex | string | 파일명 필터 (예: `.*\.csv$`) |
-| path_filter_regex | string | 경로 필터 (예: `^/data/2026`) |
-| ordering | select | NEWEST_FIRST / OLDEST_FIRST / NAME_ASC / NAME_DESC |
-| discovery_mode | select | ALL / LATEST / BATCH / ALL_NEW |
-| batch_size | number | BATCH 모드일 때 한 번에 가져올 파일 수 |
-| completion_check | select | NONE / MARKER_FILE / SIZE_STABLE |
-| marker_suffix | string | 완료 마커 파일 확장자 (예: .done, .complete) |
-| stable_seconds | number | SIZE_STABLE 체크 대기 시간 |
-| post_action | select | KEEP / DELETE / MOVE / RENAME |
-| post_action_target | string | MOVE 대상 경로 또는 RENAME 접미사 |
-| min_file_size | number | 최소 파일 크기 (bytes, 0=무제한) |
-| max_file_age_hours | number | 최대 파일 나이 (시간, 0=무제한) |
-
-#### 예외처리 시나리오 (빡빡하게)
-```
-Connection Failures:
-  ├── 서버 연결 실패 → exponential backoff (1s, 2s, 4s, 8s... max 5m)
-  ├── 인증 실패 → 즉시 STOP + Alert (재시도 무의미)
-  ├── Connection refused → Circuit breaker OPEN (5분 후 HALF_OPEN)
-  ├── DNS resolution 실패 → STOP + Alert
-  └── TLS 핸드셰이크 실패 → STOP + Alert (인증서 문제)
-
-Listing Failures:
-  ├── Permission denied → SKIP + log warning (해당 디렉토리만)
-  ├── Directory not found → STOP + Alert
-  ├── Timeout → retry 3회 후 SKIP
-  └── 서버 busy (421) → Retry-After 헤더 존중
-
-Download Failures:
-  ├── 다운로드 중 연결 끊김 → resume (부분 다운로드)
-  ├── 파일이 다운로드 중 삭제됨 → SKIP + DLQ
-  ├── 파일이 다운로드 중 변경됨 → 재다운로드
-  ├── 체크섬 불일치 → retry 3회 후 DLQ
-  ├── 디스크 공간 부족 → STOP + Alert
-  └── 파일 크기 0 bytes → SKIP (설정 가능)
-
-Post-Action Failures:
-  ├── DELETE 실패 (permission) → log warning, 다음 폴링에서 재감지됨
-  ├── MOVE 대상 디렉토리 없음 → 자동 생성 시도
-  ├── MOVE 파일명 충돌 → timestamp 접미사 추가
-  └── RENAME 실패 → log warning, 원본 유지
-```
-
-### 3C. 예외처리 프레임워크 (전체 모듈 공통)
-
-```
-모든 Connector 공통 패턴:
-├── Connection Management
-│   ├── Connection Pool (min/max/idle 설정)
-│   ├── Health Check (주기적 ping)
-│   ├── Auto-reconnect (configurable backoff)
-│   └── Circuit Breaker (failure_threshold, recovery_timeout)
-│
-├── Error Classification
-│   ├── TRANSIENT → auto-retry (네트워크, timeout)
-│   ├── PERMANENT → STOP + Alert (인증, 설정 오류)
-│   ├── THROTTLED → backoff + respect rate limits
-│   └── UNKNOWN → DLQ + manual investigation
-│
-├── Retry Strategy
-│   ├── Exponential backoff: base * 2^attempt (1s→2s→4s→8s)
-│   ├── Jitter: ±25% randomization
-│   ├── Max attempts: configurable (default: 5)
-│   ├── Max delay: configurable (default: 5m)
-│   └── Retry budget: 시간당 최대 재시도 횟수 제한
-│
-├── Dead Letter Queue
-│   ├── 실패 데이터 격리 (원본 보존)
-│   ├── 실패 사유 + stack trace 기록
-│   ├── Manual replay / auto-replay 선택
-│   └── DLQ 크기 제한 + 알림
-│
-└── Observability
-    ├── Metrics: success/failure count, latency p50/p95/p99
-    ├── Logs: structured JSON (correlation_id 포함)
-    ├── Alerts: configurable threshold (실패율 > N%)
-    └── Dashboard: Grafana 자동 생성
-```
-
-### 3D. 테스트 시나리오 확장 (목표: 300+ tests)
-
-현재: 161 tests → 목표: 300+ tests
-
-#### FTP/SFTP Collector Tests (60+)
-```
-Connection (10):
-  - FTP/FTPS/SFTP 각각 connect/login 성공
-  - 잘못된 credentials → 인증 실패
-  - Connection refused → circuit breaker 작동
-  - DNS 실패, TLS 실패, timeout
-  - Passive mode fallback
-
-Directory Traversal (15):
-  - 단일/재귀 디렉토리 탐색
-  - max_depth 제한 (0, 1, 3, -1)
-  - 날짜 폴더 패턴 (yyyyMMdd, yyyy/MM/dd)
-  - 정렬 (newest_first, oldest_first, name_asc)
-  - 빈 디렉토리, 권한 없는 디렉토리
-  - 심볼릭 링크 순환 방지
-  - 10,000+ 파일 대규모 디렉토리
-
-File Matching (15):
-  - Regex 필터 (*.csv, *.json, 날짜 패턴)
-  - Discovery mode (ALL, LATEST, BATCH, ALL_NEW)
-  - 파일 크기 필터 (min/max)
-  - 파일 나이 필터 (max_age)
-  - Completion check (marker_file, size_stable)
-  - Unicode 파일명
-
-Download & Integrity (10):
-  - 정상 다운로드 + checksum 검증
-  - 대용량 (100MB+) 파일 스트리밍
-  - 다운로드 중 연결 끊김 → resume
-  - 다운로드 중 파일 변경/삭제
-  - 0-byte 파일 처리
-
-Post-Action (5):
-  - KEEP/DELETE/MOVE/RENAME 각각
-  - MOVE 충돌 해결 (timestamp suffix)
-
-Error Recovery (5):
-  - Circuit breaker open → half-open → close
-  - DLQ 격리 + replay
-  - Backpressure → 수집 일시정지 → 재개
-```
-
-#### Kafka Consumer/Producer Tests (30+)
-```
-Consumer (15):
-  - 단일/다중 topic 구독
-  - Consumer group 참여/탈퇴
-  - Offset commit (auto/manual)
-  - Partition rebalance 처리
-  - Deserialization 실패 → DLQ
-  - 메시지 크기 제한 초과
-  - Broker 장애 → 자동 재연결
-  - SSL/SASL 인증
-
-Producer (15):
-  - 단건/배치 발행
-  - Partitioning (key-based, round-robin)
-  - Ack 모드 (0, 1, all)
-  - Serialization 실패
-  - Broker 장애 → 버퍼링 + 재전송
-  - 메시지 순서 보장
-  - Idempotent producer
-  - Transaction support
-```
-
-#### Export Connector Tests (30+)
-```
-S3 Upload (8):
-  - 단건/배치 업로드
-  - Multipart upload (대용량)
-  - 파티셔닝 (date/source/custom)
-  - Compression (gzip/snappy/zstd)
-  - 권한 오류, 버킷 없음
-  - 네트워크 실패 → retry
-
-DB Writer (8):
-  - INSERT/UPSERT/MERGE
-  - Batch insert (1000건)
-  - Schema mismatch → DLQ
-  - Connection pool exhaustion
-  - Deadlock → retry
-  - Transaction rollback
-
-Webhook (7):
-  - POST 성공 (200/201/202)
-  - 서버 오류 (500/502/503) → retry
-  - Timeout → retry with backoff
-  - Auth (Bearer, Basic, API Key)
-  - Rate limit (429) → Retry-After
-  - SSL 인증서 오류
-
-Messaging (7):
-  - AMQP publish + confirm
-  - TIBCO RV publish
-  - MQTT publish (QoS 0/1/2)
-  - Connection lost → 버퍼링
-```
-
-#### End-to-End Pipeline Tests (20+)
-```
-Happy Path (5):
-  - FTP → Anomaly Detection → S3
-  - Kafka → Transform → DB
-  - REST API → Filter → Kafka
-  - File → Split → Merge → File
-  - DB CDC → Transform → Webhook
-
-Error Scenarios (10):
-  - 중간 Step 실패 → 재처리
-  - Source 장애 → 파이프라인 일시정지 → 복구
-  - Export 장애 → DLQ → manual replay
-  - Recipe 버전 변경 → 다음 실행부터 적용
-  - Back-pressure → 수집 throttle
-  - 다중 파이프라인 동시 실행
-  - 파이프라인 비활성화 중 실행 완료 대기
-
-Performance (5):
-  - 1,000건 동시 처리 (throughput)
-  - 10MB 파일 100개 파이프라인
-  - 장시간 안정성 (1시간 연속)
-```
-
-### 3E. 기존 Phase 3 항목
-
-#### Distributed Processing
-- [x] Worker 노드 수평 확장 (in-process 시뮬레이션)
-- [ ] Coordinator-Worker 아키텍처 (Orleans)
-- [x] 작업 분배 + 리밸런싱 (round-robin)
-- [x] Worker 장애 → 자동 재할당
-- [ ] Split-brain 방지 (PostgreSQL advisory locks)
-
-#### P2 Gaps
-- [x] Authentication (JWT/OIDC)
-- [x] RBAC (Viewer/Operator/Admin)
-- [x] Audit Log
-- [x] Data Preview
-- [x] Content-Based Routing
-- [x] Rate Limiting + Circuit Breaker
-
-#### UI Enhancements (완료)
-- [x] Pipeline Designer: Settings/Recipe 분리
-- [x] 전역 Recipe Management 페이지
-- [x] Recipe Diff Viewer (Git-style)
-- [x] Connector Catalog (drag-and-drop)
-- [x] Collect/Process/Export 카테고리 리네이밍
+These matter, but they are not more important than runtime integrity.
 
 ---
 
-## Phase 4: Exit-Ready (+3 months)
+## Connector Acceptance Standard
 
-- [ ] Multi-tenancy (Workspace 격리)
-- [ ] Plugin Marketplace (내부/외부)
-- [ ] Pipeline Git Integration
-- [ ] Environment Promotion (dev → staging → prod)
-- [ ] SLA Monitoring + Alerting
-- [ ] SOC2 readiness, GDPR
-- [ ] Documentation site, CLI, Terraform Provider
+No connector should be called `Production-Ready` until it passes all of the following.
+
+### Required
+
+1. configuration schema
+2. test connection behavior
+3. preview/discovery behavior
+4. runtime execution path
+5. explicit failure classification
+6. retry or fail-fast policy
+7. metrics/logging
+8. restart behavior
+9. replay/reprocess compatibility
+10. real integration coverage or deterministic harness equivalent
+
+### Source-specific requirements
+
+#### Collect
+
+1. dedup key strategy
+2. checkpoint strategy
+3. partial-read handling
+4. source identity recorded in provenance
+
+#### Process
+
+1. deterministic step input/output summary
+2. retry semantics
+3. snapshot compatibility
+
+#### Export
+
+1. delivery success definition
+2. duplicate tolerance or idempotency strategy
+3. destination-side failure reporting
+
+---
+
+## Test Strategy Targets
+
+The test goal is not just more tests. It is better trust calibration.
+
+### Target mix
+
+- unit tests for pure domain logic
+- service tests for orchestration and snapshot behavior
+- real integration tests for FTP/SFTP, Kafka, DB, and S3-compatible storage
+- xfail contract tests for not-yet-closed operating behaviors
+- soak tests for reconnect/retry/backpressure
+
+### Required E2E contracts
+
+1. operator creates and activates pipeline
+2. source event creates one tracked work item
+3. process/export success is visible in provenance
+4. source or export failure enters retry/DLQ path visibly
+5. replay from failed stage preserves audit history
+6. restart resumes safely without silent duplication
+
+See:
+
+- `docs/CLAUDE_E2E_OPS_CONSULTING.md`
+- `backend/tests/e2e/`
+- `deploy/docker-compose.e2e.yml`
+
+---
+
+## What We Are Explicitly Not Doing Yet
+
+These are intentionally not the current priority:
+
+- connector count inflation for its own sake
+- large cluster claims before single-node integrity is closed
+- marketplace polish before runtime trust exists
+- advanced enterprise features before core collect/process/export is trustworthy
 
 ---
 
 ## Development Workflow
 
-### Branch Strategy
+### Branch policy
+
 ```
-main          ← 안정 릴리스
-├── develop   ← 개발 통합
-│   ├── feature/xxx  ← 기능 개발
-│   ├── fix/xxx      ← 버그 수정
-│   └── test/xxx     ← 테스트 추가
-└── release/x.y.z    ← 릴리스 준비
+main
+develop
+feature/*
+fix/*
+test/*
+docs/*
 ```
 
-### PR Checklist
+### PR checklist
+
 ```
-□ 기존 테스트 전부 통과
-□ 새 기능에 대한 테스트 코드 포함
-□ 커버리지 하락 없음
-□ lint 통과
-□ 보안 검사 통과 (no hardcoded secrets)
-□ ROADMAP.md 업데이트 (해당 시)
+□ runtime behavior matches docs/UI claims
+□ tests added for the changed behavior
+□ support level updated if capability changed
+□ no silent fallback to stub/runtime bypass
+□ restart/retry implications considered
+□ ROADMAP.md updated if scope or support level changed
 ```
+
+---
+
+## Short-Term Execution Plan
+
+### Next 2 weeks
+
+1. block or expose stub mode in production
+2. define persisted checkpoint and dedup strategy
+3. close FTP/SFTP runtime gaps
+4. define Kafka consumer commit semantics
+5. land Kafka producer and DB writer MVP
+
+### Next 4-6 weeks
+
+1. real-service integration suite for FTP/SFTP/Kafka/PostgreSQL
+2. replay/reprocess audit completion
+3. support-level badges in docs and UI
+4. restart and failover contract tests
+
+### After that
+
+1. operator UX refinement
+2. cluster coordination hardening
+3. broader connector ecosystem
 
 ---
 
 ## Changelog
 
-### v0.3.0 (2026-03-16) — Phase 3
-- Collect/Process/Export 카테고리 리네이밍 (ALGORITHM→PROCESS, TRANSFER→EXPORT)
-- 전역 Recipe Management 페이지 (버전 타임라인, diff, 파이프라인 영향 범위)
-- Pipeline Designer: Settings/Recipe 분리 (Settings=프로세서 설정, Recipe=전역 관리)
-- Sidebar 네비게이션에 Recipes 추가
-- FTP/SFTP Collector 상세 스펙 + 예외처리 시나리오
-- 커넥터 확장 로드맵 (37+ connectors 목표)
-- 테스트 시나리오 확장 계획 (300+ tests 목표)
+### 2026-03-18
 
-### v0.2.0 (2026-03-15) — Phase 2
-- NiFi-style processor config: Settings/Recipe/History tabs
-- 8 native plugins (REST API, File Watcher, Passthrough, File Output + 4 NiFi-equivalent)
-- FTP/SFTP collector with recursive traversal, regex filters
-- Recipe Diff Viewer (Git-style side-by-side)
-- 161 tests across collection, matching, traversal
+- roadmap refocused around integrity-first delivery
+- made `.NET engine as runtime truth` explicit
+- replaced connector-count-heavy planning with support-level and acceptance-gate planning
+- moved distributed runtime after single-node integrity hardening
+- elevated Kafka producer/consumer and FTP/SFTP to core trustworthy slice
+- added connector acceptance standard and short-term execution plan
 
-### v0.1.0 (2026-03-15) — Phase 0/1
-- Initial project setup (Python prototype + React UI)
-- Architecture design documents
-- DB schema (19 tables)
-- Plugin system (6 built-in plugins)
-- 90 test scenarios
+### 2026-03-16
+
+- Collect/Process/Export naming alignment
+- recipe management UX expansion
+- FTP/SFTP collector spec expansion
+- broad connector expansion plan drafted

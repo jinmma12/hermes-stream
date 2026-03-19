@@ -65,7 +65,7 @@ export default function ProvenancePage() {
           placeholder="Search by source key, job ID, or dedup key..."
           value={searchKey}
           onChange={e => setSearchKey(e.target.value)}
-          className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm focus:border-vessel-500 focus:outline-none"
+          className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm focus:border-hermes-500 focus:outline-none"
         />
         <button
           onClick={handleSearch}

@@ -13,8 +13,8 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.services.monitoring_engine import MonitoringEngine
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.services.monitoring_engine import MonitoringEngine
 
 logger = logging.getLogger(__name__)
 

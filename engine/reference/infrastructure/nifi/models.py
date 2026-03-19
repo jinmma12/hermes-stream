@@ -1,7 +1,7 @@
 """NiFi Data Models.
 
 Pydantic models that mirror the Apache NiFi REST API response structures.
-These models cover the subset of NiFi's API surface that Vessel integrates
+These models cover the subset of NiFi's API surface that Hermes integrates
 with: process groups, processors, connections, provenance, templates,
 parameter contexts, and system diagnostics.
 
@@ -96,7 +96,7 @@ class ProcessGroupStatus(BaseModel):
 
 
 class ProcessGroup(BaseModel):
-    """A NiFi Process Group — Vessel maps these to PipelineInstances."""
+    """A NiFi Process Group — Hermes maps these to PipelineInstances."""
 
     id: str = ""
     name: str = ""
@@ -305,7 +305,7 @@ class ProvenanceEventType(str, Enum):
 
 
 class ProvenanceEvent(BaseModel):
-    """A single NiFi provenance event — maps to Vessel ExecutionEventLog."""
+    """A single NiFi provenance event — maps to Hermes ExecutionEventLog."""
 
     id: str = ""
     event_id: int = Field(default=0, alias="eventId")
@@ -399,7 +399,7 @@ class Parameter(BaseModel):
 
 
 class ParameterContext(BaseModel):
-    """A NiFi Parameter Context — maps to Vessel Recipe versions."""
+    """A NiFi Parameter Context — maps to Hermes Recipe versions."""
 
     id: str = ""
     name: str = ""
@@ -536,12 +536,12 @@ class ControllerStatus(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# NiFi Health (Vessel-specific composite model)
+# NiFi Health (Hermes-specific composite model)
 # ---------------------------------------------------------------------------
 
 
 class NiFiHealthStatus(BaseModel):
-    """Composite health status used by the Vessel Monitor Dashboard.
+    """Composite health status used by the Hermes Monitor Dashboard.
 
     This is not a NiFi API model — it is assembled by the bridge layer from
     multiple NiFi API calls.

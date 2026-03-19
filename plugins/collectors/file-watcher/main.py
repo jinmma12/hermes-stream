@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Vessel File Watcher Collector Plugin.
+"""Hermes File Watcher Collector Plugin.
 
 Scans a directory for files matching a glob pattern and outputs
-file metadata via the Vessel plugin protocol.
+file metadata via the Hermes plugin protocol.
 """
 
 from __future__ import annotations

@@ -6,7 +6,7 @@ import hashlib
 import logging
 from typing import Any
 
-from vessel.domain.models.pipeline import PipelineInstance
+from hermes.domain.models.pipeline import PipelineInstance
 
 logger = logging.getLogger(__name__)
 

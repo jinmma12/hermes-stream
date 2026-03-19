@@ -85,7 +85,7 @@ export default function PluginMarketplacePage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Plugin Marketplace</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Browse and install plugins to extend Vessel capabilities
+          Browse and install plugins to extend Hermes capabilities
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export default function PluginMarketplacePage() {
             onClick={() => setFilter(f)}
             className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
               filter === f
-                ? 'bg-vessel-600 text-white'
+                ? 'bg-hermes-600 text-white'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >

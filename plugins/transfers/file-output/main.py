@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vessel File Output Transfer Plugin.
+"""Hermes File Output Transfer Plugin.
 
 Writes data to files in JSON, JSONL, CSV, or plain text format.
 """

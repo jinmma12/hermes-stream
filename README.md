@@ -2,7 +2,7 @@
   <img src="docs/assets/hermes-logo.png" alt="Hermes" width="200" />
 </p>
 
-<h1 align="center">Hermes Stream</h1>
+<h1 align="center">Hermes</h1>
 
 <p align="center">
   <strong>The Messenger of Data.</strong>
@@ -19,45 +19,55 @@
 <p align="center">
   <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" />
   <img src="https://img.shields.io/badge/.NET-8.0-purple.svg" alt=".NET" />
-  <img src="https://img.shields.io/badge/status-Phase%200%20Design-orange.svg" alt="Status" />
+  <img src="https://img.shields.io/badge/status-Integrity%20Track-orange.svg" alt="Status" />
 </p>
 
 ---
 
 ## What is Hermes?
 
-Hermes is a **lightweight, open-source data processing platform** that tracks every data item through collection, analysis, and delivery — with visual recipe management for non-developers.
+Hermes is an **operator-first orchestration and control plane for existing data platforms**.
 
-Think of it as **Apache NiFi's per-item tracking** + **n8n's visual UI** + **first-class reprocessing** — in a single, lightweight package.
+It sits on top of tools you already run, such as:
+
+- Kafka
+- databases
+- NiFi
+- FTP/SFTP
+- REST APIs
+
+and gives you one place to manage:
+
+- source configuration
+- recipe and parameter versioning
+- pipeline assembly
+- per-item provenance
+- replay and reprocessing
+
+Think of it as **Apache NiFi's per-item tracking** + **n8n's operator UX** + **recipe/replay control** for a mixed data stack.
 
 ### The Problem
 
 | Tool | What's Missing |
 |---|---|
-| **Apache NiFi** | Heavy (JVM 2GB+), complex UI, Java-only plugins |
-| **Airbyte** | EL only — no algorithm/processing stage |
-| **n8n** | Not built for high-volume data, no per-item tracking |
-| **Airflow/Dagster** | Developer-centric (Python code), task-level tracking only |
-| **Benthos** | No UI, no item tracking, Go-only |
+| **Kafka / DB / FTP / NiFi** | Powerful individually, but fragmented to operate together |
+| **Apache NiFi** | Strong flow tooling, but heavy to run and hard to adapt for operator-friendly recipe/version workflows |
+| **Airbyte** | Great for EL, weak for custom process/replay control |
+| **n8n** | Good UX, weak for high-volume item-level provenance |
+| **Airflow/Dagster** | Developer-centric orchestration, not operator-first runtime control |
 
 ### Hermes Fills the Gap
 
 ```
-                    Heavy / Complex
+Existing Data Platforms
+
+ Kafka     DB      NiFi     FTP/SFTP     REST APIs
+   │        │        │          │             │
+   └────────┴────────┴──────────┴─────────────┘
                          │
-                    NiFi ●
-                         │
-              Kafka ●    │
-             Connect     │     ● Airbyte
-                         │
-    Simple ──────────────┼──────────────── Rich UI
-                         │
-            Benthos ●    │         ● n8n
-                         │
-            Singer ●     │    ★ Hermes
-                         │    (sweet spot)
-                         │
-                    Lightweight
+                    ★ Hermes
+      (recipe/versioning, pipeline assembly, provenance,
+             operator UI, replay, runtime coordination)
 ```
 
 ---
@@ -68,25 +78,28 @@ Think of it as **Apache NiFi's per-item tracking** + **n8n's visual UI** + **fir
 Every data item (Job) is individually tracked through the entire pipeline. Know exactly what happened to each file, API response, or database record — when it was collected, how it was processed, and where it was delivered.
 
 ### 🎛️ Recipe Management for Non-Developers
-Operators configure collection settings, algorithm parameters, and transfer options through a **visual web UI** — no code required. Recipes are version-controlled with full diff/compare history.
+Operators configure collection settings, process parameters, and export options through a **visual web UI**. Recipes are version-controlled with full diff/compare history.
 
 ### ♻️ First-Class Reprocessing
 Failed items can be reprocessed from any stage, with the original or updated recipe. Bulk reprocess hundreds of items with one click. No other platform does this well.
 
-### 🔌 Language-Agnostic Plugins
-Algorithm containers connect via **gRPC** — write plugins in Python, C#, R, Java, or any language. Plugins run in Docker containers, fully isolated from the core platform.
+### 🔗 Existing Platform Connectors
+Hermes is designed to orchestrate existing Kafka, DB, NiFi, FTP/SFTP, file, and API systems rather than replace them. Connectors normalize operational concerns such as preview, recipe binding, provenance, replay, and failure visibility.
+
+### 🔌 Language-Agnostic Processing
+Process steps can call containers or plugins over **gRPC** — Python, C#, R, Java, or any other language — while Hermes keeps execution history and recipe snapshots consistent.
 
 ### 🔗 NiFi-Friendly
-Existing NiFi flows continue running untouched. Hermes adds a management layer on top — Recipe UI, Job tracking, and reprocessing for your NiFi pipelines.
+Existing NiFi flows can continue running. Hermes adds orchestration, recipe/version control, job tracking, and reprocessing around them.
 
 ### 📊 Visual Pipeline Designer
 Drag-and-drop pipeline assembly inspired by n8n. Click any stage to configure its Recipe with auto-generated forms (sliders, dropdowns, toggles).
 
-### 🛡️ Production-Ready Resilience
-Back-pressure, Dead Letter Queue, Circuit Breaker, Schema Evolution, disk-based Content Repository — all the patterns that mature platforms like NiFi implement internally.
+### 🛡️ Integrity-Oriented Runtime
+Hermes is being hardened around checkpointing, deduplication, retry/DLQ behavior, snapshot correctness, and replay semantics so operators can trust what ran and what should run again.
 
 ### 🌐 Distributed Clustering
-Scale from a single node to a multi-worker cluster. Coordinator election, automatic job reassignment on worker failure, and centralized log viewer.
+The long-term direction includes multi-worker coordination, failover, and centralized logs, but single-node runtime integrity comes first.
 
 ---
 
@@ -112,10 +125,10 @@ open http://localhost:8000/docs
 
 ## Current Direction
 
-- `ASP.NET Core` is the target public API for V2
-- `.NET` remains the target engine and worker runtime
-- Python remains the migration reference layer and plugin/runtime language
-- The current `.NET` prototype already exposes definition, instance, pipeline, activation, and bootstrap endpoints
+- `.NET` is the runtime source of truth for collect/process/export execution
+- Python is the management/query API layer and migration/reference layer
+- React is the operator console for recipes, pipelines, monitoring, and replay
+- Hermes is positioned as an orchestrator over existing data platforms, not a replacement for Kafka, NiFi, or your databases
 
 ## Database
 
@@ -157,28 +170,25 @@ Prototype operator flow for existing SQL Server installs:
 └────────────────────────────┬─────────────────────────────────┘
                              │ REST API + WebSocket
 ┌────────────────────────────▼─────────────────────────────────┐
-│                      HERMES CORE (.NET)                       │
+│            HERMES CONTROL PLANE (Python API)                 │
+│  CRUD │ Recipe History │ Query APIs │ Health │ WebSocket     │
+└────────────────────────────┬─────────────────────────────────┘
+                             │ gRPC / commands / status
+┌────────────────────────────▼─────────────────────────────────┐
+│                 HERMES RUNTIME (.NET Engine)                 │
 │                                                               │
-│  Monitoring Engine ──→ Job Queue ──→ Processing Orchestrator │
-│    File/API/DB/Kafka      │          Stage 1: COLLECT         │
-│    watching               │          Stage 2: ALGORITHM       │
-│                           │          Stage 3: TRANSFER        │
-│                           │                                   │
-│  Recipe Engine ──── Content Repository ──── TraceEvent Log   │
-│  (versioned config)  (disk-based storage)  (provenance)      │
-│                                                               │
-│  Execution Dispatcher:                                        │
-│    GRPC → Docker container │ HTTP → REST API                 │
-│    NIFI → NiFi flow        │ PLUGIN → subprocess             │
+│  Monitoring ──→ Orchestration ──→ Process / Export Runtime   │
+│  Checkpoints │ Dedup │ Snapshot │ Provenance │ Replay        │
 └────────────────────────────┬─────────────────────────────────┘
                              │
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-        ┌──────────┐  ┌──────────┐  ┌──────────┐
-        │PostgreSQL│  │  Kafka   │  │  NiFi    │
-        │          │  │(optional)│  │(optional)│
-        └──────────┘  └──────────┘  └──────────┘
+         ┌───────────────────┼──────────────────────────────┐
+         ▼                   ▼                              ▼
+   Kafka / MQ         DB / File / Object Store        NiFi / APIs / FTP
 ```
+
+Hermes is not trying to replace Kafka, NiFi, or your databases.
+It is the orchestration layer that makes those systems easier to connect,
+configure, track, and replay as one operator-facing runtime.
 
 ---
 
@@ -195,7 +205,7 @@ Recipe       Processing configuration — versioned, diffable
                e.g., { threshold: 3.5, method: "z-score" }
 
 Pipeline     Processing flow — ordered Stages
-               COLLECT → ALGORITHM → TRANSFER
+               COLLECT → PROCESS → EXPORT
 
 Stage        Individual processing step within a Pipeline
 
@@ -221,9 +231,9 @@ TraceEvent   Processing history — provenance for every Message
    → Hermes creates a Job entry and begins processing
 
 3. Data flows through Stages
-   COLLECT  → gather data, store in Content Repository
-   ALGORITHM → process via gRPC plugin (Docker container)
-   TRANSFER → deliver to destination (DB/API/file/S3)
+   COLLECT  → gather data from Kafka/DB/NiFi/FTP/API/file sources
+   PROCESS  → transform/analyze/enrich via plugin or runtime step
+   EXPORT   → deliver to destinations such as DB/Kafka/file/S3/webhook
 
 4. Everything is tracked
    → Every Stage records a TraceEvent
@@ -243,6 +253,7 @@ TraceEvent   Processing history — provenance for every Message
 | Document | Description |
 |---|---|
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Full architecture specification |
+| [FTP_SFTP_COLLECTOR_CONFIG_SPEC.md](docs/FTP_SFTP_COLLECTOR_CONFIG_SPEC.md) | FTP/SFTP settings vs recipe vs runtime policy contract |
 | [V2_ARCHITECTURE.md](docs/V2_ARCHITECTURE.md) | Distributed system, resilience patterns |
 | [DOTNET_SOLUTION_DESIGN.md](docs/DOTNET_SOLUTION_DESIGN.md) | C# project structure (Clean Architecture) |
 | [DOMAIN_INTERFACES.md](docs/DOMAIN_INTERFACES.md) | Service interfaces and domain model |

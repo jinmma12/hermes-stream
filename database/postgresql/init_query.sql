@@ -780,7 +780,7 @@ INSERT INTO collector_definition_versions (
         "pagination": { "enabled": false }
     }'::jsonb,
     'PLUGIN',
-    'vessel.plugins.collectors.rest_api',
+    'hermes.plugins.collectors.rest_api',
     true
 );
 

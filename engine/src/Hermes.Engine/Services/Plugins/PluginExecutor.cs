@@ -65,11 +65,11 @@ public class PluginExecutor : IPluginExecutor
         try
         {
             // Send CONFIGURE
-            var configMsg = VesselMessage.Configure(configJson, context != null ? JsonSerializer.Serialize(context) : null);
+            var configMsg = HermesMessage.Configure(configJson, context != null ? JsonSerializer.Serialize(context) : null);
             await process.StandardInput.WriteLineAsync(configMsg.ToJson());
 
             // Send EXECUTE
-            var execMsg = VesselMessage.Execute(inputDataJson);
+            var execMsg = HermesMessage.Execute(inputDataJson);
             await process.StandardInput.WriteLineAsync(execMsg.ToJson());
             process.StandardInput.Close();
 
@@ -81,7 +81,7 @@ public class PluginExecutor : IPluginExecutor
 
                 try
                 {
-                    var msg = VesselMessage.FromJson(line);
+                    var msg = HermesMessage.FromJson(line);
                     switch (msg.Type)
                     {
                         case MessageType.Log:

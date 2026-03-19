@@ -1,6 +1,6 @@
 """Plugin Executor - Subprocess-based plugin execution.
 
-Spawns plugin processes, communicates via the Vessel JSON line protocol,
+Spawns plugin processes, communicates via the Hermes JSON line protocol,
 handles timeouts, errors, and progress reporting.
 """
 
@@ -14,8 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
-from vessel.plugins.protocol import MessageType, PluginProtocol, VesselMessage
-from vessel.plugins.registry import PluginManifest
+from hermes.plugins.protocol import MessageType, PluginProtocol, HermesMessage
+from hermes.plugins.registry import PluginManifest
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class PluginResult:
 
 
 class PluginExecutor:
-    """Executes Vessel plugins as subprocesses using the JSON line protocol.
+    """Executes Hermes plugins as subprocesses using the JSON line protocol.
 
     Usage:
         executor = PluginExecutor()
@@ -132,11 +132,11 @@ class PluginExecutor:
             assert process.stderr is not None
 
             # Send CONFIGURE message
-            configure_msg = VesselMessage.configure(config, context or {})
+            configure_msg = HermesMessage.configure(config, context or {})
             await self._write_message(process.stdin, configure_msg)
 
             # Send EXECUTE message
-            execute_msg = VesselMessage.execute(input_data)
+            execute_msg = HermesMessage.execute(input_data)
             await self._write_message(process.stdin, execute_msg)
 
             # Close stdin to signal no more input
@@ -232,7 +232,7 @@ class PluginExecutor:
                 continue
 
             try:
-                msg = VesselMessage.from_json(line)
+                msg = HermesMessage.from_json(line)
             except ValueError as exc:
                 logger.warning(
                     "Ignoring invalid plugin output line: %s (%s)",
@@ -277,7 +277,7 @@ class PluginExecutor:
     @staticmethod
     async def _write_message(
         stdin: asyncio.StreamWriter,
-        message: VesselMessage,
+        message: HermesMessage,
     ) -> None:
         """Write a protocol message to the process stdin."""
         line = message.to_json() + "\n"

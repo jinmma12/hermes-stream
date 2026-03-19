@@ -3,7 +3,7 @@ using Hermes.Engine.Domain;
 
 namespace Hermes.Engine.Services.Plugins;
 
-public class VesselMessage
+public class HermesMessage
 {
     public MessageType Type { get; set; }
     public Dictionary<string, object?> Data { get; set; } = new();
@@ -13,7 +13,7 @@ public class VesselMessage
         return JsonSerializer.Serialize(new { type = Type.ToString().ToUpperInvariant(), data = Data });
     }
 
-    public static VesselMessage FromJson(string line)
+    public static HermesMessage FromJson(string line)
     {
         var doc = JsonDocument.Parse(line);
         var root = doc.RootElement;
@@ -24,12 +24,12 @@ public class VesselMessage
             foreach (var prop in dataEl.EnumerateObject())
                 data[prop.Name] = prop.Value.Clone();
         }
-        return new VesselMessage { Type = type, Data = data };
+        return new HermesMessage { Type = type, Data = data };
     }
 
-    public static VesselMessage Configure(string configJson, string? contextJson = null)
+    public static HermesMessage Configure(string configJson, string? contextJson = null)
         => new() { Type = MessageType.Configure, Data = new() { ["config"] = configJson, ["context"] = contextJson } };
 
-    public static VesselMessage Execute(string? inputDataJson)
+    public static HermesMessage Execute(string? inputDataJson)
         => new() { Type = MessageType.Execute, Data = new() { ["input"] = inputDataJson } };
 }

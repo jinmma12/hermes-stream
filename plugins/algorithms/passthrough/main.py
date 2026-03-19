@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vessel Passthrough Algorithm Plugin.
+"""Hermes Passthrough Algorithm Plugin.
 
 Default algorithm that passes input data through unchanged.
 """

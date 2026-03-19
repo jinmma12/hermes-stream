@@ -1,7 +1,7 @@
 # Engine Reference Implementations (Python)
 
 These Python files are the **original reference implementations** of the Hermes Engine layer.
-They have been moved here from `backend/vessel/` as part of the Python/C# separation.
+They have been moved here from `backend/hermes/` as part of the Python/C# separation.
 
 The .NET Engine (`engine/src/Hermes.Engine/`) should replicate this behavior.
 
@@ -25,7 +25,7 @@ The .NET Engine (`engine/src/Hermes.Engine/`) should replicate this behavior.
 
 ### infrastructure/nifi/
 - `client.py` - Async NiFi REST API client
-- `bridge.py` - NiFi-to-Vessel concept mapping
+- `bridge.py` - NiFi-to-Hermes concept mapping
 - `executor.py` - NiFi flow execution
 - `config.py` - NiFi connection configuration
 - `models.py` - NiFi data models

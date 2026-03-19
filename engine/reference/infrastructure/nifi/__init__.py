@@ -1,19 +1,19 @@
-"""Vessel NiFi Integration Module.
+"""Hermes NiFi Integration Module.
 
-Provides a bridge between Apache NiFi (1.9.x+) and the Vessel data processing
-platform, enabling seamless management of legacy NiFi flows through Vessel's
+Provides a bridge between Apache NiFi (1.9.x+) and the Hermes data processing
+platform, enabling seamless management of legacy NiFi flows through Hermes's
 simplified UI, per-item tracking, and Recipe system.
 
 Key components:
 - NiFiClient: Async REST API client for NiFi
-- NiFiVesselBridge: Maps NiFi concepts to Vessel concepts
-- NiFiFlowExecutor: Executes NiFi flows as Vessel pipeline steps
+- NiFiHermesBridge: Maps NiFi concepts to Hermes concepts
+- NiFiFlowExecutor: Executes NiFi flows as Hermes pipeline steps
 - NiFiConfig: Configuration for NiFi connectivity
 """
 
-from vessel.infrastructure.nifi.client import NiFiClient
-from vessel.infrastructure.nifi.config import NiFiConfig
-from vessel.infrastructure.nifi.models import (
+from hermes.infrastructure.nifi.client import NiFiClient
+from hermes.infrastructure.nifi.config import NiFiConfig
+from hermes.infrastructure.nifi.models import (
     Connection,
     FlowFileSummary,
     NiFiRevision,

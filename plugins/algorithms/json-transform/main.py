@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vessel JSON Transform Algorithm Plugin.
+"""Hermes JSON Transform Algorithm Plugin.
 
 Applies JMESPath expressions to transform JSON data.
 

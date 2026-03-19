@@ -70,7 +70,7 @@ long-running, and performance-critical logic:
 
 ### Algorithm Containers (Docker)
 
-- Connected via gRPC (`hermes_plugin.proto` / `vessel_plugin.proto`)
+- Connected via gRPC (`hermes_plugin.proto` / `hermes_plugin.proto`)
 - Any language (Python, R, C++, Java, etc.)
 - Isolated execution with resource limits
 - SDK available as NuGet package (`Hermes.Plugins.Sdk`)
@@ -82,7 +82,7 @@ long-running, and performance-critical logic:
 ```
 hermes-data/
 ├── backend/                        <- Python FastAPI (Web API)
-│   ├── vessel/                     <- Python package
+│   ├── hermes/                     <- Python package
 │   │   ├── api/                    <- REST endpoints (routes, schemas)
 │   │   │   └── schemas/            <- Pydantic DTOs
 │   │   ├── domain/models/          <- SQLAlchemy models (DB read/write)
@@ -127,7 +127,7 @@ hermes-data/
 │   └── transfers/                  <- File Transfer, REST API Transfer, etc.
 │
 ├── protos/                         <- gRPC definitions (shared)
-│   ├── vessel_plugin.proto         <- Plugin protocol (container <-> engine)
+│   ├── hermes_plugin.proto         <- Plugin protocol (container <-> engine)
 │   ├── hermes_cluster.proto        <- Cluster comms (coordinator <-> worker)
 │   └── hermes_bridge.proto         <- Python <-> .NET bridge (NEW)
 │
@@ -273,7 +273,7 @@ service HermesEngineService {
 cd backend
 cp .env.example .env          # Configure DB, gRPC endpoint
 pip install -e ".[dev]"
-uvicorn vessel.main:app --reload --port 8000
+uvicorn hermes.main:app --reload --port 8000
 ```
 
 #### 2. .NET Core Engine (`engine/`)
@@ -357,7 +357,7 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 
 ```bash
 # Python
-cd backend && ruff check . && mypy vessel/
+cd backend && ruff check . && mypy hermes/
 
 # .NET
 cd engine && dotnet format --verify-no-changes
