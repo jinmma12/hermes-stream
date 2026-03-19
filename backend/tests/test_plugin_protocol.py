@@ -1,4 +1,4 @@
-"""Tests for the Vessel Plugin Protocol (JSON-line communication).
+"""Tests for the Hermes Plugin Protocol (JSON-line communication).
 
 Covers message serialization, the full CONFIGURE -> EXECUTE -> OUTPUT -> DONE
 lifecycle, error handling, timeout, progress reporting, logging, invalid JSON,
@@ -14,12 +14,12 @@ from pathlib import Path
 
 import pytest
 
-from vessel.plugins.executor import (
+from hermes.plugins.executor import (
     PluginExecutor,
     PluginLogEntry,
 )
-from vessel.plugins.protocol import MessageType, PluginProtocol, VesselMessage
-from vessel.plugins.registry import PluginManifest, PluginType
+from hermes.plugins.protocol import HermesMessage, MessageType, PluginProtocol
+from hermes.plugins.registry import PluginManifest, PluginType
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -51,16 +51,16 @@ def _make_manifest(tmp_path: Path, script: str, name: str = "test-plugin") -> Pl
 
 
 class TestMessageSerialization:
-    """VesselMessage JSON round-trip tests."""
+    """HermesMessage JSON round-trip tests."""
 
     def test_message_serialization_roundtrip(self):
-        """VesselMessage -> JSON string -> VesselMessage preserves all fields."""
-        original = VesselMessage.configure(
+        """HermesMessage -> JSON string -> HermesMessage preserves all fields."""
+        original = HermesMessage.configure(
             config={"url": "https://example.com", "timeout": 30},
             context={"pipeline_id": "abc-123"},
         )
         json_str = original.to_json()
-        restored = VesselMessage.from_json(json_str)
+        restored = HermesMessage.from_json(json_str)
 
         assert restored.type == MessageType.CONFIGURE, "Message type must survive round-trip"
         assert restored.data["config"] == original.data["config"]
@@ -68,30 +68,30 @@ class TestMessageSerialization:
 
     def test_output_message_roundtrip(self):
         """OUTPUT message with nested data survives serialization."""
-        original = VesselMessage.output({"records": [{"id": 1}, {"id": 2}]})
-        restored = VesselMessage.from_json(original.to_json())
+        original = HermesMessage.output({"records": [{"id": 1}, {"id": 2}]})
+        restored = HermesMessage.from_json(original.to_json())
         assert restored.type == MessageType.OUTPUT
         assert restored.data["data"]["records"] == [{"id": 1}, {"id": 2}]
 
     def test_done_message_roundtrip(self):
         """DONE message with summary survives serialization."""
-        original = VesselMessage.done({"processed": 42, "skipped": 3})
-        restored = VesselMessage.from_json(original.to_json())
+        original = HermesMessage.done({"processed": 42, "skipped": 3})
+        restored = HermesMessage.from_json(original.to_json())
         assert restored.type == MessageType.DONE
         assert restored.data["summary"]["processed"] == 42
 
     def test_status_message_clamps_progress(self):
         """STATUS message clamps progress to [0.0, 1.0]."""
-        msg_low = VesselMessage.status(-0.5)
+        msg_low = HermesMessage.status(-0.5)
         assert msg_low.data["progress"] == 0.0, "Progress below 0.0 must be clamped"
 
-        msg_high = VesselMessage.status(1.5)
+        msg_high = HermesMessage.status(1.5)
         assert msg_high.data["progress"] == 1.0, "Progress above 1.0 must be clamped"
 
     def test_error_message_roundtrip(self):
         """ERROR message preserves code and message."""
-        original = VesselMessage.error("Something broke", code="DATA_ERROR")
-        restored = VesselMessage.from_json(original.to_json())
+        original = HermesMessage.error("Something broke", code="DATA_ERROR")
+        restored = HermesMessage.from_json(original.to_json())
         assert restored.data["code"] == "DATA_ERROR"
         assert restored.data["message"] == "Something broke"
 
@@ -107,7 +107,7 @@ class TestPluginProtocolStreams:
     def test_send_and_read_message(self):
         """Write a message to a stream and read it back via PluginProtocol."""
         buf = io.StringIO()
-        msg = VesselMessage.log("hello world", level="DEBUG")
+        msg = HermesMessage.log("hello world", level="DEBUG")
         PluginProtocol.send_message(msg, stream=buf)
 
         buf.seek(0)
@@ -125,9 +125,9 @@ class TestPluginProtocolStreams:
     def test_read_all_messages(self):
         """read_all_messages collects multiple messages until EOF."""
         buf = io.StringIO()
-        PluginProtocol.send_message(VesselMessage.status(0.25), stream=buf)
-        PluginProtocol.send_message(VesselMessage.status(0.75), stream=buf)
-        PluginProtocol.send_message(VesselMessage.done(), stream=buf)
+        PluginProtocol.send_message(HermesMessage.status(0.25), stream=buf)
+        PluginProtocol.send_message(HermesMessage.status(0.75), stream=buf)
+        PluginProtocol.send_message(HermesMessage.done(), stream=buf)
         buf.seek(0)
 
         messages = PluginProtocol.read_all_messages(stream=buf)

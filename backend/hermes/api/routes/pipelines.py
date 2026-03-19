@@ -10,10 +10,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
-from vessel.domain.services.pipeline_manager import PipelineManager
-from vessel.infrastructure.database.session import get_db
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.domain.services.pipeline_manager import PipelineManager
+from hermes.infrastructure.database.session import get_db
 
 router = APIRouter(prefix="/api/v1/pipelines", tags=["pipelines"])
 

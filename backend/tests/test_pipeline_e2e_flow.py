@@ -20,16 +20,16 @@ from unittest.mock import AsyncMock
 import pytest
 from sqlalchemy import select
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     WorkItem,
     WorkItemStepExecution,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
 
 # ===========================================================================
 # Realistic Dispatchers — simulate actual connector behavior

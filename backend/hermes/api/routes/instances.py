@@ -10,12 +10,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.definition import (
+from hermes.domain.models.definition import (
     AlgorithmDefinition,
     CollectorDefinition,
     TransferDefinition,
 )
-from vessel.domain.models.instance import (
+from hermes.domain.models.instance import (
     AlgorithmInstance,
     AlgorithmInstanceVersion,
     CollectorInstance,
@@ -23,8 +23,8 @@ from vessel.domain.models.instance import (
     TransferInstance,
     TransferInstanceVersion,
 )
-from vessel.domain.services.recipe_engine import RecipeEngine
-from vessel.infrastructure.database.session import get_db
+from hermes.domain.services.recipe_engine import RecipeEngine
+from hermes.infrastructure.database.session import get_db
 
 router = APIRouter(prefix="/api/v1/instances", tags=["instances"])
 

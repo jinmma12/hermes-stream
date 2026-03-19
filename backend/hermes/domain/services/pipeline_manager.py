@@ -12,13 +12,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from vessel.domain.models.instance import (
+from hermes.domain.models.instance import (
     AlgorithmInstance,
     CollectorInstance,
     TransferInstance,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
 
 logger = logging.getLogger(__name__)
 
@@ -309,7 +309,7 @@ class PipelineManager:
         result = await self.db.execute(stmt)
         activation = result.scalar_one_or_none()
 
-        from vessel.domain.models.execution import WorkItem
+        from hermes.domain.models.execution import WorkItem
 
         wi_count = 0
         if activation is not None:

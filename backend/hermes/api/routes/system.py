@@ -9,10 +9,10 @@ from pydantic import BaseModel
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import WorkItem
-from vessel.domain.models.pipeline import PipelineInstance
-from vessel.infrastructure.database.session import get_db
-from vessel.infrastructure.nifi.config import NiFiConfig
+from hermes.domain.models.execution import WorkItem
+from hermes.domain.models.pipeline import PipelineInstance
+from hermes.infrastructure.database.session import get_db
+from hermes.infrastructure.nifi.config import NiFiConfig
 
 router = APIRouter(tags=["system"])
 

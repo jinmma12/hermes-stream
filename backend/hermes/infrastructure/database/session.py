@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import (
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://vessel:vessel@localhost:5432/vessel",
+    "postgresql+asyncpg://hermes:hermes@localhost:5432/hermes",
 )
 
 async_engine = create_async_engine(

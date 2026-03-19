@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from vessel import engine_client as engine_client_module
+from hermes import engine_client as engine_client_module
 
 
 @pytest.mark.asyncio

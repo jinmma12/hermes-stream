@@ -12,16 +12,16 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     WorkItem,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineStep
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineStep
+from hermes.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
 
 # ---------------------------------------------------------------------------
 # Helpers

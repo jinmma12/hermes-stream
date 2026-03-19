@@ -11,7 +11,7 @@ from typing import Any
 
 import httpx
 
-from vessel.infrastructure.nifi.config import NiFiConfig
+from hermes.infrastructure.nifi.config import NiFiConfig
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class ExecutionDispatcher:
     """Dispatches execution to the appropriate backend based on execution_type.
 
     Supported execution types:
-    - PLUGIN: Vessel plugin protocol (subprocess with stdin/stdout JSON)
+    - PLUGIN: Hermes plugin protocol (subprocess with stdin/stdout JSON)
     - SCRIPT: Arbitrary script execution
     - HTTP: REST API call
     - NIFI_FLOW: Trigger NiFi process group
@@ -99,9 +99,9 @@ class ExecutionDispatcher:
         input_data: Any,
         context: dict[str, Any] | None,
     ) -> ExecutionResult:
-        """Execute a Vessel plugin via subprocess and JSON line protocol."""
-        from vessel.plugins.executor import PluginExecutor
-        from vessel.plugins.registry import PluginRegistry
+        """Execute a Hermes plugin via subprocess and JSON line protocol."""
+        from hermes.plugins.executor import PluginExecutor
+        from hermes.plugins.registry import PluginRegistry
 
         # execution_ref format: "TYPE:name" e.g. "COLLECTOR:rest-api-collector"
         if not execution_ref:

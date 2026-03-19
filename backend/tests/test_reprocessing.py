@@ -1,4 +1,4 @@
-"""Tests for Reprocessing - Vessel's killer feature.
+"""Tests for Reprocessing - Hermes's killer feature.
 
 Covers reprocessing with same recipe, updated recipe, from a specific step,
 bulk reprocessing, audit trails, and reprocessing already-completed items.
@@ -12,19 +12,19 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     ReprocessRequest,
     WorkItem,
     WorkItemExecution,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.recipe_engine import RecipeEngine
-from vessel.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.recipe_engine import RecipeEngine
+from hermes.domain.services.snapshot_resolver import ResolvedConfig, SnapshotResolver, StepConfig
 
 # ---------------------------------------------------------------------------
 # Helpers

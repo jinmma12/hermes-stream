@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.definition import (
+from hermes.domain.models.definition import (
     AlgorithmDefinition,
     AlgorithmDefinitionVersion,
     CollectorDefinition,
@@ -18,7 +18,7 @@ from vessel.domain.models.definition import (
     TransferDefinition,
     TransferDefinitionVersion,
 )
-from vessel.infrastructure.database.session import get_db
+from hermes.infrastructure.database.session import get_db
 
 router = APIRouter(prefix="/api/v1/definitions", tags=["definitions"])
 

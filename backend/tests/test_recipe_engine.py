@@ -12,10 +12,10 @@ import uuid
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.instance import (
+from hermes.domain.models.instance import (
     CollectorInstance,
 )
-from vessel.domain.services.recipe_engine import (
+from hermes.domain.services.recipe_engine import (
     RecipeDiff,
     RecipeEngine,
 )

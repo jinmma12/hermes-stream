@@ -7,7 +7,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
-    """Declarative base for all Vessel models."""
+    """Declarative base for all Hermes models."""
 
     pass
 

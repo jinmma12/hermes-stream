@@ -19,7 +19,7 @@ import uuid
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.definition import (
+from hermes.domain.models.definition import (
     AlgorithmDefinition,
     AlgorithmDefinitionVersion,
     CollectorDefinition,
@@ -27,7 +27,7 @@ from vessel.domain.models.definition import (
     TransferDefinition,
     TransferDefinitionVersion,
 )
-from vessel.domain.models.instance import (
+from hermes.domain.models.instance import (
     AlgorithmInstance,
     AlgorithmInstanceVersion,
     CollectorInstance,
@@ -35,10 +35,10 @@ from vessel.domain.models.instance import (
     TransferInstance,
     TransferInstanceVersion,
 )
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
-from vessel.domain.services.pipeline_manager import PipelineManager
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.snapshot_resolver import SnapshotResolver
+from hermes.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
+from hermes.domain.services.pipeline_manager import PipelineManager
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.snapshot_resolver import SnapshotResolver
 
 # Hard timeout for any single test to prevent event-loop hangs.
 E2E_TIMEOUT_SECONDS = 10

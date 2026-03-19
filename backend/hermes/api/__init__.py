@@ -1,1 +1,1 @@
-"""Vessel API package."""
+"""Hermes API package."""

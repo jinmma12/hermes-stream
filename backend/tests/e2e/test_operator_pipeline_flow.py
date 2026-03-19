@@ -16,13 +16,13 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     WorkItem,
     WorkItemStepExecution,
 )
-from vessel.domain.services.pipeline_manager import PipelineManager
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.pipeline_manager import PipelineManager
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
 
 from .conftest import E2E_TIMEOUT_SECONDS
 

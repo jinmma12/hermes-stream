@@ -1,7 +1,7 @@
-"""SQLAlchemy domain models for Vessel."""
+"""SQLAlchemy domain models for Hermes."""
 
-from vessel.domain.models.base import Base, TimestampMixin
-from vessel.domain.models.definition import (
+from hermes.domain.models.base import Base, TimestampMixin
+from hermes.domain.models.definition import (
     AlgorithmDefinition,
     AlgorithmDefinitionVersion,
     CollectorDefinition,
@@ -9,7 +9,7 @@ from vessel.domain.models.definition import (
     TransferDefinition,
     TransferDefinitionVersion,
 )
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     ReprocessRequest,
@@ -17,7 +17,7 @@ from vessel.domain.models.execution import (
     WorkItemExecution,
     WorkItemStepExecution,
 )
-from vessel.domain.models.instance import (
+from hermes.domain.models.instance import (
     AlgorithmInstance,
     AlgorithmInstanceVersion,
     CollectorInstance,
@@ -25,8 +25,8 @@ from vessel.domain.models.instance import (
     TransferInstance,
     TransferInstanceVersion,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
 
 __all__ = [
     "Base",

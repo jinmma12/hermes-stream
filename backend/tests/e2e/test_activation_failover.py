@@ -15,8 +15,8 @@ import asyncio
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import WorkItem
-from vessel.domain.services.pipeline_manager import PipelineManager
+from hermes.domain.models.execution import WorkItem
+from hermes.domain.services.pipeline_manager import PipelineManager
 
 from .conftest import E2E_TIMEOUT_SECONDS
 

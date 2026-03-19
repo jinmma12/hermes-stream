@@ -11,13 +11,13 @@ import uuid
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     WorkItem,
     WorkItemExecution,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance
-from vessel.domain.services.snapshot_resolver import (
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance
+from hermes.domain.services.snapshot_resolver import (
     ResolvedConfig,
     SnapshotResolver,
 )

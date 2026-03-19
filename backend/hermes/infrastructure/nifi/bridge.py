@@ -1,15 +1,15 @@
-"""NiFi-Vessel Bridge — the key integration layer.
+"""NiFi-Hermes Bridge — the key integration layer.
 
-Maps NiFi concepts to Vessel concepts, enabling existing NiFi flows to be
-managed through Vessel's simplified UI with per-item tracking, Recipe
+Maps NiFi concepts to Hermes concepts, enabling existing NiFi flows to be
+managed through Hermes's simplified UI with per-item tracking, Recipe
 management, and reprocessing capabilities.
 
 Concept mapping:
-    NiFi Process Group  ->  Vessel PipelineInstance
-    NiFi Processor      ->  Vessel Pipeline Step
-    NiFi Parameter Ctx  ->  Vessel Recipe (config_json version)
-    NiFi FlowFile       ->  Vessel WorkItem
-    NiFi Provenance     ->  Vessel ExecutionEventLog
+    NiFi Process Group  ->  Hermes PipelineInstance
+    NiFi Processor      ->  Hermes Pipeline Step
+    NiFi Parameter Ctx  ->  Hermes Recipe (config_json version)
+    NiFi FlowFile       ->  Hermes WorkItem
+    NiFi Provenance     ->  Hermes ExecutionEventLog
     NiFi Input Port     ->  Pipeline step boundary (entry)
     NiFi Output Port    ->  Pipeline step boundary (exit)
     NiFi Connection     ->  WorkItem queue between steps
@@ -24,13 +24,13 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from vessel.infrastructure.nifi.client import (
+from hermes.infrastructure.nifi.client import (
     NiFiApiError,
     NiFiClient,
     NiFiConnectionError,
 )
-from vessel.infrastructure.nifi.config import NiFiConfig
-from vessel.infrastructure.nifi.models import (
+from hermes.infrastructure.nifi.config import NiFiConfig
+from hermes.infrastructure.nifi.models import (
     NiFiHealthStatus,
 )
 
@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SyncedPipeline:
-    """Result of syncing a NiFi process group to a Vessel pipeline."""
+    """Result of syncing a NiFi process group to a Hermes pipeline."""
 
     nifi_process_group_id: str
     name: str
@@ -56,7 +56,7 @@ class SyncedPipeline:
 
 @dataclass
 class SyncedStep:
-    """A NiFi processor mapped to a Vessel pipeline step."""
+    """A NiFi processor mapped to a Hermes pipeline step."""
 
     nifi_processor_id: str
     name: str
@@ -67,7 +67,7 @@ class SyncedStep:
 
 @dataclass
 class SyncedWorkItem:
-    """A NiFi provenance event mapped to a Vessel WorkItem event."""
+    """A NiFi provenance event mapped to a Hermes WorkItem event."""
 
     flowfile_uuid: str
     event_type: str
@@ -93,10 +93,10 @@ class NiFiFlowResult:
 
 @dataclass
 class CollectorDefinitionDraft:
-    """Auto-generated Vessel Definition from a NiFi processor type.
+    """Auto-generated Hermes Definition from a NiFi processor type.
 
-    This can be registered in Vessel's Definition Layer to make the NiFi
-    processor available as a Vessel plugin.
+    This can be registered in Hermes's Definition Layer to make the NiFi
+    processor available as a Hermes plugin.
     """
 
     name: str
@@ -112,23 +112,23 @@ class CollectorDefinitionDraft:
 # ---------------------------------------------------------------------------
 
 
-class NiFiVesselBridge:
-    """Maps NiFi concepts to Vessel concepts.
+class NiFiHermesBridge:
+    """Maps NiFi concepts to Hermes concepts.
 
     This is the central integration layer that enables:
 
-    1. **Vessel as NiFi Manager** — existing NiFi flows appear in Vessel's UI
+    1. **Hermes as NiFi Manager** — existing NiFi flows appear in Hermes's UI
        as pipelines with per-item tracking.
-    2. **Hybrid execution** — Vessel pipeline steps can delegate to NiFi
+    2. **Hybrid execution** — Hermes pipeline steps can delegate to NiFi
        process groups via the ``NIFI_FLOW`` execution type.
-    3. **Recipe-driven config** — Vessel's Recipe UI controls NiFi Parameter
+    3. **Recipe-driven config** — Hermes's Recipe UI controls NiFi Parameter
        Contexts, giving non-developers a simpler interface.
 
     Usage::
 
         config = NiFiConfig(base_url="https://nifi:8443/nifi-api", enabled=True)
         async with NiFiClient(config) as client:
-            bridge = NiFiVesselBridge(client, config)
+            bridge = NiFiHermesBridge(client, config)
             pipelines = await bridge.sync_process_groups_as_pipelines()
     """
 
@@ -151,12 +151,12 @@ class NiFiVesselBridge:
         parent_id: str = "root",
         recursive: bool = False,
     ) -> list[SyncedPipeline]:
-        """Scan NiFi process groups and map them to Vessel PipelineInstances.
+        """Scan NiFi process groups and map them to Hermes PipelineInstances.
 
         For each process group, this method:
         1. Lists child process groups under ``parent_id``
         2. For each group, lists its processors (which become pipeline steps)
-        3. Returns structured data that callers can persist to the Vessel DB
+        3. Returns structured data that callers can persist to the Hermes DB
 
         Args:
             parent_id: NiFi process group to scan. Defaults to ``'root'``.
@@ -220,9 +220,9 @@ class NiFiVesselBridge:
         since: datetime | None = None,
         max_results: int = 500,
     ) -> list[SyncedWorkItem]:
-        """Read NiFi provenance events and map them to Vessel WorkItems.
+        """Read NiFi provenance events and map them to Hermes WorkItems.
 
-        Each NiFi FlowFile UUID becomes a Vessel WorkItem, and each
+        Each NiFi FlowFile UUID becomes a Hermes WorkItem, and each
         provenance event becomes a WorkItemStepExecution entry.
 
         Args:
@@ -290,13 +290,13 @@ class NiFiVesselBridge:
         recipe_config: dict[str, Any],
         parameter_context_id: str,
     ) -> None:
-        """Push Vessel Recipe configuration to a NiFi Parameter Context.
+        """Push Hermes Recipe configuration to a NiFi Parameter Context.
 
-        When a Vessel Recipe is updated, this method syncs the new parameter
+        When a Hermes Recipe is updated, this method syncs the new parameter
         values to NiFi so that processors pick up the latest configuration.
 
         Args:
-            recipe_config: The Vessel Recipe's ``config_json`` — a flat dict
+            recipe_config: The Hermes Recipe's ``config_json`` — a flat dict
                 of parameter names to values.
             parameter_context_id: NiFi Parameter Context ID to update.
 
@@ -356,7 +356,7 @@ class NiFiVesselBridge:
         if not ports:
             raise NiFiApiError(
                 f"Process group {process_group_id} has no Input Ports. "
-                "An Input Port is required for triggering flows from Vessel."
+                "An Input Port is required for triggering flows from Hermes."
             )
 
         port_entity = ports[0]
@@ -511,7 +511,7 @@ class NiFiVesselBridge:
     # ===================================================================
 
     async def get_nifi_health(self) -> NiFiHealthStatus:
-        """Check NiFi cluster health for the Vessel Monitor Dashboard.
+        """Check NiFi cluster health for the Hermes Monitor Dashboard.
 
         Aggregates data from multiple NiFi API endpoints into a single
         health status model.
@@ -562,23 +562,23 @@ class NiFiVesselBridge:
         return health
 
     # ===================================================================
-    # Processor -> Vessel Definition mapping
+    # Processor -> Hermes Definition mapping
     # ===================================================================
 
     async def map_nifi_processor_to_definition(
         self, processor_id: str
     ) -> CollectorDefinitionDraft:
-        """Auto-generate a Vessel Definition from a NiFi processor.
+        """Auto-generate a Hermes Definition from a NiFi processor.
 
         Reads the processor's property descriptors and converts them into a
-        JSON Schema ``inputSchema`` and a ``uiSchema`` suitable for Vessel's
+        JSON Schema ``inputSchema`` and a ``uiSchema`` suitable for Hermes's
         Recipe Editor.
 
         Args:
             processor_id: NiFi processor ID.
 
         Returns:
-            CollectorDefinitionDraft that can be registered in Vessel's
+            CollectorDefinitionDraft that can be registered in Hermes's
             Definition Layer.
         """
         processor = await self._client.get_processor(processor_id)
@@ -646,7 +646,7 @@ class NiFiVesselBridge:
         )
 
         logger.info(
-            "Mapped NiFi processor '%s' (%s) to Vessel definition '%s' with %d properties",
+            "Mapped NiFi processor '%s' (%s) to Hermes definition '%s' with %d properties",
             processor.name,
             processor.type,
             definition.name,

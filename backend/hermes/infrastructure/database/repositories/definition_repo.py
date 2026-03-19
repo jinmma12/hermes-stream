@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from vessel.domain.models.base import Base
+from hermes.domain.models.base import Base
 
 DefinitionT = TypeVar("DefinitionT", bound=Base)
 VersionT = TypeVar("VersionT", bound=Base)

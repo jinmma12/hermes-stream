@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     ReprocessRequest,
@@ -19,8 +19,8 @@ from vessel.domain.models.execution import (
     WorkItemExecution,
     WorkItemStepExecution,
 )
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.infrastructure.database.session import get_db
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.infrastructure.database.session import get_db
 
 router = APIRouter(prefix="/api/v1/work-items", tags=["work-items"])
 

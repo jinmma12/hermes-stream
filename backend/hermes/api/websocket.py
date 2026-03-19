@@ -11,9 +11,9 @@ from typing import Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 
-from vessel.domain.models.execution import ExecutionEventLog, WorkItem
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.infrastructure.database.session import async_session_factory
+from hermes.domain.models.execution import ExecutionEventLog, WorkItem
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.infrastructure.database.session import async_session_factory
 
 logger = logging.getLogger(__name__)
 

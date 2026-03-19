@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from vessel.domain.services.monitoring_engine import (
+from hermes.domain.services.monitoring_engine import (
     ApiPollMonitor,
     FileMonitor,
     MonitoringEngine,
@@ -133,7 +133,7 @@ class TestApiPollMonitor:
         mock_response.text = '{"items": [1, 2, 3]}'
         mock_response.raise_for_status = MagicMock()
 
-        with patch("vessel.domain.services.monitoring_engine.httpx.AsyncClient") as MockClient:
+        with patch("hermes.domain.services.monitoring_engine.httpx.AsyncClient") as MockClient:
             mock_client = AsyncMock()
             mock_client.request = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -159,7 +159,7 @@ class TestApiPollMonitor:
         mock_response.text = response_body
         mock_response.raise_for_status = MagicMock()
 
-        with patch("vessel.domain.services.monitoring_engine.httpx.AsyncClient") as MockClient:
+        with patch("hermes.domain.services.monitoring_engine.httpx.AsyncClient") as MockClient:
             mock_client = AsyncMock()
             mock_client.request = AsyncMock(return_value=mock_response)
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -182,7 +182,7 @@ class TestApiPollMonitor:
             "method": "GET",
         })
 
-        with patch("vessel.domain.services.monitoring_engine.httpx.AsyncClient") as MockClient:
+        with patch("hermes.domain.services.monitoring_engine.httpx.AsyncClient") as MockClient:
             mock_client = AsyncMock()
             mock_client.request = AsyncMock(side_effect=Exception("Connection refused"))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -208,7 +208,7 @@ class TestMonitoringEngine:
 
         # Simulate a monitor task
         activation_id = uuid.uuid4()
-        from vessel.domain.services.monitoring_engine import MonitorTask
+        from hermes.domain.services.monitoring_engine import MonitorTask
 
         async def dummy_loop():
             while True:
@@ -232,7 +232,7 @@ class TestMonitoringEngine:
         """stop_all cancels all running monitor tasks."""
         engine = MonitoringEngine(session_factory=AsyncMock())
 
-        from vessel.domain.services.monitoring_engine import MonitorTask
+        from hermes.domain.services.monitoring_engine import MonitorTask
 
         for i in range(3):
             aid = uuid.uuid4()

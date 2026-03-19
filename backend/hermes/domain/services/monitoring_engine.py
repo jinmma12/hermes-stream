@@ -16,9 +16,9 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from vessel.domain.models.execution import WorkItem
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance
+from hermes.domain.models.execution import WorkItem
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance
 
 logger = logging.getLogger(__name__)
 
@@ -288,7 +288,7 @@ class MonitoringEngine:
             # Parse simple duration strings like "5m", "30s"
             interval = _parse_interval(interval)
 
-        from vessel.domain.services.condition_evaluator import ConditionEvaluator
+        from hermes.domain.services.condition_evaluator import ConditionEvaluator
 
         evaluator = ConditionEvaluator()
 

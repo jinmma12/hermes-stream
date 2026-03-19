@@ -12,8 +12,8 @@ Features:
 
 Usage::
 
-    from vessel.infrastructure.nifi.client import NiFiClient
-    from vessel.infrastructure.nifi.config import NiFiConfig
+    from hermes.infrastructure.nifi.client import NiFiClient
+    from hermes.infrastructure.nifi.config import NiFiConfig
 
     config = NiFiConfig(base_url="https://nifi:8443/nifi-api", username="admin", password="***")
     async with NiFiClient(config) as client:
@@ -30,8 +30,8 @@ from typing import Any
 
 import httpx
 
-from vessel.infrastructure.nifi.config import NiFiConfig
-from vessel.infrastructure.nifi.models import (
+from hermes.infrastructure.nifi.config import NiFiConfig
+from hermes.infrastructure.nifi.models import (
     ClusterSummary,
     Connection,
     ControllerStatus,

@@ -1,4 +1,4 @@
-"""Shared pytest fixtures for Vessel backend tests.
+"""Shared pytest fixtures for Hermes backend tests.
 
 Provides async database sessions, sample domain objects, a pre-loaded
 plugin registry, and mock helpers for external dependencies (NiFi, HTTP).
@@ -21,8 +21,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from vessel.domain.models.base import Base
-from vessel.domain.models.definition import (
+from hermes.domain.models.base import Base
+from hermes.domain.models.definition import (
     AlgorithmDefinition,
     AlgorithmDefinitionVersion,
     CollectorDefinition,
@@ -30,10 +30,10 @@ from vessel.domain.models.definition import (
     TransferDefinition,
     TransferDefinitionVersion,
 )
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     WorkItem,
 )
-from vessel.domain.models.instance import (
+from hermes.domain.models.instance import (
     AlgorithmInstance,
     AlgorithmInstanceVersion,
     CollectorInstance,
@@ -41,10 +41,10 @@ from vessel.domain.models.instance import (
     TransferInstance,
     TransferInstanceVersion,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
-from vessel.plugins.protocol import MessageType, VesselMessage
-from vessel.plugins.registry import PluginManifest, PluginRegistry, PluginType
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.plugins.protocol import HermesMessage, MessageType
+from hermes.plugins.registry import PluginManifest, PluginRegistry, PluginType
 
 # ---------------------------------------------------------------------------
 # Database fixtures (in-memory SQLite with aiosqlite)
@@ -233,7 +233,7 @@ async def sample_transfer_definition(async_session: AsyncSession):
             },
         },
         output_schema={"type": "object", "properties": {"bytes_written": {"type": "integer"}}},
-        default_config={"output_path": "/tmp/vessel-output", "format": "json"},
+        default_config={"output_path": "/tmp/hermes-output", "format": "json"},
         execution_type="PLUGIN",
         execution_ref="TRANSFER:file-output",
         is_published=True,
@@ -358,7 +358,7 @@ async def sample_pipeline(
         description="A test pipeline with 3 steps.",
         monitoring_type="FILE_MONITOR",
         monitoring_config={
-            "watch_path": "/tmp/vessel-watch",
+            "watch_path": "/tmp/hermes-watch",
             "pattern": "*.csv",
             "interval": 5,
         },
@@ -422,7 +422,7 @@ async def sample_work_item(async_session: AsyncSession, sample_pipeline):
         pipeline_instance_id=pipeline.id,
         source_type="FILE",
         source_key="test-data-001.csv",
-        source_metadata={"path": "/tmp/vessel-watch/test-data-001.csv", "size": 1024},
+        source_metadata={"path": "/tmp/hermes-watch/test-data-001.csv", "size": 1024},
         dedup_key="FILE:abc123def456",
         status="DETECTED",
     )
@@ -455,7 +455,7 @@ def plugin_registry(tmp_path: Path) -> PluginRegistry:
             version="1.0.0",
             type=PluginType(ptype),
             description=desc,
-            author="vessel-test",
+            author="hermes-test",
             license="Apache-2.0",
             runtime="python3",
             entrypoint="main.py",
@@ -501,11 +501,11 @@ def mock_nifi_client():
 
 
 @pytest.fixture
-def make_vessel_message():
-    """Factory for creating VesselMessage instances."""
+def make_hermes_message():
+    """Factory for creating HermesMessage instances."""
 
-    def _make(msg_type: str, **data: Any) -> VesselMessage:
-        return VesselMessage(type=MessageType(msg_type), data=data)
+    def _make(msg_type: str, **data: Any) -> HermesMessage:
+        return HermesMessage(type=MessageType(msg_type), data=data)
 
     return _make
 
@@ -537,7 +537,7 @@ def make_manifest(tmp_path: Path):
             "entrypoint": entrypoint,
             "inputSchema": input_schema or {"type": "object"},
         }
-        (plugin_dir / "vessel-plugin.json").write_text(
+        (plugin_dir / "hermes-plugin.json").write_text(
             json.dumps(manifest_data, indent=2)
         )
 

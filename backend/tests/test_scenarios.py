@@ -1,6 +1,6 @@
 """Integration / scenario tests - full end-to-end workflows.
 
-These tests combine multiple Vessel subsystems to validate real-world
+These tests combine multiple Hermes subsystems to validate real-world
 usage patterns: file collection pipelines, API monitoring with reprocessing,
 and recipe change workflows.
 """
@@ -14,20 +14,20 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionEventLog,
     ExecutionSnapshot,
     ReprocessRequest,
     WorkItem,
     WorkItemExecution,
 )
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineStep
-from vessel.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
-from vessel.domain.services.monitoring_engine import FileMonitor
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.recipe_engine import RecipeEngine
-from vessel.domain.services.snapshot_resolver import (
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineStep
+from hermes.domain.services.execution_dispatcher import ExecutionDispatcher, ExecutionResult
+from hermes.domain.services.monitoring_engine import FileMonitor
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.recipe_engine import RecipeEngine
+from hermes.domain.services.snapshot_resolver import (
     ResolvedConfig,
     SnapshotResolver,
     StepConfig,

@@ -5,7 +5,7 @@ This module provides a thin client that forwards engine operations
 via gRPC. The Python Web API handles CRUD and REST; the .NET Engine
 handles all runtime processing.
 
-Generated stubs are expected at vessel/generated/hermes_bridge_pb2*.py.
+Generated stubs are expected at hermes/generated/hermes_bridge_pb2*.py.
 Run `python -m grpc_tools.protoc` to regenerate from protos/.
 """
 
@@ -51,7 +51,7 @@ class EngineClient:
             return
 
         try:
-            from vessel.generated import hermes_bridge_pb2_grpc  # type: ignore
+            from hermes.generated import hermes_bridge_pb2_grpc  # type: ignore
 
             self._channel = grpc.aio.insecure_channel(target)
             self._stub = hermes_bridge_pb2_grpc.HermesEngineServiceStub(
@@ -86,7 +86,7 @@ class EngineClient:
             logger.info("Engine.activate_pipeline(%s) - stub", pipeline_id)
             return {"status": "stub", "pipeline_id": pipeline_id}
 
-        from vessel.generated import hermes_bridge_pb2  # type: ignore
+        from hermes.generated import hermes_bridge_pb2  # type: ignore
 
         response = await self._stub.ActivatePipeline(
             hermes_bridge_pb2.ActivateRequest(
@@ -109,7 +109,7 @@ class EngineClient:
             logger.info("Engine.deactivate_pipeline(%s) - stub", pipeline_id)
             return {"status": "stub", "pipeline_id": pipeline_id}
 
-        from vessel.generated import hermes_bridge_pb2  # type: ignore
+        from hermes.generated import hermes_bridge_pb2  # type: ignore
 
         response = await self._stub.DeactivatePipeline(
             hermes_bridge_pb2.DeactivateRequest(
@@ -141,7 +141,7 @@ class EngineClient:
             logger.info("Engine.reprocess_work_item(%s) - stub", work_item_id)
             return {"status": "stub", "work_item_id": work_item_id}
 
-        from vessel.generated import hermes_bridge_pb2  # type: ignore
+        from hermes.generated import hermes_bridge_pb2  # type: ignore
 
         response = await self._stub.ReprocessJob(
             hermes_bridge_pb2.ReprocessRequest(
@@ -170,7 +170,7 @@ class EngineClient:
             logger.info("Engine.bulk_reprocess(%d items) - stub", len(work_item_ids))
             return {"status": "stub", "count": len(work_item_ids)}
 
-        from vessel.generated import hermes_bridge_pb2  # type: ignore
+        from hermes.generated import hermes_bridge_pb2  # type: ignore
 
         response = await self._stub.BulkReprocessJobs(
             hermes_bridge_pb2.BulkReprocessRequest(
@@ -198,7 +198,7 @@ class EngineClient:
                 "message": "gRPC client not yet connected",
             }
 
-        from vessel.generated import hermes_bridge_pb2  # type: ignore
+        from hermes.generated import hermes_bridge_pb2  # type: ignore
 
         response = await self._stub.GetEngineHealth(
             hermes_bridge_pb2.HealthRequest(include_details=True)
@@ -218,7 +218,7 @@ class EngineClient:
         if not self.is_connected:
             return {"status": "stub", "pipeline_id": pipeline_id}
 
-        from vessel.generated import hermes_bridge_pb2  # type: ignore
+        from hermes.generated import hermes_bridge_pb2  # type: ignore
 
         response = await self._stub.GetPipelineStatus(
             hermes_bridge_pb2.StatusRequest(pipeline_id=pipeline_id)

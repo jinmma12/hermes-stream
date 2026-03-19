@@ -1,4 +1,4 @@
-"""Domain services for Vessel Web API.
+"""Domain services for Hermes Web API.
 
 Web API services (CRUD, versioning, pipeline management):
 - RecipeEngine: Definition/instance version management
@@ -16,22 +16,22 @@ Engine tests fully replace them.
 # Web API services (stay in Python)
 # Engine services (kept for test compatibility; canonical implementation is .NET)
 # See engine/reference/ for the reference Python implementations.
-from vessel.domain.services.condition_evaluator import ConditionEvaluator
-from vessel.domain.services.execution_dispatcher import (
+from hermes.domain.services.condition_evaluator import ConditionEvaluator
+from hermes.domain.services.execution_dispatcher import (
     ExecutionDispatcher,
     ExecutionResult,
 )
-from vessel.domain.services.monitoring_engine import (
+from hermes.domain.services.monitoring_engine import (
     ApiPollMonitor,
     BaseMonitor,
     DbPollMonitor,
     FileMonitor,
     MonitoringEngine,
 )
-from vessel.domain.services.pipeline_manager import PipelineManager
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.recipe_engine import RecipeEngine
-from vessel.domain.services.snapshot_resolver import SnapshotResolver
+from hermes.domain.services.pipeline_manager import PipelineManager
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.recipe_engine import RecipeEngine
+from hermes.domain.services.snapshot_resolver import SnapshotResolver
 
 __all__ = [
     # Web API services

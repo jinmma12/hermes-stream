@@ -1,6 +1,6 @@
 """NiFi Integration Configuration.
 
-Pydantic settings model for configuring the Vessel-NiFi connection.
+Pydantic settings model for configuring the Hermes-NiFi connection.
 All settings can be overridden via environment variables prefixed with
 ``VESSEL_NIFI_``.
 
@@ -19,7 +19,7 @@ from pydantic_settings import BaseSettings
 
 
 class NiFiConfig(BaseSettings):
-    """Configuration for connecting Vessel to an Apache NiFi instance.
+    """Configuration for connecting Hermes to an Apache NiFi instance.
 
     Attributes:
         base_url: NiFi REST API base URL (no trailing slash).
@@ -32,7 +32,7 @@ class NiFiConfig(BaseSettings):
         provenance_max_wait: Maximum time to wait for a provenance query or
             flow-file completion, in seconds.
         sync_interval: Interval for periodic sync of NiFi process groups to
-            Vessel pipelines, in seconds.
+            Hermes pipelines, in seconds.
         request_timeout: HTTP request timeout for individual API calls, in seconds.
         max_retries: Maximum number of retries for transient HTTP errors.
         enabled: Master switch. When ``False``, the NiFi integration is dormant

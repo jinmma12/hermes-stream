@@ -17,15 +17,15 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import (
+from hermes.domain.models.execution import (
     ExecutionSnapshot,
     ReprocessRequest,
     WorkItem,
     WorkItemStepExecution,
 )
-from vessel.domain.services.pipeline_manager import PipelineManager
-from vessel.domain.services.processing_orchestrator import ProcessingOrchestrator
-from vessel.domain.services.snapshot_resolver import SnapshotResolver
+from hermes.domain.services.pipeline_manager import PipelineManager
+from hermes.domain.services.processing_orchestrator import ProcessingOrchestrator
+from hermes.domain.services.snapshot_resolver import SnapshotResolver
 
 from .conftest import E2E_TIMEOUT_SECONDS, FakeDispatcher
 

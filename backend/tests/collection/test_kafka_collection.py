@@ -32,7 +32,7 @@ class KafkaCollector:
         self.consumer = consumer
         self.brokers: list[str] = config.get("brokers", ["localhost:9092"])
         self.topics: list[str] = config.get("topics", [])
-        self.group_id: str = config.get("group_id", "vessel-collector")
+        self.group_id: str = config.get("group_id", "hermes-collector")
         self.security_protocol: str = config.get("security_protocol", "PLAINTEXT")
         self.max_poll_records: int = config.get("max_poll_records", 500)
         self._deserializer: str = config.get("deserializer", "json")
@@ -113,7 +113,7 @@ def kafka_collector(mock_kafka_consumer: MockKafkaConsumer) -> KafkaCollector:
     return KafkaCollector(mock_kafka_consumer, {
         "brokers": ["kafka:9092"],
         "topics": ["equipment.events"],
-        "group_id": "vessel-collector",
+        "group_id": "hermes-collector",
     })
 
 

@@ -1,12 +1,12 @@
 """NiFi Flow Executor.
 
-Implements the same interface pattern as Vessel's ``PluginExecutor`` but
+Implements the same interface pattern as Hermes's ``PluginExecutor`` but
 delegates execution to a NiFi process group.  This allows ``NIFI_FLOW``
-to be used as a step execution type in any Vessel pipeline, seamlessly
-mixing NiFi flows with native Vessel plugins.
+to be used as a step execution type in any Hermes pipeline, seamlessly
+mixing NiFi flows with native Hermes plugins.
 
 Execution flow:
-    1. Receive config + input_data from Vessel's Processing Orchestrator
+    1. Receive config + input_data from Hermes's Processing Orchestrator
     2. Resolve the target NiFi process group from config
     3. Push input data to NiFi via an Input Port
     4. Monitor provenance for the FlowFile through completion
@@ -31,15 +31,15 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from vessel.infrastructure.nifi.bridge import NiFiVesselBridge
-from vessel.infrastructure.nifi.client import NiFiApiError, NiFiClient
-from vessel.infrastructure.nifi.config import NiFiConfig
+from hermes.infrastructure.nifi.bridge import NiFiHermesBridge
+from hermes.infrastructure.nifi.client import NiFiApiError, NiFiClient
+from hermes.infrastructure.nifi.config import NiFiConfig
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Result model (mirrors PluginResult from vessel.plugins.executor)
+# Result model (mirrors PluginResult from hermes.plugins.executor)
 # ---------------------------------------------------------------------------
 
 
@@ -60,7 +60,7 @@ class NiFiExecutionResult:
     """Result of a NiFi flow execution.
 
     Designed to be compatible with ``PluginResult`` from
-    ``vessel.plugins.executor`` so the Processing Orchestrator can handle
+    ``hermes.plugins.executor`` so the Processing Orchestrator can handle
     both uniformly.
     """
 
@@ -84,10 +84,10 @@ class NiFiExecutionResult:
 
 
 class NiFiFlowExecutor:
-    """Executes NiFi flows as Vessel pipeline steps.
+    """Executes NiFi flows as Hermes pipeline steps.
 
     This class provides the same ``execute()`` contract as ``PluginExecutor``,
-    making NiFi flows interchangeable with native Vessel plugins in pipeline
+    making NiFi flows interchangeable with native Hermes plugins in pipeline
     definitions.
 
     Config keys (passed via the ``config`` dict):
@@ -115,7 +115,7 @@ class NiFiFlowExecutor:
         """
         self._client = client
         self._config = config
-        self._bridge = NiFiVesselBridge(client, config)
+        self._bridge = NiFiHermesBridge(client, config)
 
     async def execute(
         self,
@@ -137,7 +137,7 @@ class NiFiFlowExecutor:
             config: Execution configuration. Must contain ``process_group_id``.
             input_data: Input data to send to the NiFi flow.  Can be ``bytes``,
                 ``str``, or a JSON-serializable object.
-            context: Execution context from Vessel (pipeline_id, step_id, etc.).
+            context: Execution context from Hermes (pipeline_id, step_id, etc.).
 
         Returns:
             NiFiExecutionResult with outputs, events, and status.

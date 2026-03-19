@@ -16,9 +16,9 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.monitoring import PipelineActivation
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
-from vessel.domain.services.pipeline_manager import PipelineManager
+from hermes.domain.models.monitoring import PipelineActivation
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.domain.services.pipeline_manager import PipelineManager
 
 # ---------------------------------------------------------------------------
 # Helpers

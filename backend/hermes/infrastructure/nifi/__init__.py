@@ -1,4 +1,4 @@
-"""Vessel NiFi Integration Module.
+"""Hermes NiFi Integration Module.
 
 NOTE: NiFi integration is handled by the .NET Engine service.
 The Python reference implementations are preserved in engine/reference/infrastructure/nifi/.
@@ -8,9 +8,9 @@ backward compatibility. They will be removed once .NET Engine NiFi
 integration is complete.
 """
 
-from vessel.infrastructure.nifi.client import NiFiClient
-from vessel.infrastructure.nifi.config import NiFiConfig
-from vessel.infrastructure.nifi.models import (
+from hermes.infrastructure.nifi.client import NiFiClient
+from hermes.infrastructure.nifi.config import NiFiConfig
+from hermes.infrastructure.nifi.models import (
     Connection,
     FlowFileSummary,
     NiFiRevision,

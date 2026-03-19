@@ -1,6 +1,6 @@
-"""Pydantic schemas for Vessel API request/response models."""
+"""Pydantic schemas for Hermes API request/response models."""
 
-from vessel.api.schemas.definition import (
+from hermes.api.schemas.definition import (
     AlgorithmDefinitionCreate,
     AlgorithmDefinitionResponse,
     AlgorithmDefinitionVersionCreate,
@@ -14,7 +14,7 @@ from vessel.api.schemas.definition import (
     TransferDefinitionVersionCreate,
     TransferDefinitionVersionResponse,
 )
-from vessel.api.schemas.execution import (
+from hermes.api.schemas.execution import (
     BulkReprocessRequest,
     ExecutionEventLogResponse,
     ReprocessRequestCreate,
@@ -24,7 +24,7 @@ from vessel.api.schemas.execution import (
     WorkItemResponse,
     WorkItemStepExecutionResponse,
 )
-from vessel.api.schemas.instance import (
+from hermes.api.schemas.instance import (
     AlgorithmInstanceCreate,
     AlgorithmInstanceResponse,
     CollectorInstanceCreate,
@@ -35,7 +35,7 @@ from vessel.api.schemas.instance import (
     TransferInstanceCreate,
     TransferInstanceResponse,
 )
-from vessel.api.schemas.pipeline import (
+from hermes.api.schemas.pipeline import (
     PipelineActivationResponse,
     PipelineInstanceCreate,
     PipelineInstanceResponse,

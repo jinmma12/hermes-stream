@@ -8,7 +8,7 @@ from sqlalchemy import BigInteger, Boolean, ForeignKey, Integer, String, Text, f
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from vessel.domain.models.base import Base, TimestampMixin
+from hermes.domain.models.base import Base, TimestampMixin
 
 
 class WorkItem(TimestampMixin, Base):

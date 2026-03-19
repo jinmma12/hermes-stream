@@ -1,6 +1,6 @@
-"""Plugin Registry - Discovery and registration of Vessel plugins.
+"""Plugin Registry - Discovery and registration of Hermes plugins.
 
-Scans plugin directories for vessel-plugin.json manifests, validates them,
+Scans plugin directories for hermes-plugin.json manifests, validates them,
 and provides lookup by type and name.
 """
 
@@ -15,11 +15,11 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-MANIFEST_FILENAME = "vessel-plugin.json"
+MANIFEST_FILENAME = "hermes-plugin.json"
 
 
 class PluginType(StrEnum):
-    """Categories of Vessel plugins."""
+    """Categories of Hermes plugins."""
 
     COLLECTOR = "COLLECTOR"
     ALGORITHM = "ALGORITHM"
@@ -28,7 +28,7 @@ class PluginType(StrEnum):
 
 @dataclass
 class PluginManifest:
-    """Parsed contents of a vessel-plugin.json manifest file."""
+    """Parsed contents of a hermes-plugin.json manifest file."""
 
     name: str
     version: str
@@ -92,7 +92,7 @@ class PluginManifest:
 
 
 class PluginRegistry:
-    """Registry for discovering, registering, and looking up Vessel plugins.
+    """Registry for discovering, registering, and looking up Hermes plugins.
 
     Plugins are identified by their (type, name) combination.
     """
@@ -101,7 +101,7 @@ class PluginRegistry:
         self._plugins: dict[str, PluginManifest] = {}
 
     def discover_plugins(self, plugins_dir: Path | str) -> list[PluginManifest]:
-        """Scan a directory tree for vessel-plugin.json manifests.
+        """Scan a directory tree for hermes-plugin.json manifests.
 
         Recursively walks the directory, registering any plugin found.
 
@@ -228,7 +228,7 @@ class PluginRegistry:
 
     @staticmethod
     def _load_manifest(manifest_path: Path) -> PluginManifest:
-        """Load and parse a single vessel-plugin.json file."""
+        """Load and parse a single hermes-plugin.json file."""
         with open(manifest_path, encoding="utf-8") as f:
             data = json.load(f)
         return PluginManifest.from_dict(data, plugin_dir=manifest_path.parent)

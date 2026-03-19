@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from vessel.plugins.registry import (
+from hermes.plugins.registry import (
     MANIFEST_FILENAME,
     PluginManifest,
     PluginRegistry,
@@ -27,7 +27,7 @@ class TestPluginDiscovery:
     """Tests for discover_plugins_in_directory."""
 
     def test_discover_plugins_in_directory(self, tmp_path: Path):
-        """Registry finds all vessel-plugin.json files recursively."""
+        """Registry finds all hermes-plugin.json files recursively."""
         for name in ("plugin-a", "plugin-b", "nested/plugin-c"):
             plugin_dir = tmp_path / name
             plugin_dir.mkdir(parents=True, exist_ok=True)

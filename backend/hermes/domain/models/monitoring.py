@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from vessel.domain.models.base import Base
+from hermes.domain.models.base import Base
 
 
 class PipelineActivation(Base):

@@ -15,15 +15,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from vessel.api.routes.definitions import router as definitions_router
-from vessel.api.routes.instances import router as instances_router
-from vessel.api.routes.pipelines import router as pipelines_router
-from vessel.api.routes.system import router as system_router
-from vessel.api.routes.work_items import router as work_items_router
-from vessel.api.websocket import router as websocket_router
-from vessel.domain.models.base import Base
-from vessel.engine_client import EngineClient
-from vessel.infrastructure.database.session import async_engine
+from hermes.api.routes.definitions import router as definitions_router
+from hermes.api.routes.instances import router as instances_router
+from hermes.api.routes.pipelines import router as pipelines_router
+from hermes.api.routes.system import router as system_router
+from hermes.api.routes.work_items import router as work_items_router
+from hermes.api.websocket import router as websocket_router
+from hermes.domain.models.base import Base
+from hermes.engine_client import EngineClient
+from hermes.infrastructure.database.session import async_engine
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Initialize database tables
     async with async_engine.begin() as conn:
         # Import all models so they are registered with Base
-        import vessel.domain.models  # noqa: F401
+        import hermes.domain.models  # noqa: F401
 
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables initialized")

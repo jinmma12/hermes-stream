@@ -1,4 +1,4 @@
-"""Background workers for Vessel.
+"""Background workers for Hermes.
 
 NOTE: Worker execution has been moved to the .NET Engine service.
 The Python reference implementations are preserved in engine/reference/workers/.

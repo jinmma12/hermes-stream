@@ -11,7 +11,7 @@ import jsonschema
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.instance import (
+from hermes.domain.models.instance import (
     AlgorithmInstance,
     AlgorithmInstanceVersion,
     CollectorInstance,
@@ -98,7 +98,7 @@ class RecipeEngine:
             if instance is None:
                 raise ValueError(f"{instance_type} instance {instance_id} not found")
             # Use the latest def version from the definition
-            from vessel.domain.models.definition import (
+            from hermes.domain.models.definition import (
                 AlgorithmDefinitionVersion,
                 CollectorDefinitionVersion,
                 TransferDefinitionVersion,

@@ -12,8 +12,8 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from vessel.domain.models.execution import ExecutionSnapshot
-from vessel.domain.models.instance import (
+from hermes.domain.models.execution import ExecutionSnapshot
+from hermes.domain.models.instance import (
     AlgorithmInstance,
     AlgorithmInstanceVersion,
     CollectorInstance,
@@ -21,7 +21,7 @@ from vessel.domain.models.instance import (
     TransferInstance,
     TransferInstanceVersion,
 )
-from vessel.domain.models.pipeline import PipelineInstance, PipelineStep
+from hermes.domain.models.pipeline import PipelineInstance, PipelineStep
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ class SnapshotResolver:
                 step_config["def_version_id"] = str(version.def_version_id)
 
                 # Fetch execution_type and execution_ref from definition version
-                from vessel.domain.models.definition import (
+                from hermes.domain.models.definition import (
                     AlgorithmDefinitionVersion,
                     CollectorDefinitionVersion,
                     TransferDefinitionVersion,
