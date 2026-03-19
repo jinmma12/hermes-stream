@@ -1,0 +1,149 @@
+{
+  "name": "kafka-producer",
+  "version": "1.0.0",
+  "type": "exporter",
+  "description": "Publishes records to Apache Kafka topics. Supports SASL/SSL authentication, idempotent delivery, and multiple serialization formats.",
+  "author": "hermes-core",
+  "license": "Apache-2.0",
+  "runtime": "dotnet",
+  "settings_schema": {
+    "type": "object",
+    "title": "Kafka Producer Connection Settings",
+    "properties": {
+      "bootstrap_servers": {
+        "type": "string",
+        "title": "Bootstrap Servers",
+        "description": "Comma-separated list of Kafka broker addresses (e.g. broker1:9092,broker2:9092)"
+      },
+      "security_protocol": {
+        "type": "string",
+        "title": "Security Protocol",
+        "description": "Protocol used for broker communication",
+        "enum": ["PLAINTEXT", "SSL", "SASL_PLAINTEXT", "SASL_SSL"],
+        "default": "PLAINTEXT"
+      },
+      "sasl_mechanism": {
+        "type": "string",
+        "title": "SASL Mechanism",
+        "description": "SASL authentication mechanism",
+        "enum": ["PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512", "GSSAPI"],
+        "default": "PLAIN"
+      },
+      "sasl_username": {
+        "type": "string",
+        "title": "SASL Username",
+        "description": "Username for SASL authentication"
+      },
+      "sasl_password": {
+        "type": "string",
+        "title": "SASL Password",
+        "description": "Password for SASL authentication",
+        "format": "password"
+      },
+      "delivery_timeout_ms": {
+        "type": "integer",
+        "title": "Delivery Timeout (ms)",
+        "description": "Maximum time in milliseconds to wait for message delivery acknowledgment",
+        "default": 120000,
+        "minimum": 0
+      },
+      "request_timeout_ms": {
+        "type": "integer",
+        "title": "Request Timeout (ms)",
+        "description": "Timeout for individual broker requests in milliseconds",
+        "default": 30000,
+        "minimum": 1000
+      },
+      "retry_count": {
+        "type": "integer",
+        "title": "Retry Count",
+        "description": "Number of times to retry a failed produce request",
+        "default": 3,
+        "minimum": 0,
+        "maximum": 100
+      },
+      "retry_backoff_ms": {
+        "type": "integer",
+        "title": "Retry Backoff (ms)",
+        "description": "Backoff duration in milliseconds between retries",
+        "default": 100,
+        "minimum": 0
+      },
+      "batch_size": {
+        "type": "integer",
+        "title": "Batch Size (bytes)",
+        "description": "Maximum size in bytes of a produce batch sent to the broker",
+        "default": 16384,
+        "minimum": 1
+      },
+      "linger_ms": {
+        "type": "integer",
+        "title": "Linger Time (ms)",
+        "description": "Delay in milliseconds to allow batching of messages before sending",
+        "default": 5,
+        "minimum": 0
+      }
+    },
+    "required": ["bootstrap_servers"]
+  },
+  "input_schema": {
+    "type": "object",
+    "title": "Kafka Producer Recipe",
+    "properties": {
+      "topic": {
+        "type": "string",
+        "title": "Target Topic",
+        "description": "Kafka topic name to publish messages to"
+      },
+      "key_field": {
+        "type": "string",
+        "title": "Key Field",
+        "description": "Field from the record to use as the Kafka message key (leave empty for null key)"
+      },
+      "value_serializer": {
+        "type": "string",
+        "title": "Value Serializer",
+        "description": "Serialization format for message values",
+        "enum": ["json", "avro", "string"],
+        "default": "json"
+      },
+      "compression": {
+        "type": "string",
+        "title": "Compression Type",
+        "description": "Compression algorithm applied to produce batches",
+        "enum": ["none", "gzip", "snappy", "lz4", "zstd"],
+        "default": "none"
+      },
+      "acks": {
+        "type": "string",
+        "title": "Acknowledgment Mode",
+        "description": "Number of broker acknowledgments required before a produce is considered successful",
+        "enum": ["0", "1", "all"],
+        "default": "all"
+      },
+      "enable_idempotence": {
+        "type": "boolean",
+        "title": "Enable Idempotence",
+        "description": "Guarantee exactly-once delivery per partition using idempotent producer",
+        "default": true
+      },
+      "partition_strategy": {
+        "type": "string",
+        "title": "Partition Strategy",
+        "description": "Algorithm used to select the target partition for each message",
+        "enum": ["round_robin", "key_hash", "custom"],
+        "default": "key_hash"
+      },
+      "headers_mapping": {
+        "type": "object",
+        "title": "Headers Mapping",
+        "description": "Static or templated Kafka headers to attach to every message (key: header name, value: field path or literal)",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      }
+    },
+    "required": ["topic"]
+  }
+}

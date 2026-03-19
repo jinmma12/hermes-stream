@@ -1,0 +1,127 @@
+{
+  "name": "database-poller",
+  "version": "1.0.0",
+  "type": "collector",
+  "description": "Polls relational databases for new or updated rows using a cursor column. Supports PostgreSQL, SQL Server, and MySQL with watermark-based incremental reads.",
+  "author": "hermes-core",
+  "license": "Apache-2.0",
+  "runtime": "dotnet",
+  "settings_schema": {
+    "type": "object",
+    "title": "Database Connection Settings",
+    "properties": {
+      "connection_string": {
+        "type": "string",
+        "title": "Connection String",
+        "description": "Full ADO.NET connection string for the target database",
+        "format": "password"
+      },
+      "provider": {
+        "type": "string",
+        "title": "Database Provider",
+        "description": "Relational database provider to connect to",
+        "enum": ["PostgreSQL", "SqlServer", "MySQL"],
+        "default": "PostgreSQL"
+      },
+      "pool_min_size": {
+        "type": "integer",
+        "title": "Connection Pool Minimum Size",
+        "description": "Minimum number of idle connections maintained in the pool",
+        "default": 1,
+        "minimum": 0
+      },
+      "pool_max_size": {
+        "type": "integer",
+        "title": "Connection Pool Maximum Size",
+        "description": "Maximum number of concurrent connections allowed in the pool",
+        "default": 10,
+        "minimum": 1
+      },
+      "command_timeout_seconds": {
+        "type": "integer",
+        "title": "Command Timeout (seconds)",
+        "description": "Maximum time in seconds to wait for a query to complete",
+        "default": 30,
+        "minimum": 1
+      },
+      "poll_interval": {
+        "type": "string",
+        "title": "Poll Interval",
+        "description": "Duration between polling cycles in Go-style duration syntax (e.g. 30s, 5m, 1h)",
+        "default": "30s"
+      },
+      "retry_max_attempts": {
+        "type": "integer",
+        "title": "Retry Max Attempts",
+        "description": "Maximum number of retry attempts on transient database errors",
+        "default": 3,
+        "minimum": 0
+      },
+      "retry_delay_seconds": {
+        "type": "integer",
+        "title": "Retry Delay (seconds)",
+        "description": "Initial delay in seconds between retry attempts (exponential backoff applied)",
+        "default": 2,
+        "minimum": 1
+      }
+    },
+    "required": ["connection_string", "provider"]
+  },
+  "input_schema": {
+    "type": "object",
+    "title": "Database Poller Recipe",
+    "properties": {
+      "table_name": {
+        "type": "string",
+        "title": "Table Name",
+        "description": "Name of the table to poll (schema-qualified if needed, e.g. dbo.orders)"
+      },
+      "query": {
+        "type": "string",
+        "title": "Custom SQL Query",
+        "description": "Optional custom SELECT statement; use :watermark placeholder for cursor injection. Overrides table_name if set."
+      },
+      "cursor_column": {
+        "type": "string",
+        "title": "Cursor Column",
+        "description": "Column used to track polling progress (e.g. updated_at or id)"
+      },
+      "cursor_type": {
+        "type": "string",
+        "title": "Cursor Type",
+        "description": "Data type semantics of the cursor column",
+        "enum": ["timestamp", "sequence", "composite"],
+        "default": "timestamp"
+      },
+      "watermark_offset": {
+        "type": "string",
+        "title": "Watermark Offset",
+        "description": "Offset subtracted from the latest cursor value to handle late-arriving rows (e.g. 5s, 1m)",
+        "default": "0s"
+      },
+      "filter_predicate": {
+        "type": "string",
+        "title": "Filter Predicate",
+        "description": "Additional SQL WHERE clause fragment appended to the generated query (e.g. status = 'ACTIVE')"
+      },
+      "batch_size": {
+        "type": "integer",
+        "title": "Batch Size",
+        "description": "Maximum number of rows fetched per poll cycle",
+        "default": 1000,
+        "minimum": 1,
+        "maximum": 100000
+      },
+      "column_mapping": {
+        "type": "object",
+        "title": "Column Mapping",
+        "description": "Rename or alias columns in the output record (key: source column, value: output field name)",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      }
+    },
+    "required": ["cursor_column"]
+  }
+}

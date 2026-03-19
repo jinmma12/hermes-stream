@@ -1,0 +1,135 @@
+{
+  "name": "webhook-sender",
+  "version": "1.0.0",
+  "type": "exporter",
+  "description": "Sends processed records to HTTP webhook endpoints. Supports bearer/basic/API-key authentication, batching, retry with backoff, and circuit breaker.",
+  "author": "hermes-core",
+  "license": "Apache-2.0",
+  "runtime": "dotnet",
+  "settings_schema": {
+    "type": "object",
+    "title": "Webhook Connection Settings",
+    "properties": {
+      "base_url": {
+        "type": "string",
+        "title": "Base URL",
+        "description": "Root URL of the webhook target (e.g. https://api.example.com). The recipe path is appended to this value."
+      },
+      "auth_type": {
+        "type": "string",
+        "title": "Authentication Type",
+        "description": "Authentication scheme used for all outbound requests",
+        "enum": ["none", "bearer", "basic", "api_key"],
+        "default": "none"
+      },
+      "auth_token": {
+        "type": "string",
+        "title": "Auth Token / API Key",
+        "description": "Token, password, or API key used for authentication (combined with auth_type)",
+        "format": "password"
+      },
+      "default_headers": {
+        "type": "object",
+        "title": "Default Headers",
+        "description": "Static HTTP headers included in every request (key: header name, value: header value)",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "title": "Request Timeout (seconds)",
+        "description": "Maximum time in seconds to wait for a response from the target",
+        "default": 30,
+        "minimum": 1
+      },
+      "max_retries": {
+        "type": "integer",
+        "title": "Max Retries",
+        "description": "Maximum number of retry attempts on transient HTTP errors (5xx, timeouts)",
+        "default": 3,
+        "minimum": 0
+      },
+      "retry_backoff_ms": {
+        "type": "integer",
+        "title": "Retry Backoff (ms)",
+        "description": "Initial backoff duration in milliseconds before retrying; doubled on each subsequent attempt",
+        "default": 500,
+        "minimum": 0
+      },
+      "circuit_breaker_threshold": {
+        "type": "integer",
+        "title": "Circuit Breaker Failure Threshold",
+        "description": "Number of consecutive failures before the circuit breaker opens and stops sending requests",
+        "default": 5,
+        "minimum": 1
+      },
+      "circuit_breaker_recovery_seconds": {
+        "type": "integer",
+        "title": "Circuit Breaker Recovery (seconds)",
+        "description": "Time in seconds the circuit breaker stays open before allowing a probe request",
+        "default": 30,
+        "minimum": 5
+      }
+    },
+    "required": ["base_url"]
+  },
+  "input_schema": {
+    "type": "object",
+    "title": "Webhook Sender Recipe",
+    "properties": {
+      "path": {
+        "type": "string",
+        "title": "Request Path",
+        "description": "URL path appended to base_url for each request (e.g. /events/ingest)",
+        "default": "/"
+      },
+      "method": {
+        "type": "string",
+        "title": "HTTP Method",
+        "description": "HTTP verb used for the webhook request",
+        "enum": ["POST", "PUT", "PATCH"],
+        "default": "POST"
+      },
+      "content_type": {
+        "type": "string",
+        "title": "Content Type",
+        "description": "MIME type set in the Content-Type header of the request body",
+        "enum": ["application/json", "application/x-www-form-urlencoded", "text/plain"],
+        "default": "application/json"
+      },
+      "payload_template": {
+        "type": "string",
+        "title": "Payload Template",
+        "description": "Handlebars/Liquid template for the request body. Leave empty to send the raw record as JSON."
+      },
+      "batch_mode": {
+        "type": "boolean",
+        "title": "Batch Mode",
+        "description": "Send multiple records in a single request as a JSON array instead of one request per record",
+        "default": false
+      },
+      "batch_size": {
+        "type": "integer",
+        "title": "Batch Size",
+        "description": "Maximum number of records per batched request (only used when batch_mode is true)",
+        "default": 100,
+        "minimum": 1,
+        "maximum": 10000
+      },
+      "success_status_codes": {
+        "type": "array",
+        "title": "Success Status Codes",
+        "description": "List of HTTP response status codes treated as successful delivery",
+        "items": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599
+        },
+        "default": [200, 201, 202]
+      }
+    },
+    "required": ["path", "method"]
+  }
+}

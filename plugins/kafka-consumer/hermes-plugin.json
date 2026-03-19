@@ -1,0 +1,135 @@
+{
+  "name": "kafka-consumer",
+  "version": "1.0.0",
+  "type": "collector",
+  "description": "Consumes messages from Apache Kafka topics. Supports SASL/SSL authentication, consumer groups, and Avro/JSON deserialization.",
+  "author": "hermes-core",
+  "license": "Apache-2.0",
+  "runtime": "dotnet",
+  "settings_schema": {
+    "type": "object",
+    "title": "Kafka Connection Settings",
+    "properties": {
+      "bootstrap_servers": {
+        "type": "string",
+        "title": "Bootstrap Servers",
+        "description": "Comma-separated list of Kafka broker addresses (e.g. broker1:9092,broker2:9092)"
+      },
+      "group_id": {
+        "type": "string",
+        "title": "Consumer Group ID",
+        "description": "Kafka consumer group identifier for offset tracking"
+      },
+      "security_protocol": {
+        "type": "string",
+        "title": "Security Protocol",
+        "description": "Protocol used for broker communication",
+        "enum": ["PLAINTEXT", "SSL", "SASL_PLAINTEXT", "SASL_SSL"],
+        "default": "PLAINTEXT"
+      },
+      "sasl_mechanism": {
+        "type": "string",
+        "title": "SASL Mechanism",
+        "description": "SASL authentication mechanism",
+        "enum": ["PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512", "GSSAPI"],
+        "default": "PLAIN"
+      },
+      "sasl_username": {
+        "type": "string",
+        "title": "SASL Username",
+        "description": "Username for SASL authentication",
+        "format": "password"
+      },
+      "sasl_password": {
+        "type": "string",
+        "title": "SASL Password",
+        "description": "Password for SASL authentication",
+        "format": "password"
+      },
+      "poll_timeout_ms": {
+        "type": "integer",
+        "title": "Poll Timeout (ms)",
+        "description": "Maximum time in milliseconds to wait for messages per poll",
+        "default": 1000,
+        "minimum": 100
+      },
+      "max_poll_records": {
+        "type": "integer",
+        "title": "Max Poll Records",
+        "description": "Maximum number of records returned in a single poll call",
+        "default": 500,
+        "minimum": 1,
+        "maximum": 10000
+      },
+      "session_timeout_ms": {
+        "type": "integer",
+        "title": "Session Timeout (ms)",
+        "description": "Consumer group session timeout in milliseconds",
+        "default": 30000,
+        "minimum": 6000
+      },
+      "retry_backoff_ms": {
+        "type": "integer",
+        "title": "Retry Backoff (ms)",
+        "description": "Backoff duration in milliseconds before retrying a failed request",
+        "default": 100,
+        "minimum": 0
+      }
+    },
+    "required": ["bootstrap_servers", "group_id"]
+  },
+  "input_schema": {
+    "type": "object",
+    "title": "Kafka Consumer Recipe",
+    "properties": {
+      "topics": {
+        "type": "string",
+        "title": "Topics",
+        "description": "Comma-separated list of topic names to subscribe to"
+      },
+      "topic_pattern": {
+        "type": "string",
+        "title": "Topic Pattern",
+        "description": "Regex pattern to subscribe to matching topics (overrides topics if set)"
+      },
+      "auto_offset_reset": {
+        "type": "string",
+        "title": "Auto Offset Reset",
+        "description": "Where to start consuming when no committed offset exists",
+        "enum": ["earliest", "latest"],
+        "default": "latest"
+      },
+      "key_deserializer": {
+        "type": "string",
+        "title": "Key Deserializer",
+        "description": "Deserialization format for message keys",
+        "enum": ["string", "json", "avro"],
+        "default": "string"
+      },
+      "value_deserializer": {
+        "type": "string",
+        "title": "Value Deserializer",
+        "description": "Deserialization format for message values",
+        "enum": ["string", "json", "avro"],
+        "default": "json"
+      },
+      "enable_auto_commit": {
+        "type": "boolean",
+        "title": "Enable Auto Commit",
+        "description": "Automatically commit consumer offsets after processing",
+        "default": false
+      },
+      "dedup_key_field": {
+        "type": "string",
+        "title": "Deduplication Key Field",
+        "description": "Field name within the message value used for deduplication (leave empty to disable)"
+      },
+      "filter_expression": {
+        "type": "string",
+        "title": "Filter Expression",
+        "description": "JSONPath or JMESPath expression to filter incoming messages (leave empty to accept all)"
+      }
+    },
+    "required": ["topics"]
+  }
+}

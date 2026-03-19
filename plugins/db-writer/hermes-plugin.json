@@ -1,0 +1,123 @@
+{
+  "name": "db-writer",
+  "version": "1.0.0",
+  "type": "exporter",
+  "description": "Writes processed records to relational databases. Supports INSERT, UPSERT, and MERGE strategies across PostgreSQL, SQL Server, and MySQL.",
+  "author": "hermes-core",
+  "license": "Apache-2.0",
+  "runtime": "dotnet",
+  "settings_schema": {
+    "type": "object",
+    "title": "Database Writer Connection Settings",
+    "properties": {
+      "connection_string": {
+        "type": "string",
+        "title": "Connection String",
+        "description": "Full ADO.NET connection string for the target database",
+        "format": "password"
+      },
+      "provider": {
+        "type": "string",
+        "title": "Database Provider",
+        "description": "Relational database provider to write to",
+        "enum": ["PostgreSQL", "SqlServer", "MySQL"],
+        "default": "PostgreSQL"
+      },
+      "pool_min_size": {
+        "type": "integer",
+        "title": "Connection Pool Minimum Size",
+        "description": "Minimum number of idle connections maintained in the pool",
+        "default": 1,
+        "minimum": 0
+      },
+      "pool_max_size": {
+        "type": "integer",
+        "title": "Connection Pool Maximum Size",
+        "description": "Maximum number of concurrent connections allowed in the pool",
+        "default": 10,
+        "minimum": 1
+      },
+      "command_timeout_seconds": {
+        "type": "integer",
+        "title": "Command Timeout (seconds)",
+        "description": "Maximum time in seconds to wait for a write command to complete",
+        "default": 30,
+        "minimum": 1
+      },
+      "retry_max_attempts": {
+        "type": "integer",
+        "title": "Retry Max Attempts",
+        "description": "Maximum number of retry attempts on transient database errors",
+        "default": 3,
+        "minimum": 0
+      },
+      "retry_delay_seconds": {
+        "type": "integer",
+        "title": "Retry Delay (seconds)",
+        "description": "Initial delay in seconds between retry attempts (exponential backoff applied)",
+        "default": 2,
+        "minimum": 1
+      }
+    },
+    "required": ["connection_string", "provider"]
+  },
+  "input_schema": {
+    "type": "object",
+    "title": "Database Writer Recipe",
+    "properties": {
+      "table_name": {
+        "type": "string",
+        "title": "Table Name",
+        "description": "Name of the destination table"
+      },
+      "schema_name": {
+        "type": "string",
+        "title": "Schema Name",
+        "description": "Database schema that contains the destination table",
+        "default": "public"
+      },
+      "write_mode": {
+        "type": "string",
+        "title": "Write Mode",
+        "description": "Strategy used when writing records to the table",
+        "enum": ["INSERT", "UPSERT", "MERGE"],
+        "default": "INSERT"
+      },
+      "conflict_key": {
+        "type": "string",
+        "title": "Conflict Key Column(s)",
+        "description": "Comma-separated column name(s) used to detect duplicates in UPSERT or MERGE mode"
+      },
+      "column_mapping": {
+        "type": "object",
+        "title": "Column Mapping",
+        "description": "Map input record fields to destination column names (key: source field, value: target column). Omit to use field names as-is.",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "batch_size": {
+        "type": "integer",
+        "title": "Batch Size",
+        "description": "Number of records written per database transaction",
+        "default": 500,
+        "minimum": 1,
+        "maximum": 10000
+      },
+      "create_table_if_missing": {
+        "type": "boolean",
+        "title": "Create Table If Missing",
+        "description": "Automatically create the destination table based on the inferred record schema if it does not exist",
+        "default": false
+      },
+      "truncate_before_write": {
+        "type": "boolean",
+        "title": "Truncate Before Write",
+        "description": "Truncate the destination table before writing the first batch (useful for full-refresh loads)",
+        "default": false
+      }
+    },
+    "required": ["table_name"]
+  }
+}

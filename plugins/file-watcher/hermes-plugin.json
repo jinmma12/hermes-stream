@@ -2,18 +2,167 @@
   "name": "file-watcher",
   "version": "1.0.0",
   "type": "collector",
-  "description": "Monitors directories for new or modified files. Supports glob patterns.",
+  "description": "Monitors directories for new or modified files. Supports local, NFS, and SMB mounts with glob patterns, regex filters, size/age constraints, debounce, and post-action rules.",
   "author": "hermes-core",
   "license": "Apache-2.0",
-  "runtime": "python",
+  "runtime": "dotnet",
   "entrypoint": "main.py",
+  "settings_schema": {
+    "type": "object",
+    "title": "File Watcher Connection Settings",
+    "properties": {
+      "watch_root": {
+        "type": "string",
+        "title": "Watch Root Directory",
+        "description": "Absolute base directory path to watch. Recipe path filters are applied relative to this root."
+      },
+      "access_mode": {
+        "type": "string",
+        "title": "Access Mode",
+        "description": "Filesystem access method; use nfs or smb for network-mounted shares",
+        "enum": ["local", "nfs", "smb"],
+        "default": "local"
+      },
+      "poll_interval": {
+        "type": "string",
+        "title": "Poll Interval",
+        "description": "Duration between directory scan cycles in Go-style duration syntax (e.g. 10s, 1m)",
+        "default": "10s"
+      },
+      "debounce_ms": {
+        "type": "integer",
+        "title": "Debounce (ms)",
+        "description": "Time in milliseconds to wait after the last detected change before emitting a file event (prevents partial-write noise)",
+        "default": 500,
+        "minimum": 0
+      }
+    },
+    "required": ["watch_root"]
+  },
   "input_schema": {
     "type": "object",
+    "title": "File Watcher Recipe",
     "properties": {
-      "watch_path": { "type": "string", "title": "Watch Directory" },
-      "pattern": { "type": "string", "title": "File Pattern", "default": "*" },
-      "recursive": { "type": "boolean", "default": false }
-    },
-    "required": ["watch_path"]
+      "pattern": {
+        "type": "string",
+        "title": "File Glob Pattern",
+        "description": "Glob pattern matched against file names within the watch root (e.g. *.csv, data_*.json)",
+        "default": "*"
+      },
+      "recursive": {
+        "type": "boolean",
+        "title": "Recursive",
+        "description": "Descend into subdirectories when scanning for files",
+        "default": false
+      },
+      "max_depth": {
+        "type": "integer",
+        "title": "Max Depth",
+        "description": "Maximum directory depth to recurse (0 = watch root only, -1 = unlimited). Only used when recursive is true.",
+        "default": -1,
+        "minimum": -1
+      },
+      "path_filter_regex": {
+        "type": "string",
+        "title": "Path Filter Regex",
+        "description": "Regular expression matched against the full relative file path. Only files whose path matches are emitted."
+      },
+      "filename_filter_regex": {
+        "type": "string",
+        "title": "Filename Filter Regex",
+        "description": "Regular expression matched against the file name only (no directory component)"
+      },
+      "min_size_bytes": {
+        "type": "integer",
+        "title": "Minimum File Size (bytes)",
+        "description": "Skip files smaller than this size in bytes (0 = no minimum)",
+        "default": 0,
+        "minimum": 0
+      },
+      "max_size_bytes": {
+        "type": "integer",
+        "title": "Maximum File Size (bytes)",
+        "description": "Skip files larger than this size in bytes (0 = no maximum)",
+        "default": 0,
+        "minimum": 0
+      },
+      "min_age_seconds": {
+        "type": "integer",
+        "title": "Minimum File Age (seconds)",
+        "description": "Only emit files whose last-modified time is at least this many seconds in the past (0 = no minimum age)",
+        "default": 0,
+        "minimum": 0
+      },
+      "exclude_patterns": {
+        "type": "array",
+        "title": "Exclude Patterns",
+        "description": "List of glob patterns for files or directories to exclude from scanning",
+        "items": {
+          "type": "string"
+        },
+        "default": []
+      },
+      "ordering": {
+        "type": "string",
+        "title": "File Ordering",
+        "description": "Order in which matched files are emitted to downstream processors",
+        "enum": ["NEWEST_FIRST", "OLDEST_FIRST", "ALPHABETICAL"],
+        "default": "OLDEST_FIRST"
+      },
+      "completion_check": {
+        "type": "object",
+        "title": "Completion Check",
+        "description": "Strategy to verify a file is fully written before emitting it",
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "title": "Strategy",
+            "description": "Method used to determine when a file is safe to process",
+            "enum": ["NONE", "SIZE_STABLE", "MARKER_FILE"],
+            "default": "NONE"
+          },
+          "stable_seconds": {
+            "type": "integer",
+            "title": "Stable Duration (seconds)",
+            "description": "Number of seconds the file size must remain unchanged before it is considered complete (SIZE_STABLE strategy)",
+            "default": 5,
+            "minimum": 1
+          },
+          "marker_suffix": {
+            "type": "string",
+            "title": "Marker File Suffix",
+            "description": "File extension appended to the data file name that signals write completion (MARKER_FILE strategy, e.g. .done, .ready)",
+            "default": ".done"
+          }
+        },
+        "default": {
+          "strategy": "NONE",
+          "stable_seconds": 5,
+          "marker_suffix": ".done"
+        }
+      },
+      "post_action": {
+        "type": "object",
+        "title": "Post-Processing Action",
+        "description": "Action taken on a file after it has been successfully emitted and acknowledged",
+        "properties": {
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "What to do with the file after successful processing",
+            "enum": ["KEEP", "DELETE", "MOVE", "RENAME"],
+            "default": "KEEP"
+          },
+          "move_target": {
+            "type": "string",
+            "title": "Move Target Directory",
+            "description": "Absolute or watch-root-relative directory to move processed files into (MOVE action)"
+          }
+        },
+        "default": {
+          "action": "KEEP"
+        }
+      }
+    }
   }
 }

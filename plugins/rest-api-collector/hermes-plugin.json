@@ -2,22 +2,165 @@
   "name": "rest-api-collector",
   "version": "1.0.0",
   "type": "collector",
-  "description": "Polls REST API endpoints for new data. Supports GET/POST, authentication, pagination.",
+  "description": "Polls REST API endpoints for new data. Supports GET/POST, multiple authentication schemes, pagination strategies, and incremental deduplication.",
   "author": "hermes-core",
   "license": "Apache-2.0",
-  "runtime": "python",
+  "runtime": "dotnet",
   "entrypoint": "main.py",
+  "settings_schema": {
+    "type": "object",
+    "title": "REST API Connection Settings",
+    "properties": {
+      "base_url": {
+        "type": "string",
+        "title": "Base URL",
+        "description": "Root URL of the API (e.g. https://api.example.com/v1). Recipe paths are appended to this value."
+      },
+      "auth_type": {
+        "type": "string",
+        "title": "Authentication Type",
+        "description": "Authentication scheme used for all outbound requests",
+        "enum": ["none", "bearer", "basic", "api_key"],
+        "default": "none"
+      },
+      "auth_token": {
+        "type": "string",
+        "title": "Auth Token / API Key",
+        "description": "Token, password, or API key used for authentication (combined with auth_type)",
+        "format": "password"
+      },
+      "default_headers": {
+        "type": "object",
+        "title": "Default Headers",
+        "description": "Static HTTP headers included in every request (key: header name, value: header value)",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "timeout_seconds": {
+        "type": "integer",
+        "title": "Request Timeout (seconds)",
+        "description": "Maximum time in seconds to wait for a response",
+        "default": 30,
+        "minimum": 1
+      },
+      "poll_interval": {
+        "type": "string",
+        "title": "Poll Interval",
+        "description": "Duration between polling cycles in Go-style duration syntax (e.g. 30s, 5m, 1h)",
+        "default": "60s"
+      },
+      "retry_max_attempts": {
+        "type": "integer",
+        "title": "Retry Max Attempts",
+        "description": "Maximum number of retry attempts on transient HTTP errors (5xx, timeouts)",
+        "default": 3,
+        "minimum": 0
+      },
+      "retry_delay_seconds": {
+        "type": "integer",
+        "title": "Retry Delay (seconds)",
+        "description": "Initial delay in seconds between retry attempts (exponential backoff applied)",
+        "default": 2,
+        "minimum": 1
+      }
+    },
+    "required": ["base_url"]
+  },
   "input_schema": {
     "type": "object",
+    "title": "REST API Collector Recipe",
     "properties": {
-      "url": { "type": "string", "title": "API URL" },
-      "method": { "type": "string", "enum": ["GET", "POST"], "default": "GET" },
-      "headers": { "type": "object", "title": "HTTP Headers", "default": {} },
-      "auth_type": { "type": "string", "enum": ["none", "bearer", "basic", "api_key"], "default": "none" },
-      "auth_token": { "type": "string", "title": "Auth Token" },
-      "interval_seconds": { "type": "integer", "default": 60 },
-      "timeout_seconds": { "type": "integer", "default": 30 }
+      "path": {
+        "type": "string",
+        "title": "API Path",
+        "description": "URL path appended to base_url for each poll request (e.g. /orders/list)",
+        "default": "/"
+      },
+      "method": {
+        "type": "string",
+        "title": "HTTP Method",
+        "description": "HTTP verb used for the poll request",
+        "enum": ["GET", "POST", "PUT"],
+        "default": "GET"
+      },
+      "query_params": {
+        "type": "object",
+        "title": "Query Parameters",
+        "description": "Static query string parameters appended to every request URL",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "default": {}
+      },
+      "request_body": {
+        "type": "object",
+        "title": "Request Body",
+        "description": "Static JSON body sent with POST/PUT requests",
+        "additionalProperties": true,
+        "default": {}
+      },
+      "records_path": {
+        "type": "string",
+        "title": "Records Path",
+        "description": "JSONPath or dot-notation path to the array of records within the API response (e.g. data.items). Leave empty if the response root is the array."
+      },
+      "pagination_type": {
+        "type": "string",
+        "title": "Pagination Type",
+        "description": "Pagination strategy used to fetch all pages of results",
+        "enum": ["none", "offset", "cursor", "link"],
+        "default": "none"
+      },
+      "pagination_config": {
+        "type": "object",
+        "title": "Pagination Configuration",
+        "description": "Parameters controlling pagination behavior; applicable fields depend on pagination_type",
+        "properties": {
+          "page_param": {
+            "type": "string",
+            "title": "Page Parameter Name",
+            "description": "Query parameter name for the page number (offset pagination)"
+          },
+          "size_param": {
+            "type": "string",
+            "title": "Page Size Parameter Name",
+            "description": "Query parameter name for the page size (offset pagination)"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size",
+            "description": "Number of records to request per page",
+            "default": 100,
+            "minimum": 1
+          },
+          "cursor_field": {
+            "type": "string",
+            "title": "Cursor Field",
+            "description": "Response field containing the next-page cursor value (cursor pagination)"
+          },
+          "next_link_path": {
+            "type": "string",
+            "title": "Next Link Path",
+            "description": "JSONPath to the next-page URL within the response body (link pagination)"
+          }
+        },
+        "default": {}
+      },
+      "dedup_key_field": {
+        "type": "string",
+        "title": "Deduplication Key Field",
+        "description": "Field within each record used to detect already-seen records across polls (leave empty to disable)"
+      },
+      "max_records_per_poll": {
+        "type": "integer",
+        "title": "Max Records Per Poll",
+        "description": "Maximum total number of records collected in a single poll cycle across all pages (0 = unlimited)",
+        "default": 0,
+        "minimum": 0
+      }
     },
-    "required": ["url"]
+    "required": ["path"]
   }
 }

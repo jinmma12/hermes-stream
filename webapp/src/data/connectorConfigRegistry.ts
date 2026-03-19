@@ -1,14 +1,22 @@
 import { StageType } from '../types';
 
+// ── Manifest imports (source of truth) ──────────────────────
 import csvJsonConverterManifest from '../../../plugins/csv-json-converter/hermes-plugin.json';
+import databasePollerManifest from '../../../plugins/database-poller/hermes-plugin.json';
+import dbWriterManifest from '../../../plugins/db-writer/hermes-plugin.json';
 import fileOutputManifest from '../../../plugins/file-output/hermes-plugin.json';
 import fileWatcherManifest from '../../../plugins/file-watcher/hermes-plugin.json';
+import ftpSftpCollectorManifest from '../../../plugins/community-examples/ftp-sftp-collector/hermes-plugin.json';
 import jsonTransformManifest from '../../../plugins/json-transform/hermes-plugin.json';
+import kafkaConsumerManifest from '../../../plugins/kafka-consumer/hermes-plugin.json';
+import kafkaProducerManifest from '../../../plugins/kafka-producer/hermes-plugin.json';
 import mergeContentManifest from '../../../plugins/merge-content/hermes-plugin.json';
 import passthroughManifest from '../../../plugins/passthrough/hermes-plugin.json';
 import restApiCollectorManifest from '../../../plugins/rest-api-collector/hermes-plugin.json';
 import splitRecordsManifest from '../../../plugins/split-records/hermes-plugin.json';
-import ftpSftpCollectorManifest from '../../../plugins/community-examples/ftp-sftp-collector/hermes-plugin.json';
+import webhookSenderManifest from '../../../plugins/webhook-sender/hermes-plugin.json';
+
+// ── Public types ────────────────────────────────────────────
 
 export type PropertyType = 'text' | 'password' | 'number' | 'select' | 'textarea';
 export type PropertyFormat = 'line_list';
@@ -33,6 +41,8 @@ export interface ConnectorConfig {
   recipeProperties: PropertyDef[];
 }
 
+// ── JSON Schema helpers ─────────────────────────────────────
+
 interface JsonSchema {
   type?: string;
   title?: string;
@@ -51,7 +61,9 @@ interface PluginManifest {
 
 interface ManifestOverrides {
   label?: string;
+  /** Keys from settings_schema that belong in the connection section (default: all non-runtime). */
   connectionKeys?: string[];
+  /** Keys from settings_schema that belong in the runtime policy section. */
   runtimeKeys?: string[];
 }
 
@@ -126,131 +138,88 @@ function fromManifest(manifest: PluginManifest, overrides: ManifestOverrides = {
   let runtimePolicy: PropertyDef[] = [];
 
   if (connectionKeys.size > 0 || runtimeKeys.size > 0) {
-    connectionSettings = settingsProps.filter((property) => !runtimeKeys.has(property.key));
-    runtimePolicy = settingsProps.filter((property) => runtimeKeys.has(property.key));
+    connectionSettings = settingsProps.filter((p) => !runtimeKeys.has(p.key));
+    runtimePolicy = settingsProps.filter((p) => runtimeKeys.has(p.key));
 
     if (connectionKeys.size > 0) {
-      connectionSettings = settingsProps.filter((property) => connectionKeys.has(property.key));
-      runtimePolicy = settingsProps.filter((property) => runtimeKeys.has(property.key));
+      connectionSettings = settingsProps.filter((p) => connectionKeys.has(p.key));
+      runtimePolicy = settingsProps.filter((p) => runtimeKeys.has(p.key));
     }
   }
 
-  return {
-    label,
-    connectionSettings,
-    runtimePolicy,
-    recipeProperties: recipeProps,
-  };
+  return { label, connectionSettings, runtimePolicy, recipeProperties: recipeProps };
 }
 
-const manifestConnectorConfigs: Record<string, ConnectorConfig> = {
+// ── Manifest-driven configs (source of truth) ───────────────
+// Every core connector is now driven by its hermes-plugin.json manifest.
+// The runtimeKeys arrays tell the registry which settings_schema fields
+// belong in the Runtime Policy section vs the Connection section.
+
+export const connectorConfigs: Record<string, ConnectorConfig> = {
+  // ── Collectors ──
   'ftp-sftp-collector': fromManifest(ftpSftpCollectorManifest as PluginManifest, {
     label: 'FTP/SFTP Collector',
     runtimeKeys: [
-      'poll_interval',
-      'connection_timeout_seconds',
-      'data_timeout_seconds',
-      'max_concurrent_downloads',
-      'retry_max_attempts',
-      'retry_base_delay_seconds',
-      'retry_max_delay_seconds',
-      'circuit_breaker_threshold',
-      'circuit_breaker_recovery_seconds',
+      'poll_interval', 'connection_timeout_seconds', 'data_timeout_seconds',
+      'max_concurrent_downloads', 'retry_max_attempts', 'retry_base_delay_seconds',
+      'retry_max_delay_seconds', 'circuit_breaker_threshold', 'circuit_breaker_recovery_seconds',
     ],
   }),
-  'file-watcher': fromManifest(fileWatcherManifest as PluginManifest, { label: 'File Watcher' }),
-  'rest-api-collector': fromManifest(restApiCollectorManifest as PluginManifest, { label: 'REST API Collector' }),
-  'file-output': fromManifest(fileOutputManifest as PluginManifest, { label: 'File Output' }),
+  'kafka-consumer': fromManifest(kafkaConsumerManifest as PluginManifest, {
+    label: 'Kafka Consumer',
+    runtimeKeys: [
+      'poll_timeout_ms', 'max_poll_records', 'session_timeout_ms', 'retry_backoff_ms',
+    ],
+  }),
+  'rest-api-collector': fromManifest(restApiCollectorManifest as PluginManifest, {
+    label: 'REST API Collector',
+    runtimeKeys: [
+      'timeout_seconds', 'poll_interval', 'retry_max_attempts', 'retry_delay_seconds',
+    ],
+  }),
+  'database-poller': fromManifest(databasePollerManifest as PluginManifest, {
+    label: 'Database CDC Poller',
+    runtimeKeys: [
+      'poll_interval', 'command_timeout_seconds', 'retry_max_attempts', 'retry_delay_seconds',
+    ],
+  }),
+  'file-watcher': fromManifest(fileWatcherManifest as PluginManifest, {
+    label: 'File Watcher',
+    runtimeKeys: ['poll_interval', 'debounce_ms'],
+  }),
+
+  // ── Processors ──
   'json-transform': fromManifest(jsonTransformManifest as PluginManifest, { label: 'JSON Transform' }),
   'merge-content': fromManifest(mergeContentManifest as PluginManifest, { label: 'Merge Content' }),
   'split-records': fromManifest(splitRecordsManifest as PluginManifest, { label: 'Split Records' }),
   'csv-json-converter': fromManifest(csvJsonConverterManifest as PluginManifest, { label: 'CSV-JSON Converter' }),
   passthrough: fromManifest(passthroughManifest as PluginManifest, { label: 'Passthrough' }),
-};
 
-const fallbackConnectorConfigs: Record<string, ConnectorConfig> = {
-  'kafka-consumer': {
-    label: 'Kafka Consumer',
-    connectionSettings: [
-      { key: 'bootstrap_servers', label: 'Bootstrap Servers', type: 'text', defaultValue: 'localhost:9092', tooltip: 'Broker addresses', group: 'Connection' },
-      { key: 'group_id', label: 'Consumer Group', type: 'text', defaultValue: 'hermes-collect', tooltip: 'Consumer group ID', group: 'Connection' },
-      { key: 'security_protocol', label: 'Security Protocol', type: 'select', defaultValue: 'PLAINTEXT', tooltip: 'Kafka security', options: ['PLAINTEXT', 'SSL', 'SASL_PLAINTEXT', 'SASL_SSL'], group: 'Connection' },
-    ],
-    runtimePolicy: [
-      { key: 'poll_timeout_ms', label: 'Poll Timeout (ms)', type: 'number', defaultValue: 1000, tooltip: 'Max wait per poll', group: 'Scheduling' },
-      { key: 'max_poll_records', label: 'Max Poll Records', type: 'number', defaultValue: 500, tooltip: 'Records per poll', group: 'Scheduling' },
-    ],
-    recipeProperties: [
-      { key: 'topics', label: 'Topics', type: 'text', defaultValue: 'equipment-data', tooltip: 'Comma-separated topic names', group: 'Subscription' },
-      { key: 'auto_offset_reset', label: 'Auto Offset Reset', type: 'select', defaultValue: 'latest', tooltip: 'Start position if no committed offset exists', options: ['earliest', 'latest'], group: 'Subscription' },
-    ],
-  },
-  'database-poller': {
-    label: 'Database CDC',
-    connectionSettings: [
-      { key: 'connection_string', label: 'Connection String', type: 'password', defaultValue: '', tooltip: 'DB connection string', group: 'Connection' },
-    ],
-    runtimePolicy: [
-      { key: 'poll_interval', label: 'Poll Interval', type: 'text', defaultValue: '1m', tooltip: 'Change detection frequency', group: 'Scheduling' },
-    ],
-    recipeProperties: [
-      { key: 'table_name', label: 'Table Name', type: 'text', defaultValue: 'orders', tooltip: 'Table to poll', group: 'Query' },
-      { key: 'cursor_column', label: 'Cursor Column', type: 'text', defaultValue: 'updated_at', tooltip: 'Change tracking column', group: 'Query' },
-      { key: 'batch_size', label: 'Batch Size', type: 'number', defaultValue: 100, tooltip: 'Max rows per poll', group: 'Query' },
-    ],
-  },
-  'kafka-producer': {
+  // ── Exporters ──
+  'kafka-producer': fromManifest(kafkaProducerManifest as PluginManifest, {
     label: 'Kafka Producer',
-    connectionSettings: [
-      { key: 'bootstrap_servers', label: 'Bootstrap Servers', type: 'text', defaultValue: 'localhost:9092', tooltip: 'Broker addresses', group: 'Connection' },
+    runtimeKeys: [
+      'delivery_timeout_ms', 'request_timeout_ms', 'retry_count',
+      'retry_backoff_ms', 'batch_size', 'linger_ms',
     ],
-    runtimePolicy: [],
-    recipeProperties: [
-      { key: 'topic', label: 'Topic', type: 'text', defaultValue: 'output-events', tooltip: 'Target topic', group: 'Publishing' },
-      { key: 'key_field', label: 'Key Field', type: 'text', defaultValue: '', tooltip: 'Message key field', group: 'Publishing' },
-      { key: 'acks', label: 'Acks', type: 'select', defaultValue: 'all', tooltip: 'Ack level', options: ['0', '1', 'all'], group: 'Publishing' },
-      { key: 'compression', label: 'Compression', type: 'select', defaultValue: 'none', tooltip: 'Compression', options: ['none', 'gzip', 'snappy', 'lz4', 'zstd'], group: 'Publishing' },
-      { key: 'enable_idempotence', label: 'Idempotent', type: 'select', defaultValue: true, tooltip: 'Exactly-once semantics', options: ['true', 'false'], group: 'Publishing' },
-    ],
-  },
-  'db-writer': {
+  }),
+  'db-writer': fromManifest(dbWriterManifest as PluginManifest, {
     label: 'Database Writer',
-    connectionSettings: [
-      { key: 'connection_string', label: 'Connection String', type: 'password', defaultValue: '', tooltip: 'DB connection string', group: 'Connection' },
-      { key: 'provider', label: 'Provider', type: 'select', defaultValue: 'PostgreSQL', tooltip: 'Database type', options: ['PostgreSQL', 'SqlServer'], group: 'Connection' },
+    runtimeKeys: [
+      'command_timeout_seconds', 'retry_max_attempts', 'retry_delay_seconds',
     ],
-    runtimePolicy: [
-      { key: 'timeout_seconds', label: 'Timeout (sec)', type: 'number', defaultValue: 30, tooltip: 'Query timeout', group: 'Delivery' },
-    ],
-    recipeProperties: [
-      { key: 'table_name', label: 'Table Name', type: 'text', defaultValue: 'output_data', tooltip: 'Target table', group: 'Write' },
-      { key: 'write_mode', label: 'Write Mode', type: 'select', defaultValue: 'INSERT', tooltip: 'INSERT, UPSERT, or MERGE', options: ['INSERT', 'UPSERT', 'MERGE'], group: 'Write' },
-      { key: 'conflict_key', label: 'Conflict Key', type: 'text', defaultValue: 'id', tooltip: 'UPSERT conflict column', group: 'Write' },
-      { key: 'batch_size', label: 'Batch Size', type: 'number', defaultValue: 1000, tooltip: 'Records per batch', group: 'Write' },
-    ],
-  },
-  'webhook-sender': {
+  }),
+  'webhook-sender': fromManifest(webhookSenderManifest as PluginManifest, {
     label: 'Webhook Sender',
-    connectionSettings: [
-      { key: 'auth_type', label: 'Authentication', type: 'select', defaultValue: 'none', tooltip: 'Auth method', options: ['none', 'bearer', 'basic', 'api_key'], group: 'Connection' },
-      { key: 'auth_token', label: 'Auth Token', type: 'password', defaultValue: '', tooltip: 'Token or key', group: 'Connection' },
+    runtimeKeys: [
+      'timeout_seconds', 'max_retries', 'retry_backoff_ms',
+      'circuit_breaker_threshold', 'circuit_breaker_recovery_seconds',
     ],
-    runtimePolicy: [
-      { key: 'timeout_seconds', label: 'Timeout (sec)', type: 'number', defaultValue: 30, tooltip: 'Request timeout', group: 'Delivery' },
-      { key: 'max_retries', label: 'Max Retries', type: 'number', defaultValue: 3, tooltip: 'Retry with backoff', group: 'Delivery' },
-    ],
-    recipeProperties: [
-      { key: 'url', label: 'Webhook URL', type: 'text', defaultValue: 'https://api.partner.com/webhook', tooltip: 'Target endpoint', group: 'Endpoint' },
-      { key: 'method', label: 'Method', type: 'select', defaultValue: 'POST', tooltip: 'HTTP method', options: ['POST', 'PUT', 'PATCH'], group: 'Endpoint' },
-      { key: 'batch_mode', label: 'Batch Mode', type: 'select', defaultValue: false, tooltip: 'Send all records in one request', options: ['true', 'false'], group: 'Endpoint' },
-    ],
-  },
+  }),
+  'file-output': fromManifest(fileOutputManifest as PluginManifest, { label: 'File Output' }),
 };
 
-export const connectorConfigs: Record<string, ConnectorConfig> = {
-  ...fallbackConnectorConfigs,
-  ...manifestConnectorConfigs,
-};
+// ── Generic fallback (for connectors without a manifest) ────
 
 export const genericConfigs: Record<StageType, ConnectorConfig> = {
   [StageType.COLLECT]: {
