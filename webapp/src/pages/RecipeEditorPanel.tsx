@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import FtpSftpRecipeHelp from '../components/designer/FtpSftpRecipeHelp';
 import { getConnectorConfig, type ConnectorConfig, type PropertyDef } from '../data/connectorConfigRegistry';
 import { StageType } from '../types';
 
@@ -512,6 +513,7 @@ export default function RecipeEditorPanel({
   const stageMeta = STAGE_META[stageType];
   const recipeGroups = groupNames(config.recipeProperties);
   const tabStyle = TAB_CONFIG[activeTab];
+  const isFtpSftp = connectorCode === 'ftp-sftp-collector';
 
   const updateProcessSettings = (next: ProcessSettings) => {
     setProcessSettings(next);
@@ -587,6 +589,14 @@ export default function RecipeEditorPanel({
         )}
         {activeTab === 'PROPERTIES' && (
           <div className="p-4">
+            {/* FTP/SFTP help: presets, summary, path tester */}
+            {isFtpSftp && (
+              <FtpSftpRecipeHelp
+                recipeConfig={recipeConfig}
+                onApplyPreset={(preset) => { updateRecipeConfig(preset); setHasChanges(true); }}
+              />
+            )}
+
             {recipeGroups.length > 0 ? recipeGroups.map((group) => (
               <PropertyGroup
                 key={group}
