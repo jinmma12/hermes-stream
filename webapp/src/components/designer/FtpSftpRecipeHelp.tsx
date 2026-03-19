@@ -201,16 +201,15 @@ function buildSummary(config: Record<string, unknown>): string[] {
 }
 
 // ── Folder Pattern Date Matching ─────────────────────────────
+// Runtime uses: datetime.now(timezone.utc) — timezone field is read but NOT applied.
+// Preview matches this: always UTC, no timezone adjustment.
 
-/** Supported date formats: yyyyMMdd, yyyy/MM/dd, yyyy-MM-dd */
-function generateDateStrings(format: string, lookbackDays: number, tz?: string): string[] {
+/** Generate date strings matching runtime semantics: range(lookback_days + 1) = today inclusive */
+function generateDateStrings(format: string, lookbackDays: number): string[] {
   const dates: string[] = [];
-  const now = new Date();
-  // Simple timezone offset: if tz contains 'Seoul' or 'KST', add 9h
-  if (tz && /(Seoul|KST|Asia\/Seoul)/i.test(tz)) {
-    now.setHours(now.getHours() + 9);
-  }
-  for (let d = 0; d < lookbackDays; d++) {
+  const now = new Date(); // UTC-ish — matches runtime which uses datetime.now(timezone.utc)
+  // Runtime: for day_offset in range(lookback_days + 1) — today included
+  for (let d = 0; d <= lookbackDays; d++) {
     const dt = new Date(now);
     dt.setDate(dt.getDate() - d);
     const yyyy = dt.getFullYear().toString();
@@ -228,34 +227,68 @@ function matchesFolderPattern(path: string, folderPattern: Record<string, unknow
   if (!folderPattern.enabled) return { pass: true, reason: '' };
   const format = (folderPattern.format as string) || 'yyyyMMdd';
   const lookback = (folderPattern.lookback_days ?? folderPattern.lookbackDays ?? 7) as number;
-  const tz = (folderPattern.timezone as string) || 'UTC';
-  const dateStrings = generateDateStrings(format, lookback, tz);
+  // Timezone: runtime reads tz_name but uses datetime.now(timezone.utc) — tz is not applied.
+  // Preview matches this: no timezone adjustment applied.
+  const dateStrings = generateDateStrings(format, lookback);
 
-  const matched = dateStrings.some((ds) => path.includes(ds));
+  // Runtime: folder_name == date_str or path.endswith(date_str)
+  const folderName = path.split('/').filter(Boolean).slice(-2, -1)[0] || ''; // parent folder of file
+  const matched = dateStrings.some((ds) => folderName === ds || path.includes(ds));
   if (matched) {
-    return { pass: true, reason: `Folder date matches (format: ${format}, lookback: ${lookback}d)` };
+    return { pass: true, reason: `Folder date match (${format}, today + ${lookback}d back)` };
   }
-  return { pass: false, reason: `No date match in path for ${format} within last ${lookback} days` };
+  return { pass: false, reason: `No date match for ${format} within last ${lookback + 1} days (today inclusive)` };
 }
 
 // ── Path Preview Tester ─────────────────────────────────────
+// Matches runtime semantics from main.py:
+//   1. remote_path: only files under this root
+//   2. recursive=false → max_depth=0 → root files only
+//   3. max_depth >= 0 → depth check
+//   4. folder_pattern → date matching (UTC, lookback+1)
+//   5. filename_regex, path_regex, exclude_patterns
 
 function testPath(path: string, config: Record<string, unknown>): { match: boolean; reasons: string[] } {
   const reasons: string[] = [];
+  const remotePath = ((config.remote_path || config.remotePath || '/') as string).replace(/\/+$/, '');
+  const recursive = config.recursive as boolean | undefined;
+  const rawMaxDepth = config.max_depth ?? config.maxDepth;
+  const maxDepth = recursive ? ((rawMaxDepth as number) ?? -1) : 0; // runtime: max_depth = -1 if recursive else 0
   const fileFilter = (config.file_filter || config.fileFilter || {}) as Record<string, unknown>;
   const folderPattern = (config.folder_pattern || config.folderPattern || {}) as Record<string, unknown>;
   const filename = path.split('/').pop() || '';
 
-  // folder_pattern check (date-based folder filtering)
+  // 1. remote_path prefix check
+  if (!path.startsWith(remotePath + '/') && path !== remotePath) {
+    return { match: false, reasons: [`Outside remote_path: ${remotePath}`] };
+  }
+
+  // 2. depth check
+  // depth = number of path segments between remote_path and the file
+  const relativePath = path.slice(remotePath.length + 1); // e.g. "subdir/file.csv"
+  const segments = relativePath.split('/').filter(Boolean);
+  const fileDepth = segments.length - 1; // file itself doesn't count as depth level
+
+  if (maxDepth >= 0 && fileDepth > maxDepth) {
+    return { match: false, reasons: [`Depth ${fileDepth} exceeds max_depth ${maxDepth} (relative to ${remotePath})`] };
+  }
+
+  if (fileDepth === 0) {
+    reasons.push(`Root file under ${remotePath}`);
+  } else {
+    reasons.push(`Depth ${fileDepth} within max_depth ${maxDepth === -1 ? 'unlimited' : maxDepth}`);
+  }
+
+  // 3. folder_pattern check (date-based folder filtering)
   if (folderPattern && folderPattern.enabled) {
     const fpResult = matchesFolderPattern(path, folderPattern);
     if (!fpResult.pass) {
-      return { match: false, reasons: [fpResult.reason] };
+      return { match: false, reasons: [...reasons, fpResult.reason] };
     }
     reasons.push(fpResult.reason);
   }
 
-  // filename regex
+  // 4. filename regex
   const filenameRegex = (fileFilter.filename_regex || fileFilter.filenameRegex) as string | undefined;
   if (filenameRegex) {
     try {
@@ -270,7 +303,7 @@ function testPath(path: string, config: Record<string, unknown>): { match: boole
     }
   }
 
-  // path regex
+  // 5. path regex
   const pathRegex = (fileFilter.path_regex || fileFilter.pathRegex) as string | undefined;
   if (pathRegex) {
     try {
@@ -278,14 +311,14 @@ function testPath(path: string, config: Record<string, unknown>): { match: boole
       if (re.test(path)) {
         reasons.push(`Path matches: ${pathRegex}`);
       } else {
-        return { match: false, reasons: [...reasons, `Path "${path}" does not match: ${pathRegex}`] };
+        return { match: false, reasons: [...reasons, `Path does not match: ${pathRegex}`] };
       }
     } catch {
       reasons.push(`Invalid regex: ${pathRegex}`);
     }
   }
 
-  // exclude patterns
+  // 6. exclude patterns
   const excludes = (fileFilter.exclude_patterns || fileFilter.excludePatterns || []) as string[];
   for (const pattern of excludes) {
     try {
@@ -387,7 +420,7 @@ export default function FtpSftpRecipeHelp({ recipeConfig, onApplyPreset }: FtpSf
             <ul className="mt-2 space-y-1">
               <li><code className="rounded bg-amber-100 px-1 text-[10px]">filename_regex</code> — matches file names only</li>
               <li><code className="rounded bg-amber-100 px-1 text-[10px]">path_regex</code> — matches the full remote path</li>
-              <li><code className="rounded bg-amber-100 px-1 text-[10px]">folder_pattern</code> — date-based folders only</li>
+              <li><code className="rounded bg-amber-100 px-1 text-[10px]">folder_pattern</code> — date-based folders only (UTC; timezone field is read but not applied at runtime)</li>
               <li><code className="rounded bg-amber-100 px-1 text-[10px]">recursive + max_depth</code> — tree traversal control</li>
               <li><code className="rounded bg-amber-100 px-1 text-[10px]">completion_check</code> — prevents partial file pickup</li>
             </ul>
@@ -510,10 +543,12 @@ export default function FtpSftpRecipeHelp({ recipeConfig, onApplyPreset }: FtpSf
               <div>
                 <p className="font-semibold text-green-700">Covers</p>
                 <ul className="mt-0.5 space-y-0.5 text-slate-600">
-                  <li>Filename regex matching</li>
-                  <li>Path regex matching</li>
+                  <li>remote_path prefix</li>
+                  <li>recursive / max_depth</li>
+                  <li>Filename regex</li>
+                  <li>Path regex</li>
                   <li>Exclude patterns</li>
-                  <li>Folder pattern (date matching)</li>
+                  <li>Folder pattern (date, UTC)</li>
                 </ul>
               </div>
               <div>
@@ -524,6 +559,7 @@ export default function FtpSftpRecipeHelp({ recipeConfig, onApplyPreset }: FtpSf
                   <li>Size stability over time</li>
                   <li>Post-collection actions</li>
                   <li>File size/age filtering</li>
+                  <li>Timezone (runtime uses UTC)</li>
                 </ul>
               </div>
             </div>

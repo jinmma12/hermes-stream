@@ -597,23 +597,28 @@ export default function RecipeEditorPanel({
               />
             )}
 
-            {recipeGroups.length > 0 ? recipeGroups.map((group) => (
-              <PropertyGroup
-                key={group}
-                title={group}
-                properties={config.recipeProperties.filter((property) => property.group === group)}
-                color="blue"
-                values={recipeConfig}
-                onChange={updateRecipePath}
-              />
-            )) : config.recipeProperties.length > 0 ? (
-              <PropertyGroup title="Configuration" properties={config.recipeProperties} color="blue" values={recipeConfig} onChange={updateRecipePath} />
-            ) : (
-              <div className="rounded-lg border-2 border-dashed border-slate-200 py-8 text-center">
-                <p className="text-xs text-slate-400">No recipe properties for this connector type</p>
-              </div>
-            )}
+            {/* JSON editor first — so preset changes are immediately visible */}
             <JsonConfigEditor connectorCode={connectorCode} value={recipeConfig} onChange={updateRecipeConfig} />
+
+            {/* Property form groups below */}
+            <div className="mt-4">
+              {recipeGroups.length > 0 ? recipeGroups.map((group) => (
+                <PropertyGroup
+                  key={group}
+                  title={group}
+                  properties={config.recipeProperties.filter((property) => property.group === group)}
+                  color="blue"
+                  values={recipeConfig}
+                  onChange={updateRecipePath}
+                />
+              )) : config.recipeProperties.length > 0 ? (
+                <PropertyGroup title="Configuration" properties={config.recipeProperties} color="blue" values={recipeConfig} onChange={updateRecipePath} />
+              ) : (
+                <div className="rounded-lg border-2 border-dashed border-slate-200 py-8 text-center">
+                  <p className="text-xs text-slate-400">No recipe properties for this connector type</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
