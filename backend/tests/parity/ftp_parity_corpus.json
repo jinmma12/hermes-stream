@@ -1,0 +1,109 @@
+[
+  {
+    "name": "flat_csv_pickup",
+    "description": "Flat folder, CSV files only, no recursion",
+    "recipe": {
+      "remote_path": "/drop",
+      "recursive": false,
+      "file_filter": {"filename_regex": ".*\\.csv$"},
+      "discovery_mode": "ALL_NEW"
+    },
+    "dotnet_recipe": {
+      "base_path": "/drop",
+      "recursive": false,
+      "file_filter_regex": ".*\\.csv$"
+    },
+    "test_paths": [
+      {"path": "/drop/a.csv", "expected": true},
+      {"path": "/drop/b.csv", "expected": true},
+      {"path": "/drop/readme.txt", "expected": false},
+      {"path": "/drop/subdir/data.csv", "expected": false}
+    ]
+  },
+  {
+    "name": "recursive_equipment_tree",
+    "description": "Recursive scan with path_regex and filename_regex",
+    "recipe": {
+      "remote_path": "/data",
+      "recursive": true,
+      "max_depth": -1,
+      "file_filter": {
+        "filename_regex": "sensor_.*\\.csv$",
+        "path_regex": ".*/equipment_[A-Z]+/.*"
+      },
+      "discovery_mode": "ALL_NEW"
+    },
+    "dotnet_recipe": {
+      "base_path": "/data",
+      "recursive": true,
+      "file_filter_regex": "sensor_.*\\.csv$",
+      "path_filter_regex": ".*/equipment_[A-Z]+/.*"
+    },
+    "test_paths": [
+      {"path": "/data/equipment_A/sensor_01.csv", "expected": true},
+      {"path": "/data/equipment_B/sensor_02.csv", "expected": true},
+      {"path": "/data/logs/sensor_01.csv", "expected": false},
+      {"path": "/data/equipment_A/readme.txt", "expected": false}
+    ]
+  },
+  {
+    "name": "depth_limited",
+    "description": "Recursive with max_depth=1 (Python only, .NET lacks max_depth)",
+    "recipe": {
+      "remote_path": "/data",
+      "recursive": true,
+      "max_depth": 1,
+      "file_filter": {"filename_regex": ".*\\.csv$"},
+      "discovery_mode": "ALL_NEW"
+    },
+    "dotnet_recipe": null,
+    "dotnet_gap": "max_depth not supported in .NET FtpSftpMonitor",
+    "test_paths": [
+      {"path": "/data/root.csv", "expected": true},
+      {"path": "/data/sub/file.csv", "expected": true},
+      {"path": "/data/sub/deep/file.csv", "expected": false}
+    ]
+  },
+  {
+    "name": "exclude_patterns",
+    "description": "Exclude temp/hidden/bak files (Python only, .NET lacks exclude_patterns)",
+    "recipe": {
+      "remote_path": "/data",
+      "recursive": true,
+      "max_depth": -1,
+      "file_filter": {
+        "filename_regex": ".*\\.csv$",
+        "exclude_patterns": ["\\.tmp$", "^\\.", "\\.bak$"]
+      },
+      "discovery_mode": "ALL_NEW"
+    },
+    "dotnet_recipe": null,
+    "dotnet_gap": "exclude_patterns not supported in .NET FtpSftpMonitor",
+    "test_paths": [
+      {"path": "/data/report.csv", "expected": true},
+      {"path": "/data/report.csv.tmp", "expected": false},
+      {"path": "/data/.hidden.csv", "expected": false},
+      {"path": "/data/old.csv.bak", "expected": false}
+    ]
+  },
+  {
+    "name": "root_only_json",
+    "description": "Non-recursive JSON files from root",
+    "recipe": {
+      "remote_path": "/incoming",
+      "recursive": false,
+      "file_filter": {"filename_regex": ".*\\.json$"},
+      "discovery_mode": "ALL_NEW"
+    },
+    "dotnet_recipe": {
+      "base_path": "/incoming",
+      "recursive": false,
+      "file_filter_regex": ".*\\.json$"
+    },
+    "test_paths": [
+      {"path": "/incoming/data.json", "expected": true},
+      {"path": "/incoming/data.csv", "expected": false},
+      {"path": "/incoming/sub/data.json", "expected": false}
+    ]
+  }
+]
